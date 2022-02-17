@@ -1,12 +1,14 @@
+# Project-specific settings
+PROJECT := memic_model
+EMP_DIR := ../Empirical/source
+
 # Flags to use regardless of compiler
-CFLAGS_all := -Wall -std=c++17
+CFLAGS_all := -Wall -Wno-unused-function -std=c++17
 
-CXX ?= g++
-CFLAGS_not_debug := -O3 -DNDEBUG 
-CFLAGS_debug := -g
-
-default: test
+# Native compiler information
+CXX := g++
+CFLAGS_nondebug := -O3 -DNDEBUG $(CFLAGS_all)
+CFLAGS_debug := -g $(CFLAGS_all)
 
 test:
-  $(CXX) $(CFLAGS_all) $(CFLAGS_debug) test.cpp -o test_de_bruijn_graph
-  ./test_de_bruijn_graph
+	$(CXX) $(CFLAGS_debug) test.cpp
