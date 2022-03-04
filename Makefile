@@ -11,4 +11,5 @@ CFLAGS_nondebug := -O3 -DNDEBUG $(CFLAGS_all)
 CFLAGS_debug := -g $(CFLAGS_all)
 
 test:
-	$(CXX) $(CFLAGS_debug) test.cpp
+	$(CXX) $(CFLAGS_debug) DeBruijn/test.cpp
+	./a.out
