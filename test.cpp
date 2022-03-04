@@ -1,4 +1,4 @@
-#include "de_bruijn_graph.h"
+#include <DeBruijnGraph.h>
 #include <vector>
 
 void TestConstructGraph(){
