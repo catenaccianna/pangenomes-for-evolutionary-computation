@@ -45,20 +45,44 @@ void TestAddVertex() {
 
 }
 
+///@todo Need to go over if I understand what a branch means as far as sequence goes
 void TestBranchingGraph() {
-    //add in test for a branching set of genetic info
-
-}
-
-void TestTraversal() {
+    // no branches
     std::vector<int> vec({4,6,2,8,9,3,5,7});
     DeBruijnGraph g = DeBruijnGraph(vec, 3);
-    g.depth_first_traversal([&g] (DeBruijnVertex vertex) { cout << g.vertex_branch_check(vertex) << "\n"; });
+    //g.depth_first_traversal([&g] (DeBruijnVertex vertex) { cout << g.vertex_branch_check(vertex) << "\n"; });
+
+    // one branch: "628" points to both "289" and "280"
+    vec = {4, 6,2,8, 9, 6,2,8, 0};
+    DeBruijnGraph g0 = DeBruijnGraph(vec, 3);
 
 
+    // multiple branches: "289" -> "896", "894" and "967" -> "672", "678"
+    vec = {4,6, 2,8,9, 6,7, 2,8,9, 4, 9,6,7, 8};
+    DeBruijnGraph g1 = DeBruijnGraph(vec, 3);
+}
+
+void TestTraversalLambda() {
+    //can maybe modify this depending on what we're traversing for--
+    //if we need to compare adjacent verticies can make a 2-vertex parameter!
+
+    std::vector<int> vec({4,6,2,8,9,3,5,7});
+    DeBruijnGraph g = DeBruijnGraph(vec, 3);
+
+    //print all the verticies and their adjacency lists
+    g.depth_first_traversal([&g] (DeBruijnVertex vertex) { 
+        cout << vertex.get_kmer() << "->";
+        vector<DeBruijnVertex> adj_list = g.get_value(vertex).get_adj_list();
+
+        for(int i = 0; i < int(adj_list.size()); ++i){
+            cout << adj_list[i].get_kmer() << ",";
+        } 
+
+        cout << "\n"; });
 }
 
 int main() {
-    TestConstructGraph();
-    //TestTraversal();
+    //TestConstructGraph();
+    TestBranchingGraph();
+    //TestTraversalLambda();
 }

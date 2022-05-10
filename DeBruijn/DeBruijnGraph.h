@@ -169,6 +169,8 @@ public:
     template <typename FuncType>
     /**
      * Traversal function that currently prints each vertex ID
+     * @note Depending on what we're traversing for, like if we need to compare adjacent 
+     * verticies, can make a 2-vertex parameter on the lambda!
      * @todo Put in an If statement that checks whether the vertex branches
      */
     void depth_first_traversal(FuncType func){
@@ -185,6 +187,7 @@ public:
                  dfs_recursion(traversing[i], func);
              }
         }
+        this->reset_vertex_flags();
     }
 
     template <typename FuncType>
@@ -234,7 +237,18 @@ public:
      */
     vector<DeBruijnVertex> get_branch_vertices() { return mBranchedVertices; }
 
+    /**
+     * Given a vertex, retrun true if the vertex branches
+     * @param vertex to check
+     * @return true if the vertex has more than 2 verticies in it's adjacency list
+     */
     bool vertex_branch_check(DeBruijnVertex vertex) { return mVertices[vertex].get_branch(); }
+
+    /**
+     * Get the value associated with a vertex
+     * @return Debruijn vertex value object
+     */
+    DBGraphValue get_value(DeBruijnVertex vertex) { return mVertices[vertex]; }
 
 };
 
