@@ -3,9 +3,9 @@
  * @author Anna Catenacci
  *
  * A class that constructs and describes a De Bruijn Graph
- * Notes to self: -change constructors & private variables to be able to accept ints
- *              -create a display function that more clearly shows the links
- *              between vertices.
+ * Notes to self: -create a display function that more clearly shows the links between vertices.
+ * 
+ * @note Takes a longer time to run after adding the lambda to the DFS traversal function!
  */
 
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
@@ -32,51 +32,8 @@ private:
     map<DeBruijnVertex, DBGraphValue> mVertices;
 
     /// Vector of all Vertices the map contains
-    // (will this variable be necessary to keep around?)
+    // (will this variable be necessary to keep around if I already have a flag attribute in DBValue?)
     vector<DeBruijnVertex> mBranchedVertices;
-
-public:
-    DeBruijnGraph()=default;
-
-    /**
-     * Construct a new De Bruijn Graph object
-     * @todo Make an int parameter that allows you to change the length of the string for a vertex ID
-     * @param input a vector containing 3 character strings to convert to a graph
-     */
-    DeBruijnGraph(vector<string> input){
-
-        // if size of input is one, add a vertex with no outgoing edges
-        if(input.size() == 1){
-            this->set_empty_vertex(DeBruijnVertex(input[0]));
-        }
-
-        // if size of input is greater than one, call add_to_graph to create an edge
-        if(input.size() > 1) {
-            for (int i = 0; i< int(input.size()) -1; ++i) {
-                this->add_edge(DeBruijnVertex(input[i]),
-                        DeBruijnVertex(input[i+1]));
-                this->set_empty_vertex(DeBruijnVertex(input[i+1]));
-            }
-        }
-
-        this->set_size(input.size());
-    }
-
-    ///a second constructor that I'm adding after looking at the test!
-    DeBruijnGraph(vector<int> num_input){
-        this->ConstructFromSequence(num_input, 3);
-    }
-
-    /**
-     * Construct a new De Bruijn Graph object
-     * @todo Do I really need this? Probably not
-     * @param genetic_string an input of one long string of characters
-     */
-    DeBruijnGraph(string genetic_string){
-        this->ConstructFromString(genetic_string);
-    }
-
-    ~DeBruijnGraph()=default;
 
     /**
      * Create a sequence for the current constructor
@@ -90,7 +47,7 @@ public:
         for(int i = 0; i < int(num_input.size()); ++i){
             input += std::to_string(num_input[i]);
         }
-        this->ConstructFromString(input);
+        this->ConstructFromString(input, kmer_length);
     }
 
     /**
@@ -98,48 +55,68 @@ public:
      * @todo Add functionality for more kmer ID length options (as a parameter)
      * @param input string containing all genetic data sequentially
      */
-    void ConstructFromString(string input){
+    void ConstructFromString(string input, int kmer_length){
         mSize = 0;
 
-        if(input.length() == 3){
+        if(int(input.length()) == kmer_length){
             this->set_empty_vertex(DeBruijnVertex(input));
             this->set_size( this->get_size() + 1 );
         }
-        while(input.length() >= 4){
-
-            this->add_edge(DeBruijnVertex(input.substr(0, 3)),
-                    DeBruijnVertex(input.substr(1, 3)));
-            this->set_empty_vertex(DeBruijnVertex(DeBruijnVertex(input.substr(1, 3))));
+        while(int(input.length()) >= kmer_length + 1){
+            this->add_edge(DeBruijnVertex(input.substr(0, kmer_length)),
+                    DeBruijnVertex(input.substr(1, kmer_length)));
+            this->set_empty_vertex(DeBruijnVertex(DeBruijnVertex(input.substr(1, kmer_length))));
 
             input = input.substr(1, input.length()-1);
             this->set_size( this->get_size() + 1 );
         }
+    }
 
-        //this->set_size(input.length() / 3);
+public:
+///Should I disable the default constructor if we are just using this to construct an intial population?
+///For now I think no, and I will keep this and add an add_vertex function
+    DeBruijnGraph()=default;
+    ~DeBruijnGraph()=default;
+
+    /**
+     * Construct a De Bruijn Graph object from a vector of strings
+     * @param input a vector containing strings to convert to a graph
+     * @param kmer_length length of indecies to pull from input to create a kmer ID
+     */
+    DeBruijnGraph(vector<string> input, int kmer_length){
+        string result = "";
+        for(int i = 0; i < int(input.size()); ++i){
+            result += input[i];
+        }
+        this->ConstructFromString(result, kmer_length);
     }
 
     /**
-     * Return size of graph
-     * @return number of vertices the graph contains
+     * Construct a De Bruijn Graph object from a vector of integers
+     * @param input a vector containing ints to convert to a graph
+     * @param kmer_length length of indecies to pull from input to create a kmer ID
      */
-    int get_size() { return mSize; }
+    DeBruijnGraph(vector<int> input, int kmer_length){
+        this->ConstructFromSequence(input, kmer_length);
+    }
 
     /**
-     * Return vector containing all vertices in graph
-     * @return vector containing all DeBruijn vertex objects
+     * Construct a De Bruijn Graph object from an integer
+     * @param input a integer to convert to a graph
+     * @param kmer_length length of indecies to pull from input to create a kmer ID
      */
-    vector<DeBruijnVertex> get_all_vertices() {
-        vector<DeBruijnVertex> all_vertices;
-        for (auto const& element : mVertices) {
-            all_vertices.push_back(element.first);
-        }
-        return all_vertices; }
+    DeBruijnGraph(int input, int kmer_length){
+        this->ConstructFromString(std::to_string(input), kmer_length);
+    }
 
     /**
-     * Set the size object
-     * @param s size of graph
+     * Construct a De Bruijn Graph object from an string
+     * @param input a string to convert to a graph
+     * @param kmer_length length of indecies to pull from input to create a kmer ID
      */
-    void set_size(int s) { mSize = s; }
+    DeBruijnGraph(string input, int kmer_length){
+        this->ConstructFromString(input, kmer_length);
+    }
 
     /**
      * Set a vertex with no value as a place-holder
@@ -194,11 +171,13 @@ public:
         }
     }
 
+    template <typename FuncType>
     /**
      * Traversal function that currently prints each vertex ID
      * @todo Put in an If statement that checks whether the vertex branches
+     * @todo Add functionality by puting in lambda
      */
-    void depth_first_traversal(){
+    void depth_first_traversal(FuncType func){
         vector<DeBruijnVertex> traversing = this->get_all_vertices();
         for(int i = 0; i < mSize; ++i){
             auto iter = std::find(traversing.begin(), traversing.end(), traversing[i]);
@@ -206,29 +185,53 @@ public:
                  //visit vertex and preform action
                  if(!mVertices[traversing[i]].get_visitor_flag()){
                      mVertices[traversing[i]].change_visitor_flag(true);
-                     cout << traversing[i].get_kmer() << "\n";
+                     func(traversing[i]);
                  }
 
-                 dfs_recursion(traversing[i]);
+                 dfs_recursion(traversing[i], func);
              }
         }
     }
 
+    template <typename FuncType>
     /**
      * Recursive function used in depth_first_traversal
      * @param vertex DeBruijn vertex with adjacencies to be traversed
      */
-    void dfs_recursion(DeBruijnVertex vertex){
+    void dfs_recursion(DeBruijnVertex vertex, FuncType func){
         vector<DeBruijnVertex> edges = mVertices[vertex].get_adj_list();
         for(int i = 0; i < int(edges.size()); ++i){
             //if flag is false, if vertex has not yet been visited
             if(!mVertices[edges[i]].get_visitor_flag()){
                 mVertices[edges[i]].change_visitor_flag(true);
-                cout << edges[i].get_kmer() << "\n";
-
-                dfs_recursion(edges[i]);
+                func(edges[i]);
+                dfs_recursion(edges[i], func);
             }
         }
+    }
+
+    /**
+     * Set the size object
+     * @param s size of graph
+     */
+    void set_size(int s) { mSize = s; }
+
+    /**
+     * Return size of graph
+     * @return number of vertices the graph contains
+     */
+    int get_size() { return mSize; }
+
+    /**
+     * Return vector containing all vertices in graph
+     * @return vector containing all DeBruijn vertex objects
+     */
+    vector<DeBruijnVertex> get_all_vertices() {
+        vector<DeBruijnVertex> all_vertices;
+        for (auto const& element : mVertices) {
+            all_vertices.push_back(element.first);
+        }
+        return all_vertices; 
     }
 
 };
