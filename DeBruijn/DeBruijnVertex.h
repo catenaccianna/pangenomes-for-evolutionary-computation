@@ -11,6 +11,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 using std::string; using std::vector;
 
@@ -23,6 +24,9 @@ private:
     /// Sequential value of when the vertex was added to the graph
     int mOrder;
 
+    /// Pointer to the value that is associated with this vertex
+    //DBGraphValue * mValue;
+
 public:
     DeBruijnVertex()=default;
     DeBruijnVertex(string k) : mKmer(k) {};
@@ -32,18 +36,24 @@ public:
      * Get the kmer ID
      * @return string representing the vertex ID
      */
-    string get_kmer() const {return mKmer; } ;
+    string get_kmer() const { return mKmer; } ;
 
     /**
      * Get the sequential order value
      * @return True if this vertex is the beginning of the graph
      */
-    int get_order() const {return mOrder; } ;
+    int get_order() const { return mOrder; } ;
 
     /**
      * Set the sequential order value to true
      */
-    void set_start(int num) {mOrder = num; } ;
+    void set_order(int num) { mOrder = num; } ;
+
+    /**
+     * Return true if this vertex contains a branch
+     * @return true if the vertex has more than one adjacency
+     */
+    //bool get_branch() { return mValue->get_branch(); }
 
     bool operator<(const DeBruijnVertex& vertex) const noexcept
     {

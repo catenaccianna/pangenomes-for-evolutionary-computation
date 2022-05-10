@@ -26,7 +26,7 @@ class DeBruijnGraph {
 private:
 
     /// Number of vertices the graph contains
-    int mSize;
+    int mSize = 0;
 
     /// Map of Debruijn vertex objects to their values/data
     map<DeBruijnVertex, DBGraphValue> mVertices;
@@ -37,8 +37,6 @@ private:
 
     /**
      * Create a sequence for the current constructor
-     * @todo optimization should look more like this function
-     * @todo add functionality to be able to construct vertex IDs of various length
      * @param num_input vector of numbers to create a graph from
      * @param kmer_length length of each vertex ID
      */
@@ -52,24 +50,21 @@ private:
 
     /**
      * Construct nodes from a string of genetic information
-     * @todo Add functionality for more kmer ID length options (as a parameter)
      * @param input string containing all genetic data sequentially
      */
     void ConstructFromString(string input, int kmer_length){
-        mSize = 0;
-
         if(int(input.length()) == kmer_length){
             this->set_empty_vertex(DeBruijnVertex(input));
-            this->set_size( this->get_size() + 1 );
         }
         while(int(input.length()) >= kmer_length + 1){
+            this->set_size( this->get_size() + 1 );
             this->add_edge(DeBruijnVertex(input.substr(0, kmer_length)),
                     DeBruijnVertex(input.substr(1, kmer_length)));
             this->set_empty_vertex(DeBruijnVertex(DeBruijnVertex(input.substr(1, kmer_length))));
 
             input = input.substr(1, input.length()-1);
-            this->set_size( this->get_size() + 1 );
         }
+        this->set_size( this->get_size() + 1 );
     }
 
 public:
@@ -132,14 +127,14 @@ public:
      * @param end_v Vertex being pointed to
      */
     void add_edge(DeBruijnVertex start_v, DeBruijnVertex end_v){
-        start_v.set_start(mSize);
-        end_v.set_start(mSize + 1);
+        start_v.set_order(mSize);
+        end_v.set_order(mSize + 1);
         // if the start k-mer is not already recorded in the graph, add a new edge
         if(mVertices.find(start_v) == mVertices.end()){
             mVertices[start_v].add_to_adj_list(end_v);
         }
 
-            // if the start k-mer is already in the graph, add the end k-mer to the adjacency list
+        // if the start k-mer is already in the graph, add the end k-mer to the adjacency list
         else{
             mVertices[start_v].add_to_adj_list(end_v);
             //if the adj_list is not empty, this implies the vertex is a branch point
@@ -175,7 +170,6 @@ public:
     /**
      * Traversal function that currently prints each vertex ID
      * @todo Put in an If statement that checks whether the vertex branches
-     * @todo Add functionality by puting in lambda
      */
     void depth_first_traversal(FuncType func){
         vector<DeBruijnVertex> traversing = this->get_all_vertices();
@@ -233,6 +227,14 @@ public:
         }
         return all_vertices; 
     }
+
+    /**
+     * Return vector containing vertices with more than one adjacency in graph
+     * @return vector containing branched DeBruijn vertex objects
+     */
+    vector<DeBruijnVertex> get_branch_vertices() { return mBranchedVertices; }
+
+    bool vertex_branch_check(DeBruijnVertex vertex) { return mVertices[vertex].get_branch(); }
 
 };
 
