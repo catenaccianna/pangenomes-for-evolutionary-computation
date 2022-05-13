@@ -5,7 +5,6 @@
  * A class that constructs and describes a De Bruijn Graph
  * Notes to self: -create a display function that more clearly shows the links between vertices.
  * 
- * @note Takes a longer time to run after adding the lambda to the DFS traversal function!
  */
 
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
@@ -31,6 +30,9 @@ private:
     /// Map of Debruijn vertex objects to their values/data
     map<DeBruijnVertex, DBGraphValue> mVertices;
 
+    /// Starting vertex so that we know which vertex to start traversing with
+    DeBruijnVertex mStart;
+
     /// Vector of all Vertices the map contains
     // (will this variable be necessary to keep around if I already have a flag attribute in DBValue?)
     vector<DeBruijnVertex> mBranchedVertices;
@@ -53,15 +55,18 @@ private:
      * @param input string containing all genetic data sequentially
      */
     void ConstructFromString(string input, int kmer_length){
+        mStart = DeBruijnVertex(input.substr(0, kmer_length));
+        //if the graph is one vertex long:
         if(int(input.length()) == kmer_length){
             this->set_empty_vertex(DeBruijnVertex(input));
         }
+        //add to size and add an edge for each vertex, and an empty vertex for the end
         while(int(input.length()) >= kmer_length + 1){
             this->set_size( this->get_size() + 1 );
             this->add_edge(DeBruijnVertex(input.substr(0, kmer_length)),
                     DeBruijnVertex(input.substr(1, kmer_length)));
             this->set_empty_vertex(DeBruijnVertex(DeBruijnVertex(input.substr(1, kmer_length))));
-
+            //take one character off the input
             input = input.substr(1, input.length()-1);
         }
         this->set_size( this->get_size() + 1 );
@@ -69,7 +74,7 @@ private:
 
 public:
 ///Should I disable the default constructor if we are just using this to construct an intial population?
-///For now I think no, and I will keep this and add an add_vertex function
+///For now I think no, and I will keep this and add an add_vertex function if it becomes necessary
     DeBruijnGraph()=default;
     ~DeBruijnGraph()=default;
 
@@ -118,7 +123,8 @@ public:
      * @param v vertex object to add to the graph's list of vertices
      */
     void set_empty_vertex(DeBruijnVertex v){
-        mVertices[v] = DBGraphValue();
+        mVertices[v];
+        mVertices[v].set_empty_bool(true);
     }
 
     /**
@@ -127,22 +133,35 @@ public:
      * @param end_v Vertex being pointed to
      */
     void add_edge(DeBruijnVertex start_v, DeBruijnVertex end_v){
-        start_v.set_order(mSize);
-        end_v.set_order(mSize + 1);
+        //if the adj_list is not empty, this implies the vertex is a branch point
+        if(mVertices[start_v].adj_list_size() > 0){
+            mVertices[start_v].set_branch(true);
+            mBranchedVertices.push_back(start_v);
+            std::unique(mBranchedVertices.begin(), mBranchedVertices.begin() + mBranchedVertices.size());
+        }
+        mVertices[start_v].set_empty_bool(false);
+        mVertices[start_v].add_to_adj_list(end_v);
+        //OLD start_v.set_order(mSize);
+        //OLD end_v.set_order(mSize + 1);
+       
+        /* OLD
         // if the start k-mer is not already recorded in the graph, add a new edge
         if(mVertices.find(start_v) == mVertices.end()){
             mVertices[start_v].add_to_adj_list(end_v);
         }
-
         // if the start k-mer is already in the graph, add the end k-mer to the adjacency list
         else{
             mVertices[start_v].add_to_adj_list(end_v);
             //if the adj_list is not empty, this implies the vertex is a branch point
-            if(mVertices[start_v].adj_list_size() > 0){
+            //if(mVertices[start_v].adj_list_size() > 0){
+            if(!mVertices[start_v].get_empty_bool()){
                 mVertices[start_v].set_branch(true);
+
+                cout<<"SET TRUE AT "<<start_v.get_kmer()<<"\n"; //so this is fucking up cuz of the empty v?
+
                 mBranchedVertices.push_back(start_v);
             }
-        }
+        }*/
     }
 
     /**
@@ -155,6 +174,18 @@ public:
         }
     }
 
+    /** OLD
+     * Reset all vertex flags to show they are Unvisited
+     * To be used in traversals
+     
+    void reset_vertex_flags() {
+        vector<DeBruijnVertex> all_vertices;
+        for (auto & element : mVertices) {
+            element.second.change_visitor_flag(false);
+        }
+    }
+    */
+
     /**
      * Reset all vertex flags to show they are Unvisited
      * To be used in traversals
@@ -162,51 +193,53 @@ public:
     void reset_vertex_flags() {
         vector<DeBruijnVertex> all_vertices;
         for (auto & element : mVertices) {
-            element.second.change_visitor_flag(false);
+            element.second.change_visitor_flag(0);
         }
     }
 
     template <typename FuncType>
+
     /**
      * Traversal function that currently prints each vertex ID
+     * @param func lambda function to use when visiting the current vertex
      * @note Depending on what we're traversing for, like if we need to compare adjacent 
-     * verticies, can make a 2-vertex parameter on the lambda!
-     * @todo Put in an If statement that checks whether the vertex branches
+     *      verticies, can make a 2-vertex parameter on the lambda, or if we need the function
+     *      to return something (or a template of something)
      */
     void depth_first_traversal(FuncType func){
-        vector<DeBruijnVertex> traversing = this->get_all_vertices();
-        for(int i = 0; i < mSize; ++i){
-            auto iter = std::find(traversing.begin(), traversing.end(), traversing[i]);
-             if(iter != traversing.end()){
-                 //visit vertex and preform action
-                 if(!mVertices[traversing[i]].get_visitor_flag()){
-                     mVertices[traversing[i]].change_visitor_flag(true);
-                     func(traversing[i]);
-                 }
-
-                 dfs_recursion(traversing[i], func);
-             }
+        if(mSize == 1){
+            func(mStart);
         }
+        DeBruijnVertex current = mStart;
+        dfs_recursion(mStart, func);
         this->reset_vertex_flags();
     }
 
     template <typename FuncType>
+
     /**
      * Recursive function used in depth_first_traversal
      * @param vertex DeBruijn vertex with adjacencies to be traversed
+     * @param func lambda function to use when visiting the current vertex
      */
     void dfs_recursion(DeBruijnVertex vertex, FuncType func){
-        vector<DeBruijnVertex> edges = mVertices[vertex].get_adj_list();
-        for(int i = 0; i < int(edges.size()); ++i){
-            //if flag is false, if vertex has not yet been visited
-            if(!mVertices[edges[i]].get_visitor_flag()){
-                mVertices[edges[i]].change_visitor_flag(true);
-                func(edges[i]);
-                dfs_recursion(edges[i], func);
+        //cout<<"RECUR VISIT: "<<vertex.get_kmer()<< "\n";
+        //cout<<"V FLAG: "<<mVertices[vertex].get_visitor_flag()<<" ADJ LIST SIZE: "<<mVertices[vertex].adj_list_size()<<"\n";
+        if(mVertices[vertex].get_visitor_flag() < int(mVertices[vertex].adj_list_size())){
+            mVertices[vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
+            func(vertex);
+            int next_index = mVertices[vertex].get_visitor_flag() - 1;
+            DeBruijnVertex next_vertex = mVertices[vertex].get_adj_list()[next_index];
+            if( !mVertices[next_vertex].get_empty_bool() ){
+                dfs_recursion(next_vertex, func);
+            }
+            else{
+                mVertices[next_vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
+                func(next_vertex);
             }
         }
     }
-
+    
     /**
      * Set the size object
      * @param s size of graph

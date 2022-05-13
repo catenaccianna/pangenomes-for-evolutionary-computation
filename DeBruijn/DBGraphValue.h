@@ -19,16 +19,29 @@ private:
     vector<DeBruijnVertex> mAdjList = {};
 
     /// True if this vertex has been visited in traversal
-    bool mVisitedFlag = false;
+    //bool mVisitedFlag = false;
+
+    // maybe can have a counter for how many times something's been visited and then keep track of the 
+    // num of total things visited, and do math to find which index of the adj list needs to be visited still?
+    // not sure if that's enough info. 
+
+    // so you'd to to the adj list being pointed to, and then check the index to be accessed, and is the size == 
+    // the index +1, then you know this vertex is done
+    int mVisits = 0;
 
     /// True if this vertex contains more than one adjacent vertex
     bool mContainsBranch = false;
 
+    /// True if the adjacency list contains either nothing or an empty vertex
+
+    ///@todo change to be true if there is 1 empty node in the adj list at all
+
+    bool mEmptyAdjList = true;
+
 public:
     /// Constructors
     DBGraphValue()=default;
-    DBGraphValue(vector<DeBruijnVertex> a, bool v, bool c) : mAdjList(a), mVisitedFlag(v),
-                                                             mContainsBranch(c) {};
+    DBGraphValue(vector<DeBruijnVertex> a, bool c) : mAdjList(a), mContainsBranch(c) {};
 
     /// Destructor                                                        
     ~DBGraphValue()=default;
@@ -42,6 +55,8 @@ public:
     /**
      * Return size of adjacency list
      * @return size
+     * 
+     * @todo subtract 1 form size if there is one empty node in adj list
      */
     int adj_list_size(){ return mAdjList.size(); }
 
@@ -49,22 +64,34 @@ public:
      * Get the visitor flag object
      * @return true if this vertex has already been visited in a traversal
      */
-    bool get_visitor_flag(){ return mVisitedFlag; }
+    //bool get_visitor_flag(){ return mVisitedFlag; }
+
+    /**
+     * Get the visitor flag object
+     * @return true if this vertex has already been visited in a traversal
+     */
+    int get_visitor_flag(){ return mVisits; }
 
     /**
      * Add to adjacency list (creates edge)
      * @param addition vertex to add to this vertex's adjacency list
      */
-    void add_to_adj_list(DeBruijnVertex& addition){ mAdjList.push_back(addition); }
+    void add_to_adj_list(DeBruijnVertex addition){ mAdjList.push_back(addition); }
 
     /**
      * Set visitor flag
      * @param value true if visited, false if not
      */
-    void change_visitor_flag(bool value) { mVisitedFlag = value; }
+    //void change_visitor_flag(bool value) { mVisitedFlag = value; }
 
     /**
-     * @brief Set the branch objectset branching flag
+     * Set visitor flag
+     * @param value true if visited, false if not
+     */
+    void change_visitor_flag(int value) { mVisits = value; }
+
+    /**
+     * Set the branch flag
      * A true value implies the vertex contains a branch point.
      * @param value true if the vertex has more than one value in it's adjacency list
      */
@@ -75,6 +102,25 @@ public:
      * @return true if there is more than one value in the adjacency list
      */
     bool get_branch() { return mContainsBranch; }
+
+    /**
+     * Set the bool for whether the adjacency list is empty
+     * @param value true if the vertex does not point to anything yet
+     */
+    void set_empty_bool(bool value) { mEmptyAdjList = value; }
+
+    /**
+     * Get the branch truth value
+     * @return true if there is more than one value in the adjacency list
+     */
+    bool get_empty_bool() { return mEmptyAdjList; }
+
+    /**
+     * Get the adjacent DeBruijn Vertex
+     * @param index at which to pull the vertex from
+     * @return DeBruijnVertex 
+     */
+    DeBruijnVertex get_adjacency(int index) { return mAdjList[index]; }
 
 };
 

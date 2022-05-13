@@ -1,0 +1,119 @@
+//template <typename FuncType>
+
+    /**
+     * Traversal function that currently prints each vertex ID
+     * @param func lambda function to use when visiting the current vertex
+     * @note Depending on what we're traversing for, like if we need to compare adjacent 
+     *      verticies, can make a 2-vertex parameter on the lambda, or if we need the function
+     *      to return something (or a template of something)
+     */
+
+/* TRIAL 2
+    void depth_first_traversal(FuncType func){
+        int count = 0;
+        //// get all verticies in the map
+        DeBruijnVertex current = mStart;
+        vector<DeBruijnVertex> path = [mStart];
+        //// for the size of the whole thing
+        while( count < mSize ){
+            //// iterate through the map in order (here made possible with an iter pointer and the comparison operator that 
+            //                                        put the elements into the vector in order)
+//visit mStart here and then recur for each node in path list? and recur for each thing in that node's path list?
+            ///don't have the iter pointer to check if the thing is at the end, but can use empty bool flag?
+            for(int i = 0; i < adj_list.size(); ++i){}
+            //visit vertex and preform action
+            //cout<<"\nv flag "<<mVertices[current].get_visitor_flag()<<"\nadj list size "<<mVertices[current].adj_list_size()<<"\n";
+            if(mVertices[current].get_visitor_flag() <= mVertices[current].adj_list_size()){
+                // add to the count for the number of times this vertex has been visited
+                mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1);
+                //cout<<"\nnew v flag "<<mVertices[current].get_visitor_flag()<<"\n";
+                func(current);
+            }
+            //// recur
+            count = dfs_recursion(current, count, func);
+            ++ count;
+        }
+        //// reset vetices
+        this->reset_vertex_flags();
+    }
+    */
+
+    /** TRIAL 1
+     * Traversal function that currently prints each vertex ID
+     * @note Depending on what we're traversing for, like if we need to compare adjacent 
+     * verticies, can make a 2-vertex parameter on the lambda!
+    
+    void depth_first_traversal(FuncType func){
+        // get all verticies in the map
+        vector<DeBruijnVertex> traversing = this->get_all_vertices();
+        // for the size of the whole thing
+        for(int i = 0; i < mSize; ++i){
+            auto iter = std::find(traversing.begin(), traversing.end(), traversing[i]);
+            // iterate through the map in order (here made possible with an iter pointer and the comparison operator that 
+            //                                        put the elements into the vector in order)
+             if(iter != traversing.end()){
+                // visit vertex and preform action is visitor flag allows it
+                if(!mVertices[traversing[i]].get_visitor_flag()){
+                    mVertices[traversing[i]].change_visitor_flag(true);
+                    func(traversing[i]);
+                }
+                // recur
+                dfs_recursion(traversing[i], func);
+            }
+        }
+        // reset vertices
+        this->reset_vertex_flags();
+    }
+    */
+
+
+
+/**
+     * Recursive function used in depth_first_traversal
+     * @param vertex DeBruijn vertex with adjacencies to be traversed
+     * @param func lambda function to use when visiting the current vertex
+     */
+
+
+/* TRIAL 3
+    vector<DeBruijnVertex> edges = mVertices[vertex].get_adj_list();
+        for(int i = mVertices[vertex].get_visitor_flag(); i < int(edges.size()); ++i){
+            //if flag is 0, if vertex has not yet been visited
+            if(mVertices[edges[i]].get_visitor_flag() <= int(mVertices[edges[i]].adj_list_size())){
+                //visit vertex and preform action
+                mVertices[vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
+                func(edges[i]);
+                dfs_recursion(edges[i], func);
+            }
+        }*/
+    
+    /* TRIAL 2
+    std::tuple<int, DeBruijnVertex>  dfs_recursion(DeBruijnVertex vertex, int count, FuncType func){
+        vector<DeBruijnVertex> edges = mVertices[vertex].get_adj_list();
+        for(int i = mVertices[vertex].get_visitor_flag(); i < int(edges.size()); ++i){
+            //if flag is 0, if vertex has not yet been visited
+            if(mVertices[edges[i]].get_visitor_flag() <= mVertices[edges[i]].adj_list_size()){
+                //visit vertex and preform action
+                mVertices[vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
+                func(edges[i]);
+                ++ count;
+                count = dfs_recursion(edges[i], count, func);
+            }
+        }
+        return count;
+    }
+    */
+    
+/* TRIAL 1
+    void dfs_recursion(DeBruijnVertex vertex, FuncType func){
+        vector<DeBruijnVertex> edges = mVertices[vertex].get_adj_list();
+        for(int i = 0; i < int(edges.size()); ++i){
+            //if flag is false, if vertex has not yet been visited
+            if(!mVertices[edges[i]].get_visitor_flag()){
+                mVertices[edges[i]].change_visitor_flag(true);
+                func(edges[i]);
+                dfs_recursion(edges[i], func);
+            }
+        }
+    }
+*/

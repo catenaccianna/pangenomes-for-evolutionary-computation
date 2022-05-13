@@ -22,7 +22,7 @@ private:
     string mKmer;
 
     /// Sequential value of when the vertex was added to the graph
-    int mOrder;
+    //int mOrder;
 
     /// Pointer to the value that is associated with this vertex
     //DBGraphValue * mValue;
@@ -42,12 +42,12 @@ public:
      * Get the sequential order value
      * @return True if this vertex is the beginning of the graph
      */
-    int get_order() const { return mOrder; } ;
+    //int get_order() const { return mOrder; } ;
 
     /**
      * Set the sequential order value to true
      */
-    void set_order(int num) { mOrder = num; } ;
+    //void set_order(int num) { mOrder = num; } ;
 
     /**
      * Return true if this vertex contains a branch
@@ -57,7 +57,7 @@ public:
 
     bool operator<(const DeBruijnVertex& vertex) const noexcept
     {
-        return this->mOrder < vertex.get_order();
+        return this->mKmer < vertex.get_kmer();
     }
 
     bool operator==(const DeBruijnVertex& vertex) const noexcept
