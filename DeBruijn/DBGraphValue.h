@@ -10,20 +10,19 @@
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DBGRAPHVALUE_H
 #define PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DBGRAPHVALUE_H
 
-#include "DeBruijnVertex.h"
+#include <string>
+#include <vector>
+
+using std::string; using std::vector;
 
 class DBGraphValue {
 private:
 
     /// Adjacency list--vector of all verticies this vertex points to
-    vector<DeBruijnVertex> mAdjList = {};
+    vector<string> mAdjList = {};
 
     /// True if this vertex has been visited in traversal
     //bool mVisitedFlag = false;
-
-    // maybe can have a counter for how many times something's been visited and then keep track of the 
-    // num of total things visited, and do math to find which index of the adj list needs to be visited still?
-    // not sure if that's enough info. 
 
     // so you'd to to the adj list being pointed to, and then check the index to be accessed, and is the size == 
     // the index +1, then you know this vertex is done
@@ -33,15 +32,12 @@ private:
     bool mContainsBranch = false;
 
     /// True if the adjacency list contains either nothing or an empty vertex
-
-    ///@todo change to be true if there is 1 empty node in the adj list at all
-
     bool mEmptyAdjList = true;
 
 public:
     /// Constructors
     DBGraphValue()=default;
-    DBGraphValue(vector<DeBruijnVertex> a, bool c) : mAdjList(a), mContainsBranch(c) {};
+    DBGraphValue(vector<string> a, bool c) : mAdjList(a), mContainsBranch(c) {};
 
     /// Destructor                                                        
     ~DBGraphValue()=default;
@@ -50,7 +46,7 @@ public:
      * Get the adj list object
      * @return vector of adjacent verticies
      */
-    vector<DeBruijnVertex> get_adj_list() const{ return mAdjList; }
+    vector<string> get_adj_list() const{ return mAdjList; }
 
     /**
      * Return size of adjacency list
@@ -76,7 +72,7 @@ public:
      * Add to adjacency list (creates edge)
      * @param addition vertex to add to this vertex's adjacency list
      */
-    void add_to_adj_list(DeBruijnVertex addition){ mAdjList.push_back(addition); }
+    void add_to_adj_list(string addition){ mAdjList.push_back(addition); }
 
     /**
      * Set visitor flag
@@ -118,9 +114,9 @@ public:
     /**
      * Get the adjacent DeBruijn Vertex
      * @param index at which to pull the vertex from
-     * @return DeBruijnVertex 
+     * @return string reresenting kmer adjacency 
      */
-    DeBruijnVertex get_adjacency(int index) { return mAdjList[index]; }
+    string get_adjacency(int index) { return mAdjList[index]; }
 
 };
 

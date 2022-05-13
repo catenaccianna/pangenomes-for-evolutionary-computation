@@ -4,13 +4,15 @@
  *
  * A class that constructs and describes a De Bruijn Graph
  * Notes to self: -create a display function that more clearly shows the links between vertices.
- * 
+ * @todo more tests!!
+ * @todo fix all places where the constructor is a DBVertex instead of a string
+ * @todo delete DBVertex class
+ * @todo add add_sequence functions
  */
 
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
 #define PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
 
-#include "DeBruijnVertex.h"
 #include "DBGraphValue.h"
 #include <vector>
 #include <string>
@@ -28,14 +30,14 @@ private:
     int mSize = 0;
 
     /// Map of Debruijn vertex objects to their values/data
-    map<DeBruijnVertex, DBGraphValue> mVertices;
+    map<string, DBGraphValue> mVertices;
 
     /// Starting vertex so that we know which vertex to start traversing with
-    DeBruijnVertex mStart;
+    string mStart;
 
     /// Vector of all Vertices the map contains
     // (will this variable be necessary to keep around if I already have a flag attribute in DBValue?)
-    vector<DeBruijnVertex> mBranchedVertices;
+    vector<string> mBranchedVertices;
 
     /**
      * Create a useable sequence from the input to construct the graph
@@ -56,17 +58,16 @@ private:
      * @param input string containing all genetic data sequentially
      */
     void ConstructFromString(string input, int kmer_length){
-        mStart = DeBruijnVertex(input.substr(0, kmer_length));
+        mStart = input.substr(0, kmer_length);
         //if the graph is one vertex long:
         if(int(input.length()) == kmer_length){
-            this->set_empty_vertex(DeBruijnVertex(input));
+            this->set_empty_vertex(input);
         }
         //add to size and add an edge for each vertex, and an empty vertex for the end
         while(int(input.length()) >= kmer_length + 1){
             this->set_size( this->get_size() + 1 );
-            this->add_edge(DeBruijnVertex(input.substr(0, kmer_length)),
-                    DeBruijnVertex(input.substr(1, kmer_length)));
-            this->set_empty_vertex(DeBruijnVertex(DeBruijnVertex(input.substr(1, kmer_length))));
+            this->add_edge(input.substr(0, kmer_length), input.substr(1, kmer_length));
+            this->set_empty_vertex(input.substr(1, kmer_length));
             //take one character off the input, continue
             input = input.substr(1, input.length()-1);
         }
@@ -123,7 +124,7 @@ public:
      * Set a vertex with no value as a place-holder
      * @param v vertex object to add to the graph's list of vertices
      */
-    void set_empty_vertex(DeBruijnVertex v){
+    void set_empty_vertex(string v){
         mVertices[v];
         mVertices[v].set_empty_bool(true);
     }
@@ -133,7 +134,7 @@ public:
      * @param start_v Starting Debruijn vertex
      * @param end_v Vertex being pointed to
      */
-    void add_edge(DeBruijnVertex start_v, DeBruijnVertex end_v){
+    void add_edge(string start_v, string end_v){
         //if the adj_list is not empty, this implies the vertex is a branch point
         if(mVertices[start_v].adj_list_size() > 0){
             mVertices[start_v].set_branch(true);
@@ -168,7 +169,7 @@ public:
      */
     void display(){
         for (auto const& element : mVertices) {
-            cout << element.first.get_kmer() << "\n";
+            cout << element.first << "\n";
         }
     }
 
@@ -189,7 +190,7 @@ public:
      * To be used in traversals
      */
     void reset_vertex_flags() {
-        vector<DeBruijnVertex> all_vertices;
+        vector<string> all_vertices;
         for (auto & element : mVertices) {
             element.second.change_visitor_flag(0);
         }
@@ -209,7 +210,7 @@ public:
         if(mSize == 1){
             func(mStart);
         }
-        DeBruijnVertex current = mStart;
+        string current = mStart;
         dfs_recursion(mStart, func);
         this->reset_vertex_flags();
     }
@@ -221,7 +222,7 @@ public:
      * @param vertex DeBruijn vertex with adjacencies to be traversed
      * @param func lambda function to use when visiting the current vertex
      */
-    void dfs_recursion(DeBruijnVertex vertex, FuncType func){
+    void dfs_recursion(string vertex, FuncType func){
         // if the number of times we've visited this vertex's adj_list has not covered all adjacencies:
         if(mVertices[vertex].get_visitor_flag() < int(mVertices[vertex].adj_list_size())){
             // append to count of times we've visited this adj_list
@@ -231,7 +232,7 @@ public:
             // i.e. if we have 2 adjacencies, we will first visit index 0, then next time visit index 1
             // this works because the vector containing adjacencies is appended to in order of the sequence
             int next_index = mVertices[vertex].get_visitor_flag() - 1;
-            DeBruijnVertex next_vertex = mVertices[vertex].get_adj_list()[next_index];
+            string next_vertex = mVertices[vertex].get_adj_list()[next_index];
             if( !mVertices[next_vertex].get_empty_bool() ){
                 // recur
                 dfs_recursion(next_vertex, func);
@@ -260,8 +261,8 @@ public:
      * Return vector containing all vertices in graph
      * @return vector containing all DeBruijn vertex objects
      */
-    vector<DeBruijnVertex> get_all_vertices() {
-        vector<DeBruijnVertex> all_vertices;
+    vector<string> get_all_vertices() {
+        vector<string> all_vertices;
         for (auto const& element : mVertices) {
             all_vertices.push_back(element.first);
         }
@@ -272,20 +273,45 @@ public:
      * Return vector containing vertices with more than one adjacency in graph
      * @return vector containing branched DeBruijn vertex objects
      */
-    vector<DeBruijnVertex> get_branch_vertices() { return mBranchedVertices; }
+    vector<string> get_branch_vertices() { return mBranchedVertices; }
 
     /**
      * Given a vertex, retrun true if the vertex branches
      * @param vertex to check
      * @return true if the vertex has more than 2 verticies in it's adjacency list
      */
-    bool vertex_branch_check(DeBruijnVertex vertex) { return mVertices[vertex].get_branch(); }
+    bool vertex_branch_check(string vertex) { return mVertices[vertex].get_branch(); }
 
     /**
      * Get the value associated with a vertex
      * @return Debruijn vertex value object
      */
-    DBGraphValue get_value(DeBruijnVertex vertex) { return mVertices[vertex]; }
+    DBGraphValue get_value(string vertex) { return mVertices[vertex]; }
+
+    /**
+     * Add an entirely new possible sequence into the graph
+     * Will take in a sequence much like the constructors do, but in this case, they will add a new node or a new path based on what's
+     * different from the original path, and branch out from there.
+     * (this will solve the multiple paths issue)
+     * In actual expirimentation, we will choose a "fitter" section of the landscape to pull these combinations from, and then
+     * traverse through and randomly do crossovers when we hit a branch
+     * 
+     */
+    void add_sequence(int sequence){
+
+    }
+
+    void add_sequence(vector<int> sequence){
+        
+    }
+
+    void add_sequence(string sequence){
+        
+    }
+
+    void add_sequence(vector<string> sequence){
+        
+    }
 
 };
 
