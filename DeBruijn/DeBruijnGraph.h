@@ -38,7 +38,7 @@ private:
     vector<DeBruijnVertex> mBranchedVertices;
 
     /**
-     * Create a sequence for the current constructor
+     * Create a useable sequence from the input to construct the graph
      * @param num_input vector of numbers to create a graph from
      * @param kmer_length length of each vertex ID
      */
@@ -51,7 +51,8 @@ private:
     }
 
     /**
-     * Construct nodes from a string of genetic information
+     * Construct a graph from a string of genetic information
+     * This function is the common constructor
      * @param input string containing all genetic data sequentially
      */
     void ConstructFromString(string input, int kmer_length){
@@ -66,7 +67,7 @@ private:
             this->add_edge(DeBruijnVertex(input.substr(0, kmer_length)),
                     DeBruijnVertex(input.substr(1, kmer_length)));
             this->set_empty_vertex(DeBruijnVertex(DeBruijnVertex(input.substr(1, kmer_length))));
-            //take one character off the input
+            //take one character off the input, continue
             input = input.substr(1, input.length()-1);
         }
         this->set_size( this->get_size() + 1 );
@@ -156,9 +157,6 @@ public:
             //if(mVertices[start_v].adj_list_size() > 0){
             if(!mVertices[start_v].get_empty_bool()){
                 mVertices[start_v].set_branch(true);
-
-                cout<<"SET TRUE AT "<<start_v.get_kmer()<<"\n"; //so this is fucking up cuz of the empty v?
-
                 mBranchedVertices.push_back(start_v);
             }
         }*/
@@ -207,6 +205,7 @@ public:
      *      to return something (or a template of something)
      */
     void depth_first_traversal(FuncType func){
+        // edge case--this traversal did not work for size of 1 without it
         if(mSize == 1){
             func(mStart);
         }
@@ -223,16 +222,21 @@ public:
      * @param func lambda function to use when visiting the current vertex
      */
     void dfs_recursion(DeBruijnVertex vertex, FuncType func){
-        //cout<<"RECUR VISIT: "<<vertex.get_kmer()<< "\n";
-        //cout<<"V FLAG: "<<mVertices[vertex].get_visitor_flag()<<" ADJ LIST SIZE: "<<mVertices[vertex].adj_list_size()<<"\n";
+        // if the number of times we've visited this vertex's adj_list has not covered all adjacencies:
         if(mVertices[vertex].get_visitor_flag() < int(mVertices[vertex].adj_list_size())){
+            // append to count of times we've visited this adj_list
             mVertices[vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
             func(vertex);
+            // next vertex to visit will be at index based on number of times we've visited the adj_list
+            // i.e. if we have 2 adjacencies, we will first visit index 0, then next time visit index 1
+            // this works because the vector containing adjacencies is appended to in order of the sequence
             int next_index = mVertices[vertex].get_visitor_flag() - 1;
             DeBruijnVertex next_vertex = mVertices[vertex].get_adj_list()[next_index];
             if( !mVertices[next_vertex].get_empty_bool() ){
+                // recur
                 dfs_recursion(next_vertex, func);
             }
+            // if empty_bool is true, we've reached the end vertex--its adj_list contains an empty vertex
             else{
                 mVertices[next_vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
                 func(next_vertex);
