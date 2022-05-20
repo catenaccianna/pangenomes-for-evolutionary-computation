@@ -12,6 +12,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 using std::string; using std::vector;
 
@@ -33,6 +34,9 @@ private:
 
     /// True if the adjacency list contains either nothing or an empty vertex
     bool mEmptyAdjList = true;
+
+    /// True if this node is a beginning
+    bool mStart = false;
 
 public:
     /// Constructors
@@ -72,7 +76,11 @@ public:
      * Add to adjacency list (creates edge)
      * @param addition vertex to add to this vertex's adjacency list
      */
-    void add_to_adj_list(string addition){ mAdjList.push_back(addition); }
+    void add_to_adj_list(string addition){ 
+        mAdjList.push_back(addition);
+        vector<string>::iterator it;
+        it = std::unique(mAdjList.begin(), mAdjList.end());
+        mAdjList.resize( std::distance(mAdjList.begin(),it) ); }
 
     /**
      * Set visitor flag
@@ -110,6 +118,18 @@ public:
      * @return true if there is more than one value in the adjacency list
      */
     bool get_empty_bool() { return mEmptyAdjList; }
+
+    /**
+     * Set the bool for whether is node is a beginning of the graph
+     * @param value true if this node is a beginning
+     */
+    void set_beginning(bool value) { mStart = value; }
+
+    /**
+     * Get the starting truth value
+     * @return true if this node is a beginning of the graph
+     */
+    bool get_beginning() { return mStart; }
 
     /**
      * Get the adjacent DeBruijn Vertex

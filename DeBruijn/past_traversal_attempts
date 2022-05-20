@@ -1,5 +1,19 @@
 //template <typename FuncType>
 
+
+/* TRIAL 4-- see recursive stuff about this too
+void depth_first_traversal(FuncType func){
+        // edge case--this traversal did not work for size of 1 without it
+        if(mSize == 1){
+            func(mStart);
+        }
+        string current = mStart;
+        dfs_recursion(mStart, func);
+        this->reset_vertex_flags();
+    }
+
+*/
+
     /**
      * Traversal function that currently prints each vertex ID
      * @param func lambda function to use when visiting the current vertex
@@ -73,6 +87,42 @@
      * @param vertex DeBruijn vertex with adjacencies to be traversed
      * @param func lambda function to use when visiting the current vertex
      */
+
+
+/* TRIAL 4--worked except in the case that add_sequence puts in non-repetative branch verticies
+
+    void dfs_recursion(string vertex, int count, FuncType func){
+        cout<<count<<" "<<mSize<<"\n";
+    //    cout<<"vertex "<<vertex<<"\n";
+        // if the number of times we've visited this vertex's adj_list has not covered all adjacencies:
+        if(mVertices[vertex].get_visitor_flag() <= int(mVertices[vertex].adj_list_size())){
+    //        cout<<"v flag "<<mVertices[vertex].get_visitor_flag()<<" adj l size "<<int(mVertices[vertex].adj_list_size())<<"\n";
+            // append to count of times we've visited this adj_list
+            mVertices[vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
+    //        cout<<"print: \n";
+            func(vertex);
+            // next vertex to visit will be at index based on number of times we've visited the adj_list
+            // i.e. if we have 2 adjacencies, we will first visit index 0, then next time visit index 1
+            // this works because the vector containing adjacencies is appended to in order of the sequence
+
+            //is this breadth first instead of depth first?
+            int next_index = mVertices[vertex].get_visitor_flag() - 1;
+            string next_vertex = mVertices[vertex].get_adj_list()[next_index];
+    //        cout<<"next index "<<next_index<<" next empty bool "<<mVertices[next_vertex].get_empty_bool()<< "next vertex "<<next_vertex<<"\n";
+            //if( !mVertices[next_vertex].get_empty_bool() ){
+            if(count < mSize && !mVertices[next_vertex].get_empty_bool()){
+                ++count;
+                // recur
+                dfs_recursion(next_vertex, count, func);
+            }
+            // if empty_bool is true, we've reached the end vertex--its adj_list contains an empty vertex
+            else{
+                mVertices[next_vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
+                func(next_vertex);
+            }
+        }
+        
+    }
 
 
 /* TRIAL 3
