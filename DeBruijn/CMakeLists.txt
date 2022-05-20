@@ -5,4 +5,4 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(DeBruijn main.cpp
         DeBruijnGraph.cpp DeBruijnGraph.h
-        DBGraphValue.cpp DBGraphValue.h)
+        DeBruijnValue.cpp DeBruijnValue.h)

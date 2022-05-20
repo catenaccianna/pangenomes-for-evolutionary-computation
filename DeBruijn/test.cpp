@@ -61,7 +61,7 @@ void TestBranchingGraph() {
     // no branches
     std::vector<int> vec({4,6,2,8,9,3,5,7});
     DeBruijnGraph g = DeBruijnGraph(vec, 3);
-    g.depth_first_traversal([&g] (string vertex) { 
+    g.breadth_first_traversal([&g] (string vertex) { 
         cout << vertex<< " empty bool-"<<g.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g.get_value(vertex).get_branch() << "\n"; });
 
@@ -76,7 +76,7 @@ void TestBranchingGraph() {
     }
     cout<<"\n";
 
-    g0.depth_first_traversal([&g0] (string vertex) { 
+    g0.breadth_first_traversal([&g0] (string vertex) { 
         cout << vertex<< " empty bool-"<<g0.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g0.get_value(vertex).get_branch() << "\n"; });
 
@@ -94,7 +94,7 @@ void TestBranchingGraph() {
         cout << g1.get_branch_vertices()[i] <<", ";
     }
     cout<<"\n";
-    g1.depth_first_traversal([&g1] (string vertex) { 
+    g1.breadth_first_traversal([&g1] (string vertex) { 
         cout << vertex<< " empty bool-"<<g1.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g1.get_value(vertex).get_branch() << "\n"; });
 
@@ -113,7 +113,7 @@ void TestBranchingGraph() {
         cout << g2.get_branch_vertices()[i]<<", ";
     }
     cout<<"\n";
-    g2.depth_first_traversal([&g2] (string vertex) { 
+    g2.breadth_first_traversal([&g2] (string vertex) { 
         cout << vertex<< " empty bool-"<<g2.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g2.get_value(vertex).get_branch() << "\n"; });
 
@@ -261,7 +261,7 @@ void TestTraversalLambda() {
     DeBruijnGraph g = DeBruijnGraph(vec, 3);
 
     //print all the verticies and their adjacency lists
-    g.depth_first_traversal([&g] (string vertex) { 
+    g.breadth_first_traversal([&g] (string vertex) { 
         cout << vertex << "->";
         vector<string> adj_list = g.get_value(vertex).get_adj_list();
 

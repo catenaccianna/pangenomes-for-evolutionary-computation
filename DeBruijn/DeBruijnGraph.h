@@ -8,12 +8,13 @@
  * so agenda is AddSequence function > AddSequenceTest > TestMultipleEnds > take out some unnecessary stuff
  * also test AddSequence in relevant tests (like unique verticies test)
  * for MABE, go through github ssh keys setup, and set one up so you can clone MABE2 without error, then follow through
+ * @todo instead of 4 functions for constructors and add_sequence, have 2 with templates?
  */
 
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
 #define PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
 
-#include "DBGraphValue.h"
+#include "DeBruijnValue.h"
 #include <vector>
 #include <string>
 #include <map>
@@ -178,7 +179,7 @@ public:
      * @todo Would like to eventually use Julia to display the graph as a whole
      */
     void display(){
-        this -> depth_first_traversal( [&] (string vertex) { 
+        this -> breadth_first_traversal( [&] (string vertex) { 
             if (!mVertices[vertex].get_empty_bool() && mVertices[vertex].adj_list_size() == 1){
                 cout<<vertex<<" -> "<<mVertices[vertex].get_adj_list()[0];
             }
@@ -237,7 +238,7 @@ public:
      *      verticies, can make a 2-vertex parameter on the lambda, or if we need the function
      *      to return something (or a template of something)
      */
-    void depth_first_traversal(FuncType func){
+    void breadth_first_traversal(FuncType func){
         // edge case--this traversal did not work for size of 1 without it
         if(mSize == 1){
             func(mStart);
@@ -249,16 +250,8 @@ public:
             string current = "";
             /*dfs_recursion(mStart, path, func);*/
             while(path.size() > 0){
-                current = path.back();/*
-                for (auto i:path){
-                    cout<<i<<" ";
-                }
-                cout << "\n";*/
-                path.pop_back();/*
-                for (auto i:path){
-                    cout<<i<<" ";
-                }
-                cout << "\n";*/
+                current = path.back();
+                path.pop_back();
                 // if the vertex has been visited fewer times than it appears in the graph, continue:
                 if(mVertices[current].get_visitor_flag() <= int(mVertices[current].adj_list_size())){
                     /*
@@ -365,17 +358,16 @@ public:
 
     /**
      * Add an entirely new possible sequence into the graph
-     * Will take in a sequence much like the constructors do, but in this case, they will add a new node or a new path based on what's
-     * different from the original path, and branch out from there.
-     * (this will solve the multiple paths issue)
-     * In actual expirimentation, we will choose a "fitter" section of the landscape to pull these combinations from, and then
-     * traverse through and randomly do crossovers when we hit a branch
-     * 
+     * @param sequence to add to the graph
      */
     void add_sequence(int sequence){
         this->add_sequence(std::to_string(sequence));
     }
 
+    /**
+     * Add an entirely new possible sequence into the graph
+     * @param sequence to add to the graph
+     */
     void add_sequence(vector<int> sequence){
         string input = "";
         for(int i = 0; i < mKmerLength; ++i){
@@ -384,13 +376,27 @@ public:
         this->add_sequence(input);
     }
 
-    /* CASES:
-    1) sequence overlaps in the middle (different start & end)
-    2) sequence overlaps at beginning with same start
-    3) sequence overlaps at beginning of new string, or vice versa (need new start in first case)
-    4) sequence overlaps at end of new string, or vice versa
-    5) pretty much lots of cases, so maybe start basic
-    */
+    /**
+     * Add an entirely new possible sequence into the graph
+     * @param sequence to add to the graph
+     */
+    void add_sequence(vector<string> sequence){
+        string input = "";
+        for(int i = 0; i < mKmerLength; ++i){
+            input += sequence[i];
+        }
+        this->add_sequence(input);
+    }
+
+    /**
+     * Add an entirely new possible sequence into the graph
+     * Will take in a sequence much like the constructors do, but in this case, they will add a new node or a new path based on what's
+     * different from the original path, and branch out from there.
+     * (this will solve the multiple paths issue)
+     * In actual expirimentation, we will choose a "fitter" section of the landscape to pull these combinations from, and then
+     * traverse through and randomly do crossovers when we hit a branch
+     * @param sequence to add to the graph
+     */
     void add_sequence(string sequence){
         // figure out how to adjust mStart here
         //string potential_mStart = sequence.substr(0, mKmerLength);
@@ -415,28 +421,6 @@ public:
             }
             sequence = sequence.substr(1, sequence.length()-1);
         }
-/*
-        void add_edge(string start_v, string end_v){
-        //if the adj_list is not empty, this implies the vertex is a branch point
-        if(mVertices[start_v].adj_list_size() > 0){
-            mVertices[start_v].set_branch(true);
-            mBranchedVertices.push_back(start_v);
-            vector<string>::iterator it;
-            //it = std::unique_copy (mBranchedVertices.begin(), mBranchedVertices.end(), mBranchedVertices.begin(), 
-            //    [](string i, string j){return (i==j);});
-            it = std::unique(mBranchedVertices.begin(), mBranchedVertices.end());
-            mBranchedVertices.resize( std::distance(mBranchedVertices.begin(),it) );
-        }
-        mVertices[start_v].set_empty_bool(false);
-        mVertices[start_v].add_to_adj_list(end_v);*/
-    }
-
-    void add_sequence(vector<string> sequence){
-        string input = "";
-        for(int i = 0; i < mKmerLength; ++i){
-            input += sequence[i];
-        }
-        this->add_sequence(input);
     }
 
 };
