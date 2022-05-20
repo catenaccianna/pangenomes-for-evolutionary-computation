@@ -160,9 +160,10 @@ void TestAddSequence() {
     g.display();
 
     // different middles
-    cout << "\nAfter third sequence (different beginnings):\n";
+    cout << "\nAfter fourth sequence (different middles):\n";
     g.add_sequence("723111436");
     g.display();
+    ///239 visited twice
 
 }
 
@@ -246,6 +247,7 @@ void TestMultipleEnds() {
     g.add_sequence("22359");
     cout<<"\nAdd another end:\n";
     g.display();
+    ///235 visited twice
 
     cout<<"\nAdd a repetition/loop:\n";
     cout<<"In this case do we want to mark that 223 is an endpoint? Currently I am only checking to see if "<<
@@ -272,6 +274,7 @@ void TestRepetition() {
     cout<<"after addition:\n";
     g1.add_sequence("98567123");
     g1.display();
+    ///123 visited twice
 }
 
 void TestGenerateSequence() {
@@ -286,7 +289,8 @@ void TestGenerateSequence() {
     g.add_sequence("0129643789");
     g.add_sequence("0125555666");
     g.add_sequence("0129655688");
-    g.display();
+
+    
 
 }
 
@@ -298,11 +302,11 @@ void TestRemoveSequence() {
 }
 
 int main() {
-    //TestConstructGraph();
+    TestConstructGraph();
     //TestTraversalLambda();
-    //TestBranchingGraph();
-    //TestAddSequence();
-    //TestUniqueVerticies();
+    TestBranchingGraph();
+    TestAddSequence();
+    TestUniqueVerticies();
     TestMultipleEnds();
     TestRepetition();
     TestGenerateSequence();

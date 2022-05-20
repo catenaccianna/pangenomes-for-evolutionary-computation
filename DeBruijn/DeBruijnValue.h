@@ -33,7 +33,9 @@ private:
     bool mContainsBranch = false;
 
     /// True if the adjacency list contains either nothing or an empty vertex
-    bool mEmptyAdjList = true;
+    ///2 if unassigned, 1 if list contains either nothing or an empty vertex, 0 if no empty vertex
+    //bool mEmptyAdjList = false;
+    int mEmptyAdjList = 2;
 
     /// True if this node is a beginning
     bool mStart = false;
@@ -111,13 +113,13 @@ public:
      * Set the bool for whether the adjacency list is empty
      * @param value true if the vertex does not point to anything yet
      */
-    void set_empty_bool(bool value) { mEmptyAdjList = value; }
+    void set_empty_bool(int value) { mEmptyAdjList = value; }
 
     /**
      * Get the branch truth value
      * @return true if there is more than one value in the adjacency list
      */
-    bool get_empty_bool() { return mEmptyAdjList; }
+    int get_empty_bool() { return mEmptyAdjList; }
 
     /**
      * Set the bool for whether is node is a beginning of the graph

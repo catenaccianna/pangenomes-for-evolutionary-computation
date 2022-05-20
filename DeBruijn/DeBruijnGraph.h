@@ -31,6 +31,9 @@ private:
     /// Number of vertices the graph contains
     int mSize = 0;
 
+    /// Number of sequences the graph contains
+    int mNumSequences = 0;
+
     /// Length of the k-mer IDs
     int mKmerLength = 3;
 
@@ -80,11 +83,15 @@ private:
         while(int(input.length()) >= kmer_length + 1){
             this->set_size( this->get_size() + 1 );
             this->add_edge(input.substr(0, kmer_length), input.substr(1, kmer_length));
+            //change the set_empty_bool here so we don't run into endpoint troubles later.
+            mVertices[input.substr(0, kmer_length)].set_empty_bool(0);
             this->set_empty_vertex(input.substr(1, kmer_length));
             //take one character off the input, continue
             input = input.substr(1, input.length()-1);
         }
+        mVertices[input].set_empty_bool(1);
         this->set_size( this->get_size() + 1 );
+        mNumSequences++;
     }
 
 public:
@@ -137,7 +144,7 @@ public:
      */
     void set_empty_vertex(string v){
         mVertices[v];
-        mVertices[v].set_empty_bool(true);
+        //mVertices[v].set_empty_bool(true);
     }
 
     /**
@@ -154,7 +161,7 @@ public:
             it = std::unique(mBranchedVertices.begin(), mBranchedVertices.end());
             mBranchedVertices.resize( std::distance(mBranchedVertices.begin(),it) );
         }
-        mVertices[start_v].set_empty_bool(false);
+        //mVertices[start_v].set_empty_bool(false);
         mVertices[start_v].add_to_adj_list(end_v);
         //OLD start_v.set_order(mSize);
         //OLD end_v.set_order(mSize + 1);       
@@ -183,7 +190,7 @@ public:
         this -> depth_first_traversal( [&] (string vertex) { 
             cout<<vertex;
             // if there is one, non-empty vertex in the list, print it
-            if (!mVertices[vertex].get_empty_bool() && mVertices[vertex].adj_list_size() == 1){
+            if (mVertices[vertex].get_empty_bool()==0 && mVertices[vertex].adj_list_size() == 1){
                 cout<<" -> "<<mVertices[vertex].get_adj_list()[0];
             }
             // if the adj_list has more than one node in it, print them
@@ -194,7 +201,7 @@ public:
                 }
             }
             // if the adj_list contains an endpoint/empty vertex, show that
-            if (mVertices[vertex].get_empty_bool()){
+            if (mVertices[vertex].get_empty_bool()==1){
                 cout << "(an endpoint)";
             }
             cout<<"\n";
@@ -294,7 +301,7 @@ public:
             int next_index = mVertices[vertex].get_visitor_flag() - 1;
             string next_vertex = mVertices[vertex].get_adj_list()[next_index];
             //if( !mVertices[next_vertex].get_empty_bool() ){
-            if(!mVertices[next_vertex].get_empty_bool()){
+            if(mVertices[next_vertex].get_empty_bool() == 0){
                 // recur
                 dfs_recursion(next_vertex, func);
             }
@@ -311,10 +318,19 @@ public:
      * Recursive function to traverse through a single path in the graph, with branches chosen at random
      * To be used in selecting the genetic information for the next generation organism
      * @param seed random seed to be used when choosing a branching path
-     * @param organism whose genome we are modifying
+     * @param organism whose genome we are modifying--here I am just going to insert a 3-char string to represent the start
      */
-    void next_genome(){
-        
+    string next_genome_logic(unsigned int seed, string organism){
+        string path = organism;
+        string current = organism;
+        // while we are not at the end of a path, continue:
+        while (mVertices[current].get_empty_bool() == 1){
+
+            path+=" -> ";
+            path+= current;
+        }
+        path+=" end.";
+        return path;
     }
 
     /**
@@ -402,6 +418,7 @@ public:
      * @param sequence to add to the graph
      */
     void add_sequence(string sequence){
+        mNumSequences++;
         // figure out how to adjust mStart here
         //string potential_mStart = sequence.substr(0, mKmerLength);
 
@@ -419,12 +436,26 @@ public:
             }
             //add edge
             this->add_edge(sequence.substr(0, mKmerLength), sequence.substr(1, mKmerLength));
+            mVertices[sequence.substr(0, mKmerLength)].set_empty_bool(0);
             //if future vertex is not already in map, set it as an empty vertex
             if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0){
                 this->set_empty_vertex(sequence.substr(1, mKmerLength));
             }
+            //turn empty bool true for all but last guy. However, check, because if there is a 
+            //sequence already in here, then the flag will be off for that node already and we
+            //do not want to change it
             sequence = sequence.substr(1, sequence.length()-1);
         }
+        mVertices[sequence].set_empty_bool(1);
+    }
+
+    /**
+     * Remove a sequence from the graph
+     * To be used in BeforeDeath in MABE
+     * @param sequence to remove
+     */
+    void remove_sequence(string sequence){
+        mNumSequences--;
     }
 
 };
