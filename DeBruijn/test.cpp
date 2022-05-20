@@ -53,15 +53,37 @@ void TestConstructGraph() {
     
 }
 
+void TestTraversalLambda() {
+    ///@note can maybe modify this depending on what we're traversing for--
+    //  - if we need to compare adjacent verticies can make a 2-vertex parameter!
+    //  - could also adjust so that the recursive function returns something (or a template of something) if needed
+
+    cout<<"\nTRAVERSAL TEST\n";
+    std::vector<int> vec({4,6,2,8,9,3,5,7});
+    DeBruijnGraph g = DeBruijnGraph(vec, 3);
+
+    //print all the verticies and their adjacency lists
+    g.depth_first_traversal([&g] (string vertex) { 
+        cout << vertex << "->";
+        vector<string> adj_list = g.get_value(vertex).get_adj_list();
+
+        for(int i = 0; i < int(adj_list.size()); ++i){
+            cout << adj_list[i] << ",";
+        } 
+
+        cout << "\n"; });
+}
+
 void TestBranchingGraph() {
     cout<<"\nBRANCHING GRAPH TEST\n";
-    cout<<"\"empty bool\" represents whether or not there is an empty node in the vertex's adjacency list (this would happen if the node is the last one)\n";
+    cout<<"\"empty bool\" represents whether or not there is an empty node in the vertex's adjacency list "<<
+    "(this would happen if the node is the last one)\n";
     cout<<"\"contains branch\" is a boolean representing whether the vertex contains >1 adjacent vertex (a branch)\n";
 
     // no branches
     std::vector<int> vec({4,6,2,8,9,3,5,7});
     DeBruijnGraph g = DeBruijnGraph(vec, 3);
-    g.breadth_first_traversal([&g] (string vertex) { 
+    g.depth_first_traversal([&g] (string vertex) { 
         cout << vertex<< " empty bool-"<<g.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g.get_value(vertex).get_branch() << "\n"; });
 
@@ -76,15 +98,11 @@ void TestBranchingGraph() {
     }
     cout<<"\n";
 
-    g0.breadth_first_traversal([&g0] (string vertex) { 
+    g0.depth_first_traversal([&g0] (string vertex) { 
         cout << vertex<< " empty bool-"<<g0.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g0.get_value(vertex).get_branch() << "\n"; });
 
     cout<<"\n";
-
-
-
-///         THIS ONE BELOW IS NOT IN ORDER
 
     // multiple branches: "289" -> "896", "894" and "967" -> "672", "678"
     vec = {4,6, 2,8,9, 6,7, 2,8,9, 4, 9,6,7, 8};
@@ -94,16 +112,15 @@ void TestBranchingGraph() {
         cout << g1.get_branch_vertices()[i] <<", ";
     }
     cout<<"\n";
-    g1.breadth_first_traversal([&g1] (string vertex) { 
+    g1.depth_first_traversal([&g1] (string vertex) { 
         cout << vertex<< " empty bool-"<<g1.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g1.get_value(vertex).get_branch() << "\n"; });
 
-    cout<<"\nThis one is not in order, I think because of how the branches were added into and popped off the queue, \nbut does this matter? Ask Emily about this!\n";
+    cout<<"\nThis one is not in order, I think because of how the branches were added into and popped off the queue, "<<
+    "\nbut does this matter? Ask Emily about this!\n";
 
     g1.display();
     cout<<"\n";
-
-    
 
     // multiple limbs on the branches: "289" -> "896", "894", "895"
     vec = {4,6, 2,8,9, 6,7, 2,8,9, 4,9, 2,8,9, 5 };
@@ -113,7 +130,7 @@ void TestBranchingGraph() {
         cout << g2.get_branch_vertices()[i]<<", ";
     }
     cout<<"\n";
-    g2.breadth_first_traversal([&g2] (string vertex) { 
+    g2.depth_first_traversal([&g2] (string vertex) { 
         cout << vertex<< " empty bool-"<<g2.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g2.get_value(vertex).get_branch() << "\n"; });
 
@@ -121,7 +138,7 @@ void TestBranchingGraph() {
 
 void TestAddSequence() {
     cout<<"\nADD SEQUENCE TEST\n";
-    cout<<"This test is meant to test that traversing and adding sequences work in unison\n\n";
+    cout<<"This test is meant to test that traversing and adding sequences work in unison\n";
     // one branch (at 123)
     string str1 = "12345";
     DeBruijnGraph g = DeBruijnGraph(str1, 3);
@@ -131,14 +148,6 @@ void TestAddSequence() {
     cout << "\nAfter first sequence (branch from 123, different ends):\n";
     g.add_sequence("1236");
     g.display();
-
-    /*for(auto i: g.get_all_vertices()){
-        cout<<"\n";
-        cout<<i<<"->";
-        for (auto i : g.get_value(i).get_adj_list()){
-            cout<<i<<" ";
-        }
-    }*/
 
     // multiple limbs on the same branch (at 123)
     cout << "\nAfter second sequence (another branch from 123, another different end):\n";
@@ -155,10 +164,6 @@ void TestAddSequence() {
     g.add_sequence("723111436");
     g.display();
 
-    // loop
-    cout<<"\nNew graph with a loop:\n";
-    DeBruijnGraph g0 = DeBruijnGraph("123456123", 3);
-    g0.display();
 }
 
 bool comparison (string i, string j) {
@@ -232,11 +237,8 @@ void TestUniqueVerticies() {
 
 void TestMultipleEnds() {
     cout<<"\nMULTIPLE ENDS TEST\n";
-    cout<<"This is meant to make sure that graphs with sequences that have different endings are marked correctly\n\n";
-    // multiple end nodes
-    //try this with just a single graph and then also when we add a sequence
+    cout<<"This is meant to make sure that graphs with sequences that have different endings are marked correctly\n";
 
-    //simple one
     DeBruijnGraph g = DeBruijnGraph("12367", 3);
     g.add_sequence("12358");
     g.display();
@@ -246,37 +248,63 @@ void TestMultipleEnds() {
     g.display();
 
     cout<<"\nAdd a repetition/loop:\n";
-    cout<<"In this case do we want to mark that 223 is an endpoint? Currently I am only checking to see if \nthe vertex is already in graph, could check beginnings and ends specifically\n";
+    cout<<"In this case do we want to mark that 223 is an endpoint? Currently I am only checking to see if "<<
+    "\nthe vertex is already in graph, could check beginnings and ends specifically\n";
     g.add_sequence("678223");
     g.display();
 }
 
-void TestTraversalLambda() {
-    ///@note can maybe modify this depending on what we're traversing for--
-    //  - if we need to compare adjacent verticies can make a 2-vertex parameter!
-    //  - could also adjust so that the recursive function returns something (or a template of something) if needed
+void TestRepetition() {
+    cout<<"\nREPETITION TEST\n";
+    cout<<"This is meant to detect loops and repetition.\n";
+    cout<<"In the case that a node is both an endpoint and repeated within the sequence, \n"<<
+    "it's adjacency list should contain an empty node as well as any other adjacencies.\n\n";
 
-    cout<<"\nTRAVERSAL TEST\n";
-    std::vector<int> vec({4,6,2,8,9,3,5,7});
-    DeBruijnGraph g = DeBruijnGraph(vec, 3);
+    // loop
+    cout<<"New graph with a loop:\n";
+    DeBruijnGraph g0 = DeBruijnGraph("123456123", 3);
+    g0.display();
 
-    //print all the verticies and their adjacency lists
-    g.breadth_first_traversal([&g] (string vertex) { 
-        cout << vertex << "->";
-        vector<string> adj_list = g.get_value(vertex).get_adj_list();
+    // repetition -> loop
+    cout<<"\nNew graph with an added sequence that creates a loop:\noriginal:\n";
+    DeBruijnGraph g1 = DeBruijnGraph("1234567", 3);
+    g1.display();
+    cout<<"after addition:\n";
+    g1.add_sequence("98567123");
+    g1.display();
+}
 
-        for(int i = 0; i < int(adj_list.size()); ++i){
-            cout << adj_list[i] << ",";
-        } 
+void TestGenerateSequence() {
+    cout<<"\nGENERATE SEQUENCE TEST\n";
+    cout<<"This is meant test the application to MABE.\n";
+    cout<<"In a graph with multiple added sequences, a reasonable new sequence should be returned \n"<<
+    "describing the new genetic information of the net generation offspring.\n\n";
 
-        cout << "\n"; });
+    cout<<"Add 3 10-bit sequences to graph: (these have same beginnings)\n";
+    cout<<"0123456789\n0129643789\n0125555666\n0129655688\n\n";
+    DeBruijnGraph g = DeBruijnGraph("0123456789", 3);
+    g.add_sequence("0129643789");
+    g.add_sequence("0125555666");
+    g.add_sequence("0129655688");
+    g.display();
+
+}
+
+void TestRemoveSequence() {
+    cout<<"\nREMOVE SEQUENCE TEST\n";
+    cout<<"This is meant test the application to MABE.\n";
+    cout<<"Before the death of an organism in MABE, we should be able to remove it's genome \n"<<
+    "from the existing pangenome pool.\n";
 }
 
 int main() {
     //TestConstructGraph();
-    TestBranchingGraph();
-    TestAddSequence();
+    //TestTraversalLambda();
+    //TestBranchingGraph();
+    //TestAddSequence();
     //TestUniqueVerticies();
     TestMultipleEnds();
-    //TestTraversalLambda();
+    TestRepetition();
+    TestGenerateSequence();
+    TestRemoveSequence();
 }

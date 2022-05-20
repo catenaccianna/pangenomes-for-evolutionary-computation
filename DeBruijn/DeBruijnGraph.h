@@ -3,12 +3,13 @@
  * @author Anna Catenacci
  *
  * A class that constructs and describes a De Bruijn Graph
- * Notes to self: -create a display function that more clearly shows the links between vertices.
  * 
- * so agenda is AddSequence function > AddSequenceTest > TestMultipleEnds > take out some unnecessary stuff
- * also test AddSequence in relevant tests (like unique verticies test)
- * for MABE, go through github ssh keys setup, and set one up so you can clone MABE2 without error, then follow through
+ * @todo (optional) create a display function that more clearly shows the links between vertices.
+ * @todo agenda is AddSequence function > AddSequenceTest > TestMultipleEnds > take out some unnecessary stuff
+ * @todo also test AddSequence in relevant tests (like unique verticies test)
  * @todo instead of 4 functions for constructors and add_sequence, have 2 with templates?
+ * 
+ * @todo !!! test for the case where it's an endpoint and also still has the adj_list !!!
  */
 
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
@@ -179,28 +180,23 @@ public:
      * @todo Would like to eventually use Julia to display the graph as a whole
      */
     void display(){
-        this -> breadth_first_traversal( [&] (string vertex) { 
+        this -> depth_first_traversal( [&] (string vertex) { 
+            cout<<vertex;
+            // if there is one, non-empty vertex in the list, print it
             if (!mVertices[vertex].get_empty_bool() && mVertices[vertex].adj_list_size() == 1){
-                cout<<vertex<<" -> "<<mVertices[vertex].get_adj_list()[0];
+                cout<<" -> "<<mVertices[vertex].get_adj_list()[0];
             }
+            // if the adj_list has more than one node in it, print them
             else if (mVertices[vertex].adj_list_size() >= 1){
-                cout<<vertex<<" -> ";
+                cout<<" -> ";
                 for(auto i: mVertices[vertex].get_adj_list()){
                     cout<<i<<", ";
                 }
             }
+            // if the adj_list contains an endpoint/empty vertex, show that
             if (mVertices[vertex].get_empty_bool()){
-                cout << vertex << " (an endpoint)";
+                cout << "(an endpoint)";
             }
-            //else{ cout << vertex << "\n"; } } );
-            /*if (mVertices[vertex].get_empty_bool()){
-                cout << vertex << " (an endpoint)";
-            }
-            else{
-                cout<<vertex<<" -> ";
-                for(auto i: mVertices[vertex].get_adj_list()){
-                    cout<<i<<", ";
-                }*/
             cout<<"\n";
             });
     }
@@ -238,7 +234,7 @@ public:
      *      verticies, can make a 2-vertex parameter on the lambda, or if we need the function
      *      to return something (or a template of something)
      */
-    void breadth_first_traversal(FuncType func){
+    void depth_first_traversal(FuncType func){
         // edge case--this traversal did not work for size of 1 without it
         if(mSize == 1){
             func(mStart);
@@ -276,7 +272,6 @@ public:
         this->reset_vertex_flags();
     }
 
-
     template <typename FuncType>
 
     /**
@@ -312,6 +307,15 @@ public:
         
     }
     
+    /**
+     * Recursive function to traverse through a single path in the graph, with branches chosen at random
+     * To be used in selecting the genetic information for the next generation organism
+     * @param seed random seed to be used when choosing a branching path
+     * @param organism whose genome we are modifying
+     */
+    void next_genome(){
+        
+    }
 
     /**
      * Set the size object

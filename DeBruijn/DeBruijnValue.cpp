@@ -1,7 +1,7 @@
 /**
- * @file DBGraphValue.cpp
+ * @file DeBruijnValue.cpp
  * @author Anna Catenacci
  */
 
-#include "DBGraphValue.h"
+#include "DeBruijnValue.h"
 

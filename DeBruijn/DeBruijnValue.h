@@ -1,5 +1,5 @@
 /**
- * @file DBGraphValue.h
+ * @file DeBruijnValue.h
  * @author Anna Catenacci
  *
  * Class describing the attributes of a DeBruijnVertex object
@@ -7,8 +7,8 @@
  * not the vertex branches, and whether it has been visited in traversal
  */
 
-#ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DBGRAPHVALUE_H
-#define PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DBGRAPHVALUE_H
+#ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNVALUE_H
+#define PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNVALUE_H
 
 #include <string>
 #include <vector>
@@ -140,4 +140,4 @@ public:
 
 };
 
-#endif //PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DBGRAPHVALUE_H
+#endif //PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNVALUE_H
