@@ -225,16 +225,12 @@ public:
             // therefore, I will put all the beginnings into my queue to start traversal
             vector<string> path = mStarts;
             string current = "";
-            /*dfs_recursion(mStart, path, func);*/
             while(path.size() > 0){
                 current = path.back();
                 path.pop_back();
                 // if the vertex has been visited fewer times than it appears in the graph, continue:
                 if(mVertices[current].get_visitor_flag() <= int(mVertices[current].adj_list_size())){
-                    /*
-                    mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1);*/
-                    func(current);/*
-                    for(int i = mVertices[current].adj_list_size() - mVertices[current].get_visitor_flag(); i > 0; i--){*/
+                    func(current);
                     // if this is the first time the vertex is being visited, we need to add it's adj_list into the queue
                     // otherwise, the adjacencies are already in there somewhere, so not needed
                     if(mVertices[current].get_visitor_flag() < 1){
@@ -245,47 +241,8 @@ public:
                     mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1);
                 }   
             } 
-            /*
-            for(string i : mStarts){
-                dfs_recursion(i, func);
-            }*/
         }
         this->reset_vertex_flags();
-    }
-
-    template <typename FuncType>
-
-    /**
-     * Recursive function used in depth_first_traversal
-     * @param vertex DeBruijn vertex with adjacencies to be traversed
-     * @param func lambda function to use when visiting the current vertex
-     */
-    void dfs_recursion(string vertex, FuncType func){
-        ////////////string current = path.pop();
-        // if the number of times we've visited this vertex's adj_list has not covered all adjacencies:
-        if(mVertices[vertex].get_visitor_flag() <= int(mVertices[vertex].adj_list_size())){
-            // append to count of times we've visited this adj_list
-            mVertices[vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
-            func(vertex);
-            // next vertex to visit will be at index based on number of times we've visited the adj_list
-            // i.e. if we have 2 adjacencies, we will first visit index 0, then next time visit index 1
-            // this works because the vector containing adjacencies is appended to in order of the sequence
-
-            //is this breadth first instead of depth first?
-            int next_index = mVertices[vertex].get_visitor_flag() - 1;
-            string next_vertex = mVertices[vertex].get_adj_list()[next_index];
-            //if( !mVertices[next_vertex].get_empty_bool() ){
-            if(mVertices[next_vertex].get_empty_bool() == 0){
-                // recur
-                dfs_recursion(next_vertex, func);
-            }
-            // if empty_bool is true, we've reached the end vertex--its adj_list contains an empty vertex
-            else{
-                mVertices[next_vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
-                func(next_vertex);
-            }
-        }
-        
     }
     
     /**
