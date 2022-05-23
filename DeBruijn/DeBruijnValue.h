@@ -19,11 +19,9 @@ using std::string; using std::vector;
 class DBGraphValue {
 private:
 
+    //could make this a map of the adj to the number of sequences it's used in if it helps with remove_sequence
     /// Adjacency list--vector of all verticies this vertex points to
     vector<string> mAdjList = {};
-
-    /// True if this vertex has been visited in traversal
-    //bool mVisitedFlag = false;
 
     // so you'd to to the adj list being pointed to, and then check the index to be accessed, and is the size == 
     // the index +1, then you know this vertex is done
@@ -36,9 +34,6 @@ private:
     ///2 if unassigned, 1 if list contains either nothing or an empty vertex, 0 if no empty vertex
     //bool mEmptyAdjList = false;
     int mEmptyAdjList = 2;
-
-    /// True if this node is a beginning
-    bool mStart = false;
 
 public:
     /// Constructors
@@ -55,24 +50,19 @@ public:
     vector<string> get_adj_list() const{ return mAdjList; }
 
     /**
+     * Get the adjacent DeBruijn Vertex
+     * @param index at which to pull the vertex from
+     * @return string reresenting kmer adjacency 
+     */
+    string get_adjacency(int index) { return mAdjList[index]; }
+
+    /**
      * Return size of adjacency list
      * @return size
      * 
      * @todo subtract 1 form size if there is one empty node in adj list
      */
     int adj_list_size(){ return mAdjList.size(); }
-
-    /**
-     * Get the visitor flag object
-     * @return true if this vertex has already been visited in a traversal
-     */
-    //bool get_visitor_flag(){ return mVisitedFlag; }
-
-    /**
-     * Get the visitor flag object
-     * @return true if this vertex has already been visited in a traversal
-     */
-    int get_visitor_flag(){ return mVisits; }
 
     /**
      * Add to adjacency list (creates edge)
@@ -85,10 +75,10 @@ public:
         mAdjList.resize( std::distance(mAdjList.begin(),it) ); }
 
     /**
-     * Set visitor flag
-     * @param value true if visited, false if not
+     * Get the visitor flag object
+     * @return true if this vertex has already been visited in a traversal
      */
-    //void change_visitor_flag(bool value) { mVisitedFlag = value; }
+    int get_visitor_flag(){ return mVisits; }
 
     /**
      * Set visitor flag
@@ -120,25 +110,6 @@ public:
      * @return true if there is more than one value in the adjacency list
      */
     int get_empty_bool() { return mEmptyAdjList; }
-
-    /**
-     * Set the bool for whether is node is a beginning of the graph
-     * @param value true if this node is a beginning
-     */
-    void set_beginning(bool value) { mStart = value; }
-
-    /**
-     * Get the starting truth value
-     * @return true if this node is a beginning of the graph
-     */
-    bool get_beginning() { return mStart; }
-
-    /**
-     * Get the adjacent DeBruijn Vertex
-     * @param index at which to pull the vertex from
-     * @return string reresenting kmer adjacency 
-     */
-    string get_adjacency(int index) { return mAdjList[index]; }
 
 };
 

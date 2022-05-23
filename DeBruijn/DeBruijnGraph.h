@@ -148,7 +148,6 @@ public:
      */
     void set_empty_vertex(string v){
         mVertices[v];
-        //mVertices[v].set_empty_bool(true);
     }
 
     /**
@@ -165,25 +164,8 @@ public:
             it = std::unique(mBranchedVertices.begin(), mBranchedVertices.end());
             mBranchedVertices.resize( std::distance(mBranchedVertices.begin(),it) );
         }
-        //mVertices[start_v].set_empty_bool(false);
         mVertices[start_v].add_to_adj_list(end_v);
-        //OLD start_v.set_order(mSize);
-        //OLD end_v.set_order(mSize + 1);       
-        /* OLD
-        // if the start k-mer is not already recorded in the graph, add a new edge
-        if(mVertices.find(start_v) == mVertices.end()){
-            mVertices[start_v].add_to_adj_list(end_v);
-        }
-        // if the start k-mer is already in the graph, add the end k-mer to the adjacency list
-        else{
-            mVertices[start_v].add_to_adj_list(end_v);
-            //if the adj_list is not empty, this implies the vertex is a branch point
-            //if(mVertices[start_v].adj_list_size() > 0){
-            if(!mVertices[start_v].get_empty_bool()){
-                mVertices[start_v].set_branch(true);
-                mBranchedVertices.push_back(start_v);
-            }
-        }*/
+        
     }
 
     /**
@@ -211,18 +193,6 @@ public:
             cout<<"\n";
             });
     }
-
-    /** OLD
-     * Reset all vertex flags to show they are Unvisited
-     * To be used in traversals
-     
-    void reset_vertex_flags() {
-        vector<DeBruijnVertex> all_vertices;
-        for (auto & element : mVertices) {
-            element.second.change_visitor_flag(false);
-        }
-    }
-    */
 
     /**
      * Reset all vertex flags to show they are Unvisited
@@ -327,9 +297,6 @@ public:
     string next_genome_logic(unsigned int seed, string organism){
         string path = organism;
         string current = organism;
-        // while we are not at the end of a path, continue:
-        //while (mVertices[current].get_empty_bool() == 0){
-            
         // this will work while all sequences are the same length (looks like this is the case in MABE)
         while (int(path.size()) < mSequenceLength){
             // generate index using the empirical random library when we have empirical hooked up
@@ -463,6 +430,12 @@ public:
      */
     void remove_sequence(string sequence){
         mNumSequences--;
+        string current = sequence.substr(0,mKmerLength);
+        while(int(sequence.size()) > mKmerLength){
+            //get/set adjlist to remove this element from it if it's not used for a duplicate string
+            //remove element from mVerticies if it's not used for a duplicate string
+            sequence = sequence.substr(1, sequence.length()-1);
+        }
     }
 
 };
