@@ -283,14 +283,26 @@ void TestGenerateSequence() {
     cout<<"In a graph with multiple added sequences, a reasonable new sequence should be returned \n"<<
     "describing the new genetic information of the net generation offspring.\n\n";
 
-    cout<<"Add 3 10-bit sequences to graph: (these have same beginnings)\n";
+    cout<<"Add 4 10-bit sequences to graph: (these have same beginnings)\n";
     cout<<"0123456789\n0129643789\n0125555666\n0129655688\n\n";
     DeBruijnGraph g = DeBruijnGraph("0123456789", 3);
     g.add_sequence("0129643789");
     g.add_sequence("0125555666");
     g.add_sequence("0129655688");
 
-    
+    //cout<<"next genome w/seed = 0: "<<g.next_genome_logic(0, "012")<<"\n";
+    cout<<"next genome w/seed = 1: "<<g.next_genome_logic(1, "012")<<"\n";
+    cout<<"next genome w/seed = 8: "<<g.next_genome_logic(8, "012")<<"\n";
+
+    cout<<"\nAdd 4 10-bit sequences to graph: (these have same beginnings, but a loop)\n";
+    cout<<"0128675012\n0129643789\n0125555666\n0129655688\n\n";
+    DeBruijnGraph g1 = DeBruijnGraph("0128675012", 3);
+    g1.add_sequence("0129643789");
+    g1.add_sequence("0125555666");
+    g1.add_sequence("0129655688");
+    //this does get stuck so we'll fix it
+    cout<<"next genome w/seed = 1: "<<g1.next_genome_logic(1, "012")<<"\n";
+    cout<<"next genome w/seed = 8: "<<g1.next_genome_logic(8, "012")<<"\n";
 
 }
 
@@ -299,6 +311,7 @@ void TestRemoveSequence() {
     cout<<"This is meant test the application to MABE.\n";
     cout<<"Before the death of an organism in MABE, we should be able to remove it's genome \n"<<
     "from the existing pangenome pool.\n";
+    
 }
 
 int main() {

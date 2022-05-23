@@ -37,6 +37,9 @@ private:
     /// Length of the k-mer IDs
     int mKmerLength = 3;
 
+    /// Length of sequences (number of bits in BitsOrg)
+    int mSequenceLength;
+
     /// Map of Debruijn vertex objects to their values/data
     map<string, DBGraphValue> mVertices;
 
@@ -72,6 +75,7 @@ private:
      * @param input string containing all genetic data sequentially
      */
     void ConstructFromString(string input, int kmer_length){
+        mSequenceLength = input.size();
         mKmerLength = kmer_length;
         mStart = input.substr(0, kmer_length);
         mStarts.push_back(input.substr(0, kmer_length));
@@ -324,12 +328,14 @@ public:
         string path = organism;
         string current = organism;
         // while we are not at the end of a path, continue:
-        while (mVertices[current].get_empty_bool() == 1){
-
-            path+=" -> ";
-            path+= current;
+        //while (mVertices[current].get_empty_bool() == 0){
+            
+        // this will work while all sequences are the same length (looks like this is the case in MABE)
+        while (int(path.size()) < mSequenceLength){
+            // generate index using the empirical random library when we have empirical hooked up
+            current = mVertices[current].get_adj_list()[(mVertices[current].adj_list_size()-1)%seed];
+            path+= current.substr(2,1);
         }
-        path+=" end.";
         return path;
     }
 
@@ -419,6 +425,7 @@ public:
      */
     void add_sequence(string sequence){
         mNumSequences++;
+        mSequenceLength = sequence.size();
         // figure out how to adjust mStart here
         //string potential_mStart = sequence.substr(0, mKmerLength);
 
