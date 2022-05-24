@@ -53,27 +53,6 @@ void TestConstructGraph() {
     
 }
 
-void TestTraversalLambda() {
-    ///@note can maybe modify this depending on what we're traversing for--
-    //  - if we need to compare adjacent verticies can make a 2-vertex parameter!
-    //  - could also adjust so that the recursive function returns something (or a template of something) if needed
-
-    cout<<"\nTRAVERSAL TEST\n";
-    std::vector<int> vec({4,6,2,8,9,3,5,7});
-    DeBruijnGraph g = DeBruijnGraph(vec, 3);
-
-    //print all the verticies and their adjacency lists
-    g.depth_first_traversal([&g] (string vertex) { 
-        cout << vertex << "->";
-        vector<string> adj_list = g.get_value(vertex).get_adj_list();
-
-        for(int i = 0; i < int(adj_list.size()); ++i){
-            cout << adj_list[i] << ",";
-        } 
-
-        cout << "\n"; });
-}
-
 void TestBranchingGraph() {
     cout<<"\nBRANCHING GRAPH TEST\n";
     cout<<"\"empty bool\" represents whether or not there is an empty node in the vertex's adjacency list "<<
@@ -143,25 +122,30 @@ void TestAddSequence() {
     string str1 = "12345";
     DeBruijnGraph g = DeBruijnGraph(str1, 3);
     cout << "Original graph:\n";
+    cout<<"size "<<g.get_size()<<"\n";
     g.display();
 
     cout << "\nAfter first sequence (branch from 123, different ends):\n";
     g.add_sequence("1236");
+    cout<<"size "<<g.get_size()<<"\n";
     g.display();
 
     // multiple limbs on the same branch (at 123)
     cout << "\nAfter second sequence (another branch from 123, another different end):\n";
     g.add_sequence("1239476");
+    cout<<"size "<<g.get_size()<<"\n";
     g.display();
 
     // different beginnings
     cout << "\nAfter third sequence (different beginnings):\n";
     g.add_sequence("7239436");
+    cout<<"size "<<g.get_size()<<"\n";
     g.display();
 
     // different middles
     cout << "\nAfter fourth sequence (different middles):\n";
     g.add_sequence("723111436");
+    cout<<"size "<<g.get_size()<<"\n";
     g.display();
     ///239 visited twice
 
@@ -307,21 +291,70 @@ void TestGenerateSequence() {
 }
 
 void TestRemoveSequence() {
+    //size is weird, and repetition does not disappear from graph
     cout<<"\nREMOVE SEQUENCE TEST\n";
     cout<<"This is meant test the application to MABE.\n";
     cout<<"Before the death of an organism in MABE, we should be able to remove it's genome \n"<<
     "from the existing pangenome pool.\n";
-    
+    cout<<"Count represents the number of times the kmer appears in any sequence in the graph.\n";
+
+    cout<<"\nTest a graph containing a single sequence:\n";
+    DeBruijnGraph g = DeBruijnGraph("0128644", 3);
+    cout<<"initial size: "<< g.get_size()<<"\n";
+    g.depth_first_traversal([&g] (string vertex) { 
+       cout << vertex<< " count-"<<g.get_value(vertex).get_sequence_count()<< ", "; });
+    g.remove_sequence("0128644");
+    cout<<"\nsize after removal: "<<g.get_size()<<"\n";
+    g.depth_first_traversal([&g] (string vertex) { 
+        cout << vertex<< " count-"<<g.get_value(vertex).get_sequence_count()<< ", "; });
+
+    cout<<"\nTest a graph containing a single repetitive sequence:\n";
+    DeBruijnGraph g0 = DeBruijnGraph("01280127", 3);
+    cout<<"initial size: "<< g0.get_size()<<"\n";
+    g0.depth_first_traversal([&g0] (string vertex) { 
+        cout << vertex<< " count-"<<g0.get_value(vertex).get_sequence_count()<< ", "; });
+    g0.remove_sequence("01280127");
+    cout<<"\nsize after removal: "<<g0.get_size()<<"\n";
+    g0.depth_first_traversal([&g0] (string vertex) { 
+        cout << vertex<< " count-"<<g0.get_value(vertex).get_sequence_count()<< ", "; });
+
+    cout<<"\nTest a graph containing a few sequences:\n";
+    DeBruijnGraph g1 = DeBruijnGraph("0128675012", 3);
+    g1.add_sequence("6543210");
+    cout<<"initial size: "<< g1.get_size()<<"\n";
+    g1.depth_first_traversal([&g1] (string vertex) { 
+        cout << vertex<< " count-"<<g1.get_value(vertex).get_sequence_count()<< ", "; });
+    g1.remove_sequence("0128012");
+    cout<<"\nsize after removal: "<<g1.get_size()<<"\n";
+    g1.depth_first_traversal([&g1] (string vertex) { 
+        cout << vertex<< " count-"<<g1.get_value(vertex).get_sequence_count()<< ", "; });
+
+    cout<<"\n\nTest a graph containing repetition in sequences:\n";
+    DeBruijnGraph g2 = DeBruijnGraph("0128012", 3);
+    g2.add_sequence("5555555");
+    cout<<"initial size: "<< g2.get_size()<<"\n";
+    g2.depth_first_traversal([&g2] (string vertex) { 
+        cout << vertex<< " count-"<<g2.get_value(vertex).get_sequence_count()<< ", "; });
+    g2.remove_sequence("0128012");
+    cout<<"\nsize after removal: "<<g2.get_size()<<"\n";
+    g2.depth_first_traversal([&g2] (string vertex) { 
+        cout << vertex<< " count-"<<g2.get_value(vertex).get_sequence_count()<< ", "; });
+    g2.remove_sequence("5555555");
+    cout<<"\nsize after 2nd removal: "<<g2.get_size()<<"\n";
+    g2.depth_first_traversal([&g2] (string vertex) { 
+        cout << vertex<< " count-"<<g2.get_value(vertex).get_sequence_count()<< ", "; });
+    cout<<"\n";
 }
 
 int main() {
-    TestConstructGraph();
-    //TestTraversalLambda();
-    TestBranchingGraph();
-    TestAddSequence();
-    TestUniqueVerticies();
-    TestMultipleEnds();
-    TestRepetition();
-    TestGenerateSequence();
+    //not sure if I've really tested attributes of the verticies and values and graph throughout this (size, adjlist, mbranch, mvert)
+
+    //TestConstructGraph();
+    //TestBranchingGraph();
+    //TestAddSequence();
+    //TestUniqueVerticies();
+    //TestMultipleEnds();
+    //TestRepetition();
+    //TestGenerateSequence();
     TestRemoveSequence();
 }

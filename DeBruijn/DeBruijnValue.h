@@ -35,6 +35,9 @@ private:
     //bool mEmptyAdjList = false;
     int mEmptyAdjList = 2;
 
+    /// Count of the number of sequences in the graph that use this kmer
+    int mSequenceCount = 0;
+
 public:
     /// Constructors
     DBGraphValue()=default;
@@ -75,6 +78,14 @@ public:
         mAdjList.resize( std::distance(mAdjList.begin(),it) ); }
 
     /**
+     * Remove edge, remove value from adjacency list
+     * @param addition vertex to remove from the adjacency list
+     */
+    void remove_from_adj_list(string removal){
+        mAdjList.erase(std::remove(mAdjList.begin(), mAdjList.end(), removal), mAdjList.end());
+    }
+
+    /**
      * Get the visitor flag object
      * @return true if this vertex has already been visited in a traversal
      */
@@ -110,6 +121,22 @@ public:
      * @return true if there is more than one value in the adjacency list
      */
     int get_empty_bool() { return mEmptyAdjList; }
+
+    /**
+     * Get the sequence count
+     * @return number of sequences this kmer is  used in
+     */
+    int get_sequence_count() { return mSequenceCount; }
+
+    /**
+     * Increment the sequence count
+     */
+    void increment_sequence_count() { mSequenceCount++; }
+
+    /**
+     * Decrement the sequence count
+     */
+    void decrement_sequence_count() { mSequenceCount--; }
 
 };
 

@@ -4,16 +4,19 @@
  *
  * A class that constructs and describes a De Bruijn Graph
  * 
- * @todo (optional) create a display function that more clearly shows the links between vertices.
- * @todo agenda is AddSequence function > AddSequenceTest > TestMultipleEnds > take out some unnecessary stuff
- * @todo also test AddSequence in relevant tests (like unique verticies test)
  * @todo instead of 4 functions for constructors and add_sequence, have 2 with templates?
+ * @note there are a couple cases (when we have a couple sequences with a kmer that is in both, but in different locations)
+ *       where the kmer is visited more than once in traversal, but I think this is ok because of the fact that if we're 
+ *       creating a new sequence, we're going to want to see both locations of it
  * 
- * @todo !!! test for the case where it's an endpoint and also still has the adj_list !!!
+ * am i adding to size in the right places???????
+ * make sure kmerlength is always used instead of 3
  */
 
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
 #define PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
+
+//#include "../../Desktop/mabe again/MABE2/source/orgs/BitsOrg.hpp" here?
 
 #include "DeBruijnValue.h"
 #include <vector>
@@ -31,27 +34,21 @@ private:
     /// Number of vertices the graph contains
     int mSize = 0;
 
-    /// Number of sequences the graph contains
-    int mNumSequences = 0;
-
     /// Length of the k-mer IDs
     int mKmerLength = 3;
 
     /// Length of sequences (number of bits in BitsOrg)
-    int mSequenceLength;
+    int mSequenceLength = 0;
 
     /// Map of Debruijn vertex objects to their values/data
     map<string, DBGraphValue> mVertices;
 
     /// Starting vertex so that we know which vertex to start traversing with
-    string mStart;
+    //string mStart;
 
     /// Vector of all Vertices the map contains
     // (will this variable be necessary to keep around if I already have a flag attribute in DBValue?)
     vector<string> mBranchedVertices;
-
-    /// Vector of all ending verticies
-    vector<string> mEnds;
 
     /// Vector of all beginning verticies
     vector<string> mStarts;
@@ -77,15 +74,22 @@ private:
     void ConstructFromString(string input, int kmer_length){
         mSequenceLength = input.size();
         mKmerLength = kmer_length;
-        mStart = input.substr(0, kmer_length);
+        //mStart = input.substr(0, kmer_length);
         mStarts.push_back(input.substr(0, kmer_length));
         //if the graph is one vertex long:
         if(int(input.length()) == kmer_length){
             this->set_empty_vertex(input);
         }
+        // if the vertex is already in the graph, then skip this and don't add to size
+        // is there anything else we should only do if it's not already in here?
+        if(mVertices.count(input.substr(0, mKmerLength)) <= 0){
+            mSize++;
+        }
         //add to size and add an edge for each vertex, and an empty vertex for the end
         while(int(input.length()) >= kmer_length + 1){
-            this->set_size( this->get_size() + 1 );
+            if(mVertices.count(input.substr(1, mKmerLength)) <= 0){
+                mSize++;
+            }
             this->add_edge(input.substr(0, kmer_length), input.substr(1, kmer_length));
             //change the set_empty_bool here so we don't run into endpoint troubles later.
             mVertices[input.substr(0, kmer_length)].set_empty_bool(0);
@@ -94,8 +98,7 @@ private:
             input = input.substr(1, input.length()-1);
         }
         mVertices[input].set_empty_bool(1);
-        this->set_size( this->get_size() + 1 );
-        mNumSequences++;
+        mVertices[input].increment_sequence_count();
     }
 
 public:
@@ -165,6 +168,7 @@ public:
             mBranchedVertices.resize( std::distance(mBranchedVertices.begin(),it) );
         }
         mVertices[start_v].add_to_adj_list(end_v);
+        mVertices[start_v].increment_sequence_count();
         
     }
 
@@ -218,7 +222,7 @@ public:
     void depth_first_traversal(FuncType func){
         // edge case--this traversal did not work for size of 1 without it
         if(mSize == 1){
-            func(mStart);
+            func(mStarts[0]);
         }
         else{
             // because this is a directed graph, I want to make sure each path start is covered
@@ -348,22 +352,16 @@ public:
      * @param sequence to add to the graph
      */
     void add_sequence(string sequence){
-        mNumSequences++;
         mSequenceLength = sequence.size();
-        // figure out how to adjust mStart here
-        //string potential_mStart = sequence.substr(0, mKmerLength);
-
         // if the beginning string is not in the graph, add a new beginning vertex
-        // maybe adjust the DB value for beginning if we keep that
         if(mVertices.count(sequence.substr(0, mKmerLength)) <= 0){
             mStarts.push_back(sequence.substr(0, mKmerLength));
+            mSize++;
         }
-
         // go through the entire new sequence and add edges:
         while(int(sequence.length()) >= mKmerLength+1){
-            //if vertex is not already in the map, add to size
-            if(mVertices.count(sequence.substr(0, mKmerLength)) <= 0){
-                this->set_size( this->get_size() + 1 );
+            if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0){
+                mSize++;
             }
             //add edge
             this->add_edge(sequence.substr(0, mKmerLength), sequence.substr(1, mKmerLength));
@@ -378,6 +376,18 @@ public:
             sequence = sequence.substr(1, sequence.length()-1);
         }
         mVertices[sequence].set_empty_bool(1);
+        mVertices[sequence].increment_sequence_count();
+    }
+
+    /**
+     * remove_sequence helper function to make sure sequence is removed from all containers
+     * @param sequence to remove
+     */
+    void remove(string sequence){
+        mSize--;
+        mVertices.erase(sequence);
+        mStarts.erase(std::remove(mStarts.begin(), mStarts.end(), sequence), mStarts.end());
+        mBranchedVertices.erase(std::remove(mBranchedVertices.begin(), mBranchedVertices.end(), sequence), mBranchedVertices.end());
     }
 
     /**
@@ -386,13 +396,45 @@ public:
      * @param sequence to remove
      */
     void remove_sequence(string sequence){
-        mNumSequences--;
-        string current = sequence.substr(0,mKmerLength);
+        string current, next;
+        bool current_duplicated, next_duplicated;
+        // while we still have sequence left:
         while(int(sequence.size()) > mKmerLength){
-            //get/set adjlist to remove this element from it if it's not used for a duplicate string
-            //remove element from mVerticies if it's not used for a duplicate string
+            current = sequence.substr(0,mKmerLength);
+            next = sequence.substr(1,mKmerLength);
+            current_duplicated = mVertices[current].get_sequence_count() > 1;
+            next_duplicated = mVertices[next].get_sequence_count() > 1;
+            mVertices[current].decrement_sequence_count();
+            //if the entire sequence is not exactly a duplicate, remove adjacency
+            if(!current_duplicated || !next_duplicated){
+                mVertices[current].remove_from_adj_list(next);
+            }
+            //if current is not a duplicate, delete it from mverticies
+            if (!current_duplicated){
+                this->remove(current);
+            }
             sequence = sequence.substr(1, sequence.length()-1);
         }
+        mVertices[sequence].decrement_sequence_count();
+        if (mVertices[sequence].get_sequence_count() == 0){
+            this->remove(sequence);
+        }
+    }
+
+    /**
+     * Iterate through graph along sequence to make sure the sequence is in the graph
+     * @param sequence to evaluate
+     * @return true is the sequence is valid, false if it is not in the graph
+     */
+    bool is_valid(string sequence){
+        bool valid = true;
+        string current = sequence.substr(0,mKmerLength);
+        while(sequence.size() > mKmerLength){
+            
+            sequence = sequence.substr(1, sequence.length()-1);
+            current = sequence.substr(0,mKmerLength);
+        }
+        return valid;
     }
 
 };
