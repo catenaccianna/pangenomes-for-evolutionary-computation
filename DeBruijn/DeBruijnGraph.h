@@ -9,14 +9,14 @@
  *       where the kmer is visited more than once in traversal, but I think this is ok because of the fact that if we're 
  *       creating a new sequence, we're going to want to see both locations of it
  * 
- * am i adding to size in the right places???????
- * make sure kmerlength is always used instead of 3
+ * @todo ask Emily about the process where you look at which statements are not being used in your code (for after tests)
  */
 
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
 #define PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
 
-//#include "../../Desktop/mabe again/MABE2/source/orgs/BitsOrg.hpp" here?
+//#include "../../Desktop/mabe/MABE2/source/orgs/BitsOrg.hpp" here?
+#include "../../../mabe/MABE2/source/third-party/empirical/include/emp/math/Random.hpp"
 
 #include "DeBruijnValue.h"
 #include <vector>
@@ -24,6 +24,7 @@
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <stdexcept>
 
 using std::string; using std::vector; using std::map;
 using std::cout;
@@ -105,6 +106,8 @@ public:
     DeBruijnGraph()=default;
     ~DeBruijnGraph()=default;
 
+///@remark CONSTRUCTORS
+
     /**
      * Construct a De Bruijn Graph object from a vector of strings
      * @param input a vector containing strings to convert to a graph
@@ -172,143 +175,29 @@ public:
         
     }
 
-    /**
-     * Print all vertices on the map to disply them
-     * @todo Would like to eventually use Julia to display the graph as a whole
-     */
-    void display(){
-        this -> depth_first_traversal( [&] (string vertex) { 
-            cout<<vertex;
-            // if there is one, non-empty vertex in the list, print it
-            if (mVertices[vertex].get_empty_bool()==0 && mVertices[vertex].adj_list_size() == 1){
-                cout<<" -> "<<mVertices[vertex].get_adj_list()[0];
-            }
-            // if the adj_list has more than one node in it, print them
-            else if (mVertices[vertex].adj_list_size() >= 1){
-                cout<<" -> ";
-                for(auto i: mVertices[vertex].get_adj_list()){
-                    cout<<i<<", ";
-                }
-            }
-            // if the adj_list contains an endpoint/empty vertex, show that
-            if (mVertices[vertex].get_empty_bool()==1){
-                cout << "(an endpoint)";
-            }
-            cout<<"\n";
-            });
-    }
+///@remark MABE FUNCTIONS (next genome, add sequence, remove sequence)
 
-    /**
-     * Reset all vertex flags to show they are Unvisited
-     * To be used in traversals
-     */
-    void reset_vertex_flags() {
-        vector<string> all_vertices;
-        for (auto & element : mVertices) {
-            element.second.change_visitor_flag(0);
-        }
-    }
-
-    template <typename FuncType>
-
-///@todo have emily look at the general setup of this function, because I'm not sure if time and space complexity are just too much (probably are honestly)
-    /**
-     * Traversal function that currently prints each vertex ID
-     * @param func lambda function to use when visiting the current vertex
-     * @note Depending on what we're traversing for, like if we need to compare adjacent 
-     *      verticies, can make a 2-vertex parameter on the lambda, or if we need the function
-     *      to return something (or a template of something)
-     */
-    void depth_first_traversal(FuncType func){
-        // edge case--this traversal did not work for size of 1 without it
-        if(mSize == 1){
-            func(mStarts[0]);
-        }
-        else{
-            // because this is a directed graph, I want to make sure each path start is covered
-            // therefore, I will put all the beginnings into my queue to start traversal
-            vector<string> path = mStarts;
-            string current = "";
-            while(path.size() > 0){
-                current = path.back();
-                path.pop_back();
-                // if the vertex has been visited fewer times than it appears in the graph, continue:
-                if(mVertices[current].get_visitor_flag() <= int(mVertices[current].adj_list_size())){
-                    func(current);
-                    // if this is the first time the vertex is being visited, we need to add it's adj_list into the queue
-                    // otherwise, the adjacencies are already in there somewhere, so not needed
-                    if(mVertices[current].get_visitor_flag() < 1){
-                        for(int i = mVertices[current].adj_list_size(); i > 0; i--){
-                            path.push_back(mVertices[current].get_adj_list()[i-1]);
-                        }
-                    }
-                    mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1);
-                }   
-            } 
-        }
-        this->reset_vertex_flags();
-    }
-    
     /**
      * Recursive function to traverse through a single path in the graph, with branches chosen at random
      * To be used in selecting the genetic information for the next generation organism
      * @param seed random seed to be used when choosing a branching path
      * @param organism whose genome we are modifying--here I am just going to insert a 3-char string to represent the start
      */
-    string next_genome_logic(unsigned int seed, string organism){
+    string next_genome_logic(emp::Random & random, string organism){
         string path = organism;
         string current = organism;
         // this will work while all sequences are the same length (looks like this is the case in MABE)
         while (int(path.size()) < mSequenceLength){
             // generate index using the empirical random library when we have empirical hooked up
-            current = mVertices[current].get_adj_list()[(mVertices[current].adj_list_size()-1)%seed];
+            current = mVertices[current].get_adj_list()[random.GetUInt(mVertices[current].adj_list_size()-1)]; ///random seed here?!
             path+= current.substr(2,1);
         }
         return path;
     }
 
-    /**
-     * Set the size object
-     * @param s size of graph
-     */
-    void set_size(int s) { mSize = s; }
+    void modify_org(){
 
-    /**
-     * Return size of graph
-     * @return number of vertices the graph contains
-     */
-    int get_size() { return mSize; }
-
-    /**
-     * Return vector containing all vertices in graph
-     * @return vector containing all DeBruijn vertex objects
-     */
-    vector<string> get_all_vertices() {
-        vector<string> all_vertices;
-        for (auto const& element : mVertices) {
-            all_vertices.push_back(element.first);
-        }
-        return all_vertices; 
     }
-
-    /**
-     * Return vector containing vertices with more than one adjacency in graph
-     * @return vector containing branched DeBruijn vertex objects
-     */
-    vector<string> get_branch_vertices() { return mBranchedVertices; }
-
-    /**
-     * Given a vertex, retrun true if the vertex branches
-     * @param vertex to check
-     * @return true if the vertex has more than 2 verticies in it's adjacency list
-     */
-    bool vertex_branch_check(string vertex) { return mVertices[vertex].get_branch(); }
-
-    /**
-     * Get the value associated with a vertex
-     * @return Debruijn vertex value object
-     */
-    DBGraphValue get_value(string vertex) { return mVertices[vertex]; }
 
     /**
      * Add an entirely new possible sequence into the graph
@@ -396,14 +285,20 @@ public:
      * @param sequence to remove
      */
     void remove_sequence(string sequence){
+        if(!this->is_valid(sequence)){
+            throw std::invalid_argument( "input sequence is invalid" );
+        }
+
         string current, next;
         bool current_duplicated, next_duplicated;
         // while we still have sequence left:
         while(int(sequence.size()) > mKmerLength){
+
             current = sequence.substr(0,mKmerLength);
             next = sequence.substr(1,mKmerLength);
             current_duplicated = mVertices[current].get_sequence_count() > 1;
             next_duplicated = mVertices[next].get_sequence_count() > 1;
+
             mVertices[current].decrement_sequence_count();
             //if the entire sequence is not exactly a duplicate, remove adjacency
             if(!current_duplicated || !next_duplicated){
@@ -423,19 +318,148 @@ public:
 
     /**
      * Iterate through graph along sequence to make sure the sequence is in the graph
+     * @note Currently in removal of a sequence, I don't check to make sure the wntire sequence is valid beforehand, 
+     * so if you were to remove a sequence where the first half of it is valid, it would remove those verticies before stopping
+     * (I think). Could check like this beforehand--wasn't sure about runtime, but as long as it's not used nested, it should be ok
      * @param sequence to evaluate
      * @return true is the sequence is valid, false if it is not in the graph
      */
     bool is_valid(string sequence){
-        bool valid = true;
-        string current = sequence.substr(0,mKmerLength);
-        while(sequence.size() > mKmerLength){
-            
-            sequence = sequence.substr(1, sequence.length()-1);
+        string current, next;
+        while(int(sequence.size()) > mKmerLength+1){
             current = sequence.substr(0,mKmerLength);
+            next = sequence.substr(1,mKmerLength);
+            // if the path from this vertex to it's adjacency is invalid, return false
+            if(!mVertices[current].valid_adj(next)){
+                return false;
+            }
+            sequence = sequence.substr(1, sequence.length()-1);
         }
-        return valid;
+        return true;
     }
+
+///@remark DISPLAY AND TRAVERSAL
+
+///@todo have Emily look at the general setup of this function, because I'm not sure if time and space complexity are just too much (probably are honestly)
+    template <typename FuncType>
+    /**
+     * Traversal function that currently prints each vertex ID
+     * @param func lambda function to use when visiting the current vertex
+     * @note Depending on what we're traversing for, like if we need to compare adjacent 
+     *      verticies, can make a 2-vertex parameter on the lambda, or if we need the function
+     *      to return something (or a template of something)
+     */
+    void depth_first_traversal(FuncType func){
+        // edge case--this traversal did not work for size of 1 without it
+        if(mSize == 1){
+            func(mStarts[0]);
+        }
+        else{
+            // because this is a directed graph, I want to make sure each path start is covered
+            // therefore, I will put all the beginnings into my queue to start traversal
+            vector<string> path = mStarts;
+            string current = "";
+            while(path.size() > 0){
+                current = path.back();
+                path.pop_back();
+                // if the vertex has been visited fewer times than it appears in the graph, continue:
+                if(mVertices[current].get_visitor_flag() <= int(mVertices[current].adj_list_size())){
+                    func(current);
+                    // if this is the first time the vertex is being visited, we need to add it's adj_list into the queue
+                    // otherwise, the adjacencies are already in there somewhere, so not needed
+                    if(mVertices[current].get_visitor_flag() < 1){
+                        for(int i = mVertices[current].adj_list_size(); i > 0; i--){
+                            path.push_back(mVertices[current].get_adj_list()[i-1]);
+                        }
+                    }
+                    mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1);
+                }   
+            } 
+        }
+        this->reset_vertex_flags();
+    }
+    
+    /**
+     * Reset all vertex flags to show they are Unvisited
+     * To be used in traversals
+     */
+    void reset_vertex_flags() {
+        vector<string> all_vertices;
+        for (auto & element : mVertices) {
+            element.second.change_visitor_flag(0);
+        }
+    }
+
+    /**
+     * Print all vertices on the map to disply them
+     * @todo Would like to eventually use Julia to display the graph as a whole
+     */
+    void display(){
+        this -> depth_first_traversal( [&] (string vertex) { 
+            cout<<vertex;
+            // if there is one, non-empty vertex in the list, print it
+            if (mVertices[vertex].get_empty_bool()==0 && mVertices[vertex].adj_list_size() == 1){
+                cout<<" -> "<<mVertices[vertex].get_adj_list()[0];
+            }
+            // if the adj_list has more than one node in it, print them
+            else if (mVertices[vertex].adj_list_size() >= 1){
+                cout<<" -> ";
+                for(auto i: mVertices[vertex].get_adj_list()){
+                    cout<<i<<", ";
+                }
+            }
+            // if the adj_list contains an endpoint/empty vertex, show that
+            if (mVertices[vertex].get_empty_bool()==1){
+                cout << "(an endpoint)";
+            }
+            cout<<"\n";
+            });
+    }
+
+///@remark GETTERS AND SETTERS
+
+    /**
+     * Set the size object
+     * @param s size of graph
+     */
+    void set_size(int s) { mSize = s; }
+
+    /**
+     * Return size of graph
+     * @return number of vertices the graph contains
+     */
+    int get_size() { return mSize; }
+
+    /**
+     * Return vector containing all vertices in graph
+     * @return vector containing all DeBruijn vertex objects
+     */
+    vector<string> get_all_vertices() {
+        vector<string> all_vertices;
+        for (auto const& element : mVertices) {
+            all_vertices.push_back(element.first);
+        }
+        return all_vertices; 
+    }
+
+    /**
+     * Return vector containing vertices with more than one adjacency in graph
+     * @return vector containing branched DeBruijn vertex objects
+     */
+    vector<string> get_branch_vertices() { return mBranchedVertices; }
+
+    /**
+     * Given a vertex, retrun true if the vertex branches
+     * @param vertex to check
+     * @return true if the vertex has more than 2 verticies in it's adjacency list
+     */
+    bool vertex_branch_check(string vertex) { return mVertices[vertex].get_branch(); }
+
+    /**
+     * Get the value associated with a vertex
+     * @return Debruijn vertex value object
+     */
+    DBGraphValue get_value(string vertex) { return mVertices[vertex]; }
 
 };
 

@@ -3,6 +3,6 @@ project(DeBruijn)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(DeBruijn main.cpp
+add_executable(DeBruijn test.cpp
         DeBruijnGraph.cpp DeBruijnGraph.h
         DeBruijnValue.cpp DeBruijnValue.h)

@@ -86,6 +86,18 @@ public:
     }
 
     /**
+     * Check to see whether this vertex-to-adjacency path is valid
+     * @param adj adjacency to check
+     * @return true if the adjacency is in the adj_list for this vertex
+     */
+    bool valid_adj(string adj){
+        if (std::find(mAdjList.begin(), mAdjList.end(), adj) != mAdjList.end()){
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Get the visitor flag object
      * @return true if this vertex has already been visited in a traversal
      */

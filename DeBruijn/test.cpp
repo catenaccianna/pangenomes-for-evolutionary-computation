@@ -259,9 +259,21 @@ void TestRepetition() {
     g1.add_sequence("98567123");
     g1.display();
     ///123 visited twice
+
+    cout<<"\nNew graph with a completely repetitive sequence:\n";
+    cout<<"(Currently, the sequence 55555 will traverse 2 555 kmers instead of 3, has a 555 value in branch vector, and has 1 value 555 in vertex map)\n";
+    cout<<"Everything in here as far as functionality goes looks correct\n";
+    DeBruijnGraph g2 = DeBruijnGraph("55555", 3);
+    //cout<<"generated: "<<g2.next_genome_logic(2, "555")<<"\n";
+    g2.display();
+    for(auto i : g2.get_branch_vertices()){
+        cout<<"branched "<<i<<"\n";
+    }
+    cout<<"number of times appears in sequence: "<<g2.get_value("555").get_sequence_count()<<"\n";
 }
 
 void TestGenerateSequence() {
+    cout<<"\nNO LONGER TESTING, AS RANDOM FROM EMPIRICAL IS BEING USED AS SEED";
     cout<<"\nGENERATE SEQUENCE TEST\n";
     cout<<"This is meant test the application to MABE.\n";
     cout<<"In a graph with multiple added sequences, a reasonable new sequence should be returned \n"<<
@@ -275,8 +287,8 @@ void TestGenerateSequence() {
     g.add_sequence("0129655688");
 
     //cout<<"next genome w/seed = 0: "<<g.next_genome_logic(0, "012")<<"\n";
-    cout<<"next genome w/seed = 1: "<<g.next_genome_logic(1, "012")<<"\n";
-    cout<<"next genome w/seed = 8: "<<g.next_genome_logic(8, "012")<<"\n";
+    //cout<<"next genome w/seed = 1: "<<g.next_genome_logic(1, "012")<<"\n";
+    //cout<<"next genome w/seed = 8: "<<g.next_genome_logic(8, "012")<<"\n";
 
     cout<<"\nAdd 4 10-bit sequences to graph: (these have same beginnings, but a loop)\n";
     cout<<"0128675012\n0129643789\n0125555666\n0129655688\n\n";
@@ -285,8 +297,8 @@ void TestGenerateSequence() {
     g1.add_sequence("0125555666");
     g1.add_sequence("0129655688");
     //this does get stuck so we'll fix it
-    cout<<"next genome w/seed = 1: "<<g1.next_genome_logic(1, "012")<<"\n";
-    cout<<"next genome w/seed = 8: "<<g1.next_genome_logic(8, "012")<<"\n";
+    //cout<<"next genome w/seed = 1: "<<g1.next_genome_logic(1, "012")<<"\n";
+    //cout<<"next genome w/seed = 8: "<<g1.next_genome_logic(8, "012")<<"\n";
 
 }
 
@@ -346,6 +358,11 @@ void TestRemoveSequence() {
     cout<<"\n";
 }
 
+void TestValid(){
+    DeBruijnGraph g = DeBruijnGraph("0128012", 3);
+    cout<<g.is_valid("0128012")<<g.is_valid("0128212")<<"\n";
+}
+
 int main() {
     //not sure if I've really tested attributes of the verticies and values and graph throughout this (size, adjlist, mbranch, mvert)
 
@@ -354,7 +371,8 @@ int main() {
     //TestAddSequence();
     //TestUniqueVerticies();
     //TestMultipleEnds();
-    //TestRepetition();
+    TestRepetition();
     //TestGenerateSequence();
-    TestRemoveSequence();
+    //TestRemoveSequence();
+    //TestValid();
 }
