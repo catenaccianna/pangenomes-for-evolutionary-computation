@@ -24,6 +24,7 @@
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <stdexcept>
 
 using std::string; using std::vector; using std::map;
 using std::cout;
@@ -396,14 +397,20 @@ public:
      * @param sequence to remove
      */
     void remove_sequence(string sequence){
+        if(!this->is_valid(sequence)){
+            throw std::invalid_argument( "input sequence is invalid" );
+        }
+
         string current, next;
         bool current_duplicated, next_duplicated;
         // while we still have sequence left:
         while(int(sequence.size()) > mKmerLength){
+
             current = sequence.substr(0,mKmerLength);
             next = sequence.substr(1,mKmerLength);
             current_duplicated = mVertices[current].get_sequence_count() > 1;
             next_duplicated = mVertices[next].get_sequence_count() > 1;
+
             mVertices[current].decrement_sequence_count();
             //if the entire sequence is not exactly a duplicate, remove adjacency
             if(!current_duplicated || !next_duplicated){
@@ -423,18 +430,24 @@ public:
 
     /**
      * Iterate through graph along sequence to make sure the sequence is in the graph
+     * @note Currently in removal of a sequence, I don't check to make sure the wntire sequence is valid beforehand, 
+     * so if you were to remove a sequence where the first half of it is valid, it would remove those verticies before stopping
+     * (I think). Could check like this beforehand--wasn't sure about runtime, but as long as it's not used nested, it should be ok
      * @param sequence to evaluate
      * @return true is the sequence is valid, false if it is not in the graph
      */
     bool is_valid(string sequence){
-        bool valid = true;
-        string current = sequence.substr(0,mKmerLength);
-        while(sequence.size() > mKmerLength){
-            
-            sequence = sequence.substr(1, sequence.length()-1);
+        string current, next;
+        while(int(sequence.size()) > mKmerLength+1){
             current = sequence.substr(0,mKmerLength);
+            next = sequence.substr(1,mKmerLength);
+            // if the path from this vertex to it's adjacency is invalid, return false
+            if(!mVertices[current].valid_adj(next)){
+                return false;
+            }
+            sequence = sequence.substr(1, sequence.length()-1);
         }
-        return valid;
+        return true;
     }
 
 };

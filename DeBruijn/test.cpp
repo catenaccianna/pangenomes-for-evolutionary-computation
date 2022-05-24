@@ -329,6 +329,8 @@ void TestRemoveSequence() {
     g1.depth_first_traversal([&g1] (string vertex) { 
         cout << vertex<< " count-"<<g1.get_value(vertex).get_sequence_count()<< ", "; });
 
+///@todo the 555555 doesn't work in display or in the removal from mVerts
+
     cout<<"\n\nTest a graph containing repetition in sequences:\n";
     DeBruijnGraph g2 = DeBruijnGraph("0128012", 3);
     g2.add_sequence("5555555");
@@ -346,6 +348,11 @@ void TestRemoveSequence() {
     cout<<"\n";
 }
 
+void TestValid(){
+    DeBruijnGraph g = DeBruijnGraph("0128012", 3);
+    cout<<g.is_valid("0128012")<<g.is_valid("0128212")<<"\n";
+}
+
 int main() {
     //not sure if I've really tested attributes of the verticies and values and graph throughout this (size, adjlist, mbranch, mvert)
 
@@ -356,5 +363,6 @@ int main() {
     //TestMultipleEnds();
     //TestRepetition();
     //TestGenerateSequence();
-    TestRemoveSequence();
+    //TestRemoveSequence();
+    TestValid();
 }
