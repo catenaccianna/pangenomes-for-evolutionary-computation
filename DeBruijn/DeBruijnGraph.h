@@ -195,8 +195,37 @@ public:
         return path;
     }
 
-    void modify_org(){
+    string modify_org(emp::Random & random, string organism){
+        string path = organism;
+        string current = organism;
+        string next;
+        mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1);
+        int index;
+        // so I either need to somehow make sure random does not land on an index that has reached it's max visitor count, OR 
+        // generate a new random seed until I reach one that has not reached max visitor count (time O(n^2)?) OR
+        // create a new vector in DBValue for possible verticies to grab (does vector '=' or 'remove' make time complexity go up?)
+        while (int(path.size()) < mSequenceLength){
+            if(mVertices[current].get_visitor_flag() == 1){
+                mVertices[current].set_adj_availible();
+            }
+            // generate index using the empirical random library when we have empirical hooked up
+            index = random.GetUInt(mVertices[current].adj_availible_size()-1);
+            next = mVertices[current].get_adj_availible(index);
+            path+= next.substr(2,1);
 
+            mVertices[next].change_visitor_flag(mVertices[next].get_visitor_flag()+1);
+            if(mVertices[next].get_visitor_flag() == mVertices[current].get_sequence_count()){
+                mVertices[current].remove_adj_availible(next);
+            }
+            current = next;
+            /*if(mVertices[mVertices[current].get_adj_list()[index]].get_visitor_flag() <= int(mVertices[mVertices[current].get_adj_list()[index]].adj_list_size())){
+                current = mVertices[current].get_adj_list()[index];
+                path+= current.substr(2,1);
+                mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1);
+            }*/
+        }
+        this->reset_vertex_flags();
+        return path;
     }
 
     /**

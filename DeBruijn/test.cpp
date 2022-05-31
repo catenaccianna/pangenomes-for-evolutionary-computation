@@ -273,8 +273,6 @@ void TestRepetition() {
 }
 
 void TestGenerateSequence() {
-    cout<<"\nNO LONGER TESTING, AS RANDOM FROM EMPIRICAL IS BEING USED AS SEED";
-    cout<<"\nGENERATE SEQUENCE TEST\n";
     cout<<"This is meant test the application to MABE.\n";
     cout<<"In a graph with multiple added sequences, a reasonable new sequence should be returned \n"<<
     "describing the new genetic information of the net generation offspring.\n\n";
@@ -286,19 +284,32 @@ void TestGenerateSequence() {
     g.add_sequence("0125555666");
     g.add_sequence("0129655688");
 
-    //cout<<"next genome w/seed = 0: "<<g.next_genome_logic(0, "012")<<"\n";
-    //cout<<"next genome w/seed = 1: "<<g.next_genome_logic(1, "012")<<"\n";
-    //cout<<"next genome w/seed = 8: "<<g.next_genome_logic(8, "012")<<"\n";
+    emp::Random random;
 
-    cout<<"\nAdd 4 10-bit sequences to graph: (these have same beginnings, but a loop)\n";
-    cout<<"0128675012\n0129643789\n0125555666\n0129655688\n\n";
+    cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
+
+    cout<<"\nAdd 8 10-bit sequences to graph: (these have same beginnings, but a loop)\n";
+    cout<<"0128675012\n0129643789\n0125555666\n0129655688\n0120120120\n0122876012\n0000000000\n0128764789\n\n";
     DeBruijnGraph g1 = DeBruijnGraph("0128675012", 3);
     g1.add_sequence("0129643789");
     g1.add_sequence("0125555666");
     g1.add_sequence("0129655688");
+    g1.add_sequence("0120120120");
+    g1.add_sequence("0122876012");
+    g1.add_sequence("0000000000");
+    g1.add_sequence("0128764789");
     //this does get stuck so we'll fix it
-    //cout<<"next genome w/seed = 1: "<<g1.next_genome_logic(1, "012")<<"\n";
-    //cout<<"next genome w/seed = 8: "<<g1.next_genome_logic(8, "012")<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "012")<<"\n";
 
 }
 
@@ -371,8 +382,8 @@ int main() {
     //TestAddSequence();
     //TestUniqueVerticies();
     //TestMultipleEnds();
-    TestRepetition();
-    //TestGenerateSequence();
+    //TestRepetition();
+    TestGenerateSequence();
     //TestRemoveSequence();
     //TestValid();
 }

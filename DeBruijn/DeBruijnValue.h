@@ -19,9 +19,10 @@ using std::string; using std::vector;
 class DBGraphValue {
 private:
 
-    //could make this a map of the adj to the number of sequences it's used in if it helps with remove_sequence
     /// Adjacency list--vector of all verticies this vertex points to
     vector<string> mAdjList = {};
+
+    vector<string> mAvailableAdj;
 
     // so you'd to to the adj list being pointed to, and then check the index to be accessed, and is the size == 
     // the index +1, then you know this vertex is done
@@ -31,11 +32,11 @@ private:
     bool mContainsBranch = false;
 
     /// True if the adjacency list contains either nothing or an empty vertex
-    ///2 if unassigned, 1 if list contains either nothing or an empty vertex, 0 if no empty vertex
-    //bool mEmptyAdjList = false;
+    /// 2 if unassigned, 1 if list contains either nothing or an empty vertex, 0 if no empty vertex
     int mEmptyAdjList = 2;
 
     /// Count of the number of sequences in the graph that use this kmer
+    /// Used to make sure we don't remove a duplicant sequence
     int mSequenceCount = 0;
 
 public:
@@ -149,6 +150,12 @@ public:
      * Decrement the sequence count
      */
     void decrement_sequence_count() { mSequenceCount--; }
+
+    void set_adj_availible() { mAvailableAdj = mAdjList; }
+    string get_adj_availible(int index) { return mAvailableAdj[index]; }
+    int adj_availible_size() { return mAvailableAdj.size(); }
+    void remove_adj_availible(string val) { 
+    mAvailableAdj.erase(std::remove(mAvailableAdj.begin(), mAvailableAdj.end(), val), mAvailableAdj.end()); }
 
 };
 
