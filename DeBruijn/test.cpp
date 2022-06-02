@@ -62,6 +62,11 @@ void TestBranchingGraph() {
     // no branches
     std::vector<int> vec({4,6,2,8,9,3,5,7});
     DeBruijnGraph g = DeBruijnGraph(vec, 3);
+    cout<<"Verticies in this graph that contain >1 adjacencies, or a branch: ";
+    for(int i = 0; i<int(g.get_branch_vertices().size()); ++i){
+        cout <<g.get_branch_vertices()[i]<<", ";
+    }
+    cout<<"\n";
     g.depth_first_traversal([&g] (string vertex) { 
         cout << vertex<< " empty bool-"<<g.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g.get_value(vertex).get_branch() << "\n"; });
@@ -273,7 +278,7 @@ void TestRepetition() {
 }
 
 void TestGenerateSequence() {
-    cout<<"This is meant test the application to MABE.\n";
+    cout<<"\nThis is meant test the application to MABE.\n";
     cout<<"In a graph with multiple added sequences, a reasonable new sequence should be returned \n"<<
     "describing the new genetic information of the net generation offspring.\n\n";
 
@@ -352,6 +357,8 @@ void TestRemoveSequence() {
     g1.depth_first_traversal([&g1] (string vertex) { 
         cout << vertex<< " count-"<<g1.get_value(vertex).get_sequence_count()<< ", "; });
 
+///@todo the 555555 doesn't work in display or in the removal from mVerts
+
     cout<<"\n\nTest a graph containing repetition in sequences:\n";
     DeBruijnGraph g2 = DeBruijnGraph("0128012", 3);
     g2.add_sequence("5555555");
@@ -372,18 +379,31 @@ void TestRemoveSequence() {
 void TestValid(){
     DeBruijnGraph g = DeBruijnGraph("0128012", 3);
     cout<<g.is_valid("0128012")<<g.is_valid("0128212")<<"\n";
+    DeBruijnGraph g1 = DeBruijnGraph("0128675012", 3);
+    g1.add_sequence("0129643789");
+    g1.add_sequence("0125555666");
+    g1.add_sequence("0129655688");
+    g1.add_sequence("0120120120");
+    g1.add_sequence("0122876012");
+    g1.add_sequence("0000000000");
+    g1.add_sequence("0128764789");
+    cout<<"\nTest combinations that could be created from graph\n";
+    cout<<"0128675012, 0129643789, 0125555666, 0129655688, 0120120120, 0122876012, 0000000000, 0128764789\n";
+    cout<< "0120125555 IS VALID: "<<g1.is_valid("0120125555")<<"\n";
+    cout<< "0120120129 IS VALID: "<<g1.is_valid("0120120129")<<"\n";
+    cout<< "0120129643 IS VALID: "<<g1.is_valid("0120129643")<<"\n";
 }
 
 int main() {
     //not sure if I've really tested attributes of the verticies and values and graph throughout this (size, adjlist, mbranch, mvert)
 
-    //TestConstructGraph();
-    //TestBranchingGraph();
-    //TestAddSequence();
-    //TestUniqueVerticies();
-    //TestMultipleEnds();
-    //TestRepetition();
-    //TestGenerateSequence();
-    //TestRemoveSequence();
-    //TestValid();
+    TestConstructGraph();
+    TestBranchingGraph();
+    TestAddSequence();
+    TestUniqueVerticies();
+    TestMultipleEnds();
+    TestRepetition();
+    TestGenerateSequence();
+    TestRemoveSequence();
+    TestValid();
 }

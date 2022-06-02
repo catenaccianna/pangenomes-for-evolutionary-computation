@@ -314,6 +314,7 @@ public:
      * @param sequence to remove
      */
     void remove_sequence(string sequence){
+
         /*if(!this->is_valid(sequence)){
             throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" );
         }*/
@@ -338,6 +339,8 @@ public:
                     this->remove(current);
                 }
                 sequence = sequence.substr(1, sequence.length()-1);
+
+
             }
             mVertices[sequence].decrement_sequence_count();
             if (mVertices[sequence].get_sequence_count() == 0){
