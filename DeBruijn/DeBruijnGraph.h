@@ -314,34 +314,35 @@ public:
      * @param sequence to remove
      */
     void remove_sequence(string sequence){
-        if(!this->is_valid(sequence)){
-            throw std::invalid_argument( "input sequence is invalid" );
-        }
+        /*if(!this->is_valid(sequence)){
+            throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" );
+        }*/
+        if(this->is_valid(sequence)){
+            string current, next;
+            bool current_duplicated, next_duplicated;
+            // while we still have sequence left:
+            while(int(sequence.size()) > mKmerLength){
 
-        string current, next;
-        bool current_duplicated, next_duplicated;
-        // while we still have sequence left:
-        while(int(sequence.size()) > mKmerLength){
+                current = sequence.substr(0,mKmerLength);
+                next = sequence.substr(1,mKmerLength);
+                current_duplicated = mVertices[current].get_sequence_count() > 1;
+                next_duplicated = mVertices[next].get_sequence_count() > 1;
 
-            current = sequence.substr(0,mKmerLength);
-            next = sequence.substr(1,mKmerLength);
-            current_duplicated = mVertices[current].get_sequence_count() > 1;
-            next_duplicated = mVertices[next].get_sequence_count() > 1;
-
-            mVertices[current].decrement_sequence_count();
-            //if the entire sequence is not exactly a duplicate, remove adjacency
-            if(!current_duplicated || !next_duplicated){
-                mVertices[current].remove_from_adj_list(next);
+                mVertices[current].decrement_sequence_count();
+                //if the entire sequence is not exactly a duplicate, remove adjacency
+                if(!current_duplicated || !next_duplicated){
+                    mVertices[current].remove_from_adj_list(next);
+                }
+                //if current is not a duplicate, delete it from mverticies
+                if (!current_duplicated){
+                    this->remove(current);
+                }
+                sequence = sequence.substr(1, sequence.length()-1);
             }
-            //if current is not a duplicate, delete it from mverticies
-            if (!current_duplicated){
-                this->remove(current);
+            mVertices[sequence].decrement_sequence_count();
+            if (mVertices[sequence].get_sequence_count() == 0){
+                this->remove(sequence);
             }
-            sequence = sequence.substr(1, sequence.length()-1);
-        }
-        mVertices[sequence].decrement_sequence_count();
-        if (mVertices[sequence].get_sequence_count() == 0){
-            this->remove(sequence);
         }
     }
 
