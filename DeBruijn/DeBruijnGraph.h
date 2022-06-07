@@ -460,10 +460,16 @@ public:
     void set_size(int s) { mSize = s; }
 
     /**
-     * Return size of graph
+     * Return size of graph (NOT the total number of sequences in the pangenome)
      * @return number of vertices the graph contains
      */
     int get_size() { return mSize; }
+
+    /**
+     * Return sequence size of graph
+     * @return number of sequences the graph has added into the total pangenome
+     */
+    int get_sequence_size() { return mSeqSize; }
 
     /**
      * Return vector containing all vertices in graph
