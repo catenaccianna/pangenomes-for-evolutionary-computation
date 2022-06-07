@@ -35,6 +35,9 @@ private:
     /// Number of vertices the graph contains
     int mSize = 0;
 
+    /// Number of sequences added to graph in total
+    int mSeqSize = 0;
+
     /// Length of the k-mer IDs
     int mKmerLength = 3;
 
@@ -43,9 +46,6 @@ private:
 
     /// Map of Debruijn vertex objects to their values/data
     map<string, DBGraphValue> mVertices;
-
-    /// Starting vertex so that we know which vertex to start traversing with
-    //string mStart;
 
     /// Vector of all Vertices the map contains
     // (will this variable be necessary to keep around if I already have a flag attribute in DBValue?)
@@ -73,9 +73,9 @@ private:
      * @param input string containing all genetic data sequentially
      */
     void ConstructFromString(string input, int kmer_length){
+        mSeqSize += 1;
         mSequenceLength = input.size();
         mKmerLength = kmer_length;
-        //mStart = input.substr(0, kmer_length);
         mStarts.push_back(input.substr(0, kmer_length));
         //if the graph is one vertex long:
         if(int(input.length()) == kmer_length){
@@ -270,6 +270,7 @@ public:
      * @param sequence to add to the graph
      */
     void add_sequence(string sequence){
+        mSeqSize += 1;
         mSequenceLength = sequence.size();
         // if the beginning string is not in the graph, add a new beginning vertex
         if(mVertices.count(sequence.substr(0, mKmerLength)) <= 0){
@@ -319,6 +320,7 @@ public:
             throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" );
         }*/
         if(this->is_valid(sequence)){
+            mSeqSize -= 1;
             string current, next;
             bool current_duplicated, next_duplicated;
             // while we still have sequence left:
