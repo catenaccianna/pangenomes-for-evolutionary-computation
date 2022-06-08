@@ -270,6 +270,7 @@ public:
      * @param sequence to add to the graph
      */
     void add_sequence(string sequence){
+        std::cout<<std::endl<<sequence<<std::endl;
         mSeqSize += 1;
         mSequenceLength = sequence.size();
         // if the beginning string is not in the graph, add a new beginning vertex
