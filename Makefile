@@ -13,3 +13,17 @@ CFLAGS_debug := -g $(CFLAGS_all)
 test:
 	$(CXX) $(CFLAGS_debug) DeBruijn/test.cpp
 	./a.out
+
+debug: test.cpp
+	g++ $(CXX) $(CFLAGS_debug) $< -o $@.out
+	./$@.out
+
+clean: 
+	rm -f *.out
+	rm -f *.o
+	rm -f *.gcda
+	rm -f *.gcno
+	rm -f *.info
+	rm -f *.gcov 
+	rm -f ./Coverage* 
+	rm -rf ./temp

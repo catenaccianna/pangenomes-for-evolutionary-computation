@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <iterator>
 
 using std::string; using std::vector;
 
@@ -68,6 +69,24 @@ public:
      */
     int adj_list_size(){ return mAdjList.size(); }
 
+    
+  vector<string>::iterator unique_ (vector<string>::iterator first, vector<string>::iterator last)
+    {
+        std::string f = *first;
+        std::cout<<std::endl<<"first"<<f;
+
+        std::cout<<" bool"<<(*first == *last)<<std::endl;
+        if (first==last) return last;
+
+        vector<string>::iterator result = first;
+        while (++first != last)
+        {   
+            if (!(*result == *first))  // or: if (!pred(*result,*first)) for version (2)
+            *(++result)=*first;
+        }
+        return ++result;
+    }
+
     /**
      * Add to adjacency list (creates edge)
      * @param addition vertex to add to this vertex's adjacency list
@@ -75,8 +94,16 @@ public:
     void add_to_adj_list(string addition){ 
         mAdjList.push_back(addition);
         vector<string>::iterator it;
-        it = std::unique(mAdjList.begin(), mAdjList.end());
-        mAdjList.resize( std::distance(mAdjList.begin(),it) ); }
+        //it = std::unique(mAdjList.begin(), mAdjList.end());
+        //it = unique_(mAdjList.begin(), mAdjList.end());
+        //mAdjList.resize( std::distance(mAdjList.begin(),it) ); 
+        std::sort( mAdjList.begin(), mAdjList.end() );
+        mAdjList.erase( std::unique( mAdjList.begin(), mAdjList.end() ), mAdjList.end() );
+        std::cout<<std::endl<<"dist"<<std::distance(mAdjList.begin(),it)<<std::endl;
+          for(auto i : mAdjList){
+            std::cout<<i<<std::endl;
+        }
+    }
 
     /**
      * Remove edge, remove value from adjacency list
