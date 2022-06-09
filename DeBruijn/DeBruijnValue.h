@@ -94,15 +94,8 @@ public:
     void add_to_adj_list(string addition){ 
         mAdjList.push_back(addition);
         vector<string>::iterator it;
-        //it = std::unique(mAdjList.begin(), mAdjList.end());
-        //it = unique_(mAdjList.begin(), mAdjList.end());
-        //mAdjList.resize( std::distance(mAdjList.begin(),it) ); 
         std::sort( mAdjList.begin(), mAdjList.end() );
         mAdjList.erase( std::unique( mAdjList.begin(), mAdjList.end() ), mAdjList.end() );
-        std::cout<<std::endl<<"dist"<<std::distance(mAdjList.begin(),it)<<std::endl;
-          for(auto i : mAdjList){
-            std::cout<<i<<std::endl;
-        }
     }
 
     /**

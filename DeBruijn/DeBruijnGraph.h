@@ -106,7 +106,7 @@ public:
     DeBruijnGraph()=default;
     ~DeBruijnGraph()=default;
 
-///@remark CONSTRUCTORS
+///@remark CONSTRUCTORS /////////////////////////////////////////////////////////////
 
     /**
      * Construct a De Bruijn Graph object from a vector of strings
@@ -175,7 +175,7 @@ public:
         
     }
 
-///@remark MABE FUNCTIONS (next genome, add sequence, remove sequence)
+///@remark MABE FUNCTIONS (next genome, add sequence, remove sequence) /////////////////////////////////////////////////////////////
 
     /**
      * Recursive function to traverse through a single path in the graph, with branches chosen at random
@@ -195,28 +195,36 @@ public:
         return path;
     }
 
+    /**
+     * so I either need to somehow make sure random does not land on an index that has reached it's max visitor count, OR 
+     * generate a new random seed until I reach one that has not reached max visitor count (time O(n^2)?) OR
+     * create a new vector in DBValue for possible verticies to grab (does vector '=' or 'remove' make time complexity go up?)
+     * @param random Empirical random number generator
+     * @param organism whose genome we are modifying--here I am just going to insert a 3-char string to represent the start
+     * 
+     * @note should a sequence be availible as many times as we see it in all sequences in the graph or only 
+     *       as many times as it appears in the sequence it appears most in?
+     */
     string modify_org(emp::Random & random, string organism){
-        string path = organism;
+        organism = organism.substr(0,mKmerLength); //make the string the first kmer if it is not already
+        string path = organism;                    //initialize string variables we use to change and go down the path
         string current = organism;
         string next;
-        mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1);
+        mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1); //mark 1st kmer as visited
         int index;
-        // so I either need to somehow make sure random does not land on an index that has reached it's max visitor count, OR 
-        // generate a new random seed until I reach one that has not reached max visitor count (time O(n^2)?) OR
-        // create a new vector in DBValue for possible verticies to grab (does vector '=' or 'remove' make time complexity go up?)
-        while (int(path.size()) < mSequenceLength){
-            if(mVertices[current].get_visitor_flag() == 1){
-                mVertices[current].set_adj_availible();
+        
+        while (int(path.size()) < mSequenceLength){                 //while our path hasn't reached the sequence length
+            if(mVertices[current].get_visitor_flag() == 1){         
+                mVertices[current].set_adj_availible();      //available choices = full adj_list if this is our first time seeing it
             }
-            // generate index using the empirical random library when we have empirical hooked up
-            index = random.GetUInt(mVertices[current].adj_availible_size()-1);
-            next = mVertices[current].get_adj_availible(index);
-            path+= next.substr(2,1);
+            index = random.GetUInt(mVertices[current].adj_availible_size());  //index will be randomly generated number
+            next = mVertices[current].get_adj_availible(index);                 //record next kmer using index
+            path+= next.substr(2,1);                                            //add it to path
 
-            mVertices[next].change_visitor_flag(mVertices[next].get_visitor_flag()+1);
+            mVertices[next].change_visitor_flag(mVertices[next].get_visitor_flag()+1);  //mark next as visited
             if(mVertices[next].get_visitor_flag() == mVertices[current].get_sequence_count()){
-                mVertices[current].remove_adj_availible(next);
-            }
+                mVertices[current].remove_adj_availible(next);  //remove kmer from availible seq.s if it has been visited as many times
+            }                                                   //as it appears in all sequences in graph
             current = next;
             /*if(mVertices[mVertices[current].get_adj_list()[index]].get_visitor_flag() <= int(mVertices[mVertices[current].get_adj_list()[index]].adj_list_size())){
                 current = mVertices[current].get_adj_list()[index];
@@ -270,7 +278,6 @@ public:
      * @param sequence to add to the graph
      */
     void add_sequence(string sequence){
-        std::cout<<std::endl<<sequence<<std::endl;
         mSeqSize += 1;
         mSequenceLength = sequence.size();
         // if the beginning string is not in the graph, add a new beginning vertex
@@ -374,7 +381,7 @@ public:
         return true;
     }
 
-///@remark DISPLAY AND TRAVERSAL
+///@remark DISPLAY AND TRAVERSAL /////////////////////////////////////////////////////////////
 
 ///@todo have Emily look at the general setup of this function, because I'm not sure if time and space complexity are just too much (probably are honestly)
     template <typename FuncType>
@@ -452,7 +459,7 @@ public:
             });
     }
 
-///@remark GETTERS AND SETTERS
+///@remark GETTERS AND SETTERS /////////////////////////////////////////////////////////////
 
     /**
      * Set the size object

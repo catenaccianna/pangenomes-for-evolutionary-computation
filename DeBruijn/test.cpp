@@ -408,7 +408,8 @@ void TestBitOrgs(){
     g.add_sequence("1010110110001010000011000111000101101101100101010001101111000111001000011010101111010110110000001010");
     g.add_sequence("1100010101110001101101101000010000001000101100011011001110101001111001101011101101011000111110110011");
     g.display();
-    //cout<<std::endl<<g.get_value("110").adj_list_size()<<std::endl;
+
+    cout<<std::endl<<g.get_sequence_size()<<std::endl;
 }
 
 int main() {
@@ -420,8 +421,8 @@ int main() {
     // TestUniqueVerticies();
     // TestMultipleEnds();
     // TestRepetition();
-    // TestGenerateSequence();
+    TestGenerateSequence();
     // TestRemoveSequence();
     // TestValid();
-    TestBitOrgs();
+    // TestBitOrgs();
 }
