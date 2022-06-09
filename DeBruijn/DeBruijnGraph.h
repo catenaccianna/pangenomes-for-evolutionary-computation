@@ -167,8 +167,10 @@ public:
             mVertices[start_v].set_branch(true);
             mBranchedVertices.push_back(start_v);
             vector<string>::iterator it;
-            it = std::unique(mBranchedVertices.begin(), mBranchedVertices.end());
-            mBranchedVertices.resize( std::distance(mBranchedVertices.begin(),it) );
+            //it = std::unique(mBranchedVertices.begin(), mBranchedVertices.end());
+            std::sort( mBranchedVertices.begin(), mBranchedVertices.end() );
+            mBranchedVertices.erase( std::unique( mBranchedVertices.begin(), mBranchedVertices.end() ), mBranchedVertices.end() );
+            //mBranchedVertices.resize( std::distance(mBranchedVertices.begin(),it) );
         }
         mVertices[start_v].add_to_adj_list(end_v);
         mVertices[start_v].increment_sequence_count();
@@ -306,6 +308,7 @@ public:
         mVertices[sequence].increment_sequence_count();
     }
 
+private:
     /**
      * remove_sequence helper function to make sure sequence is removed from all containers
      * @param sequence to remove
@@ -316,7 +319,8 @@ public:
         mStarts.erase(std::remove(mStarts.begin(), mStarts.end(), sequence), mStarts.end());
         mBranchedVertices.erase(std::remove(mBranchedVertices.begin(), mBranchedVertices.end(), sequence), mBranchedVertices.end());
     }
-
+    
+public:
     /**
      * Remove a sequence from the graph
      * To be used in BeforeDeath in MABE

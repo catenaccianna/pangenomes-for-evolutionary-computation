@@ -170,6 +170,7 @@ void TestUniqueVerticies() {
     cout<<"This is meant to show whether there are repeats of the same verticies in the graph, "<<"\n";
     cout<<"which would most likely happpen where there is a branch."<<"\n";
     cout<<"This test will print out a message whenever it comes across a copy. (So no message means we passed)\n\n";
+    ///@note the print statment is in the comparison function above - looks like this is doing a whole lot of nothing w/o that
 
     // make sure in this graph especially that there's only one node for something like 289
     // multiple limbs on the branches: "289" -> "896", "894", "895"
@@ -179,7 +180,7 @@ void TestUniqueVerticies() {
     vector<string> graph = g.get_all_vertices();
     vector<string> g_result = g.get_all_vertices();
     vector<string>::iterator it;
-    it = std::unique_copy (graph.begin(), graph.end(), graph.begin(), comparison);
+    it = std::unique_copy (graph.begin(), graph.end(), g_result.begin(), comparison);
 
     // make sure there are unique elements in the vector that stores branch points
     cout<<"Testing \"branched verticies\" vector for above sequence...\n";
@@ -193,7 +194,7 @@ void TestUniqueVerticies() {
     DeBruijnGraph g0 = DeBruijnGraph(vec, 3);
     graph = g0.get_all_vertices();
     g_result = g0.get_all_vertices();
-    it = std::unique_copy (graph.begin(), graph.end(), graph.begin(), comparison);
+    it = std::unique_copy (graph.begin(), graph.end(), g_result.begin(), comparison);
     cout<<"Testing \"branched verticies\" vector for above sequence...\n";
     branches = g0.get_branch_vertices();
     branch_result = g0.get_branch_vertices();
@@ -205,7 +206,7 @@ void TestUniqueVerticies() {
     DeBruijnGraph g1 = DeBruijnGraph(vec, 3);
     graph = g1.get_all_vertices();
     g_result = g1.get_all_vertices();
-    it = std::unique_copy (graph.begin(), graph.end(), graph.begin(), comparison);
+    it = std::unique_copy (graph.begin(), graph.end(), g_result.begin(), comparison);
     cout<<"Testing \"branched verticies\" vector for above sequence...\n";
     branches = g1.get_branch_vertices();
     branch_result = g1.get_branch_vertices();
@@ -217,10 +218,46 @@ void TestUniqueVerticies() {
     DeBruijnGraph g2 = DeBruijnGraph(vec, 3);
     graph = g2.get_all_vertices();
     g_result = g2.get_all_vertices();
-    it = std::unique_copy (graph.begin(), graph.end(), graph.begin(), comparison);
+    it = std::unique_copy (graph.begin(), graph.end(), g_result.begin(), comparison);
     cout<<"Testing \"branched verticies\" vector for above sequence...\n";
     branches = g2.get_branch_vertices();
     branch_result = g2.get_branch_vertices();
+    it = std::unique_copy (branches.begin(), branches.end(), branch_result.begin(), comparison);
+
+    // MABE sequence
+    cout<<"\nTesting sequence 1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110...\n";
+    string organism = "1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110";
+    DeBruijnGraph g3 = DeBruijnGraph(organism, 3);
+    graph = g3.get_all_vertices();
+    g_result = g3.get_all_vertices();
+    it = std::unique_copy (graph.begin(), graph.end(), g_result.begin(), comparison);
+    cout<<"Testing \"branched verticies\" vector for above sequence...\n";
+    branches = g3.get_branch_vertices();
+    branch_result = g3.get_branch_vertices();
+    it = std::unique_copy (branches.begin(), branches.end(), branch_result.begin(), comparison);
+
+    // MABE sequence
+    cout<<"\nTesting sequence 1111111110111100011110100010101010101110010011100111010000101110001101010010110010010111110111100011...\n";
+    organism = "1111111110111100011110100010101010101110010011100111010000101110001101010010110010010111110111100011";
+    DeBruijnGraph g4 = DeBruijnGraph(organism, 3);
+    graph = g4.get_all_vertices();
+    g_result = g4.get_all_vertices();
+    it = std::unique_copy (graph.begin(), graph.end(), g_result.begin(), comparison);
+    cout<<"Testing \"branched verticies\" vector for above sequence...\n";
+    branches = g4.get_branch_vertices();
+    branch_result = g4.get_branch_vertices();
+    it = std::unique_copy (branches.begin(), branches.end(), branch_result.begin(), comparison);
+
+    // MABE sequence
+    cout<<"\nTesting sequence 0101000101001000001011010110101010011101000100101100000111000100000010010010011111101011101001010011...\n";
+    organism = "0101000101001000001011010110101010011101000100101100000111000100000010010010011111101011101001010011";
+    DeBruijnGraph g5 = DeBruijnGraph(organism, 3);
+    graph = g5.get_all_vertices();
+    g_result = g5.get_all_vertices();
+    it = std::unique_copy (graph.begin(), graph.end(), g_result.begin(), comparison);
+    cout<<"Testing \"branched verticies\" vector for above sequence...\n";
+    branches = g5.get_branch_vertices();
+    branch_result = g5.get_branch_vertices();
     it = std::unique_copy (branches.begin(), branches.end(), branch_result.begin(), comparison);
 
 }
@@ -421,8 +458,8 @@ int main() {
     // TestUniqueVerticies();
     // TestMultipleEnds();
     // TestRepetition();
-    TestGenerateSequence();
-    // TestRemoveSequence();
+    // TestGenerateSequence();
+    TestRemoveSequence();
     // TestValid();
     // TestBitOrgs();
 }
