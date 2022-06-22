@@ -10,6 +10,14 @@ CXX := g++
 CFLAGS_nondebug := -O3 -DNDEBUG $(CFLAGS_all)
 CFLAGS_debug := -g $(CFLAGS_all)
 
+assert:
+	$(CXX) $(CFLAGS_debug) DeBruijn/DeBruijnGraph.cpp
+	./a.out
+
+assert_value:
+	$(CXX) $(CFLAGS_debug) DeBruijn/DeBruijnValue.cpp
+	./a.out
+
 test:
 	$(CXX) $(CFLAGS_debug) DeBruijn/test.cpp
 	./a.out

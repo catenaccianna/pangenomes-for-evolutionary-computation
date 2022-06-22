@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include <string>
+#include "../../../mabe/MABE2/source/third-party/empirical/third-party/Catch/single_include/catch2/catch.hpp"
 
 using std::unique; using std::string;
 
@@ -56,13 +57,13 @@ void TestConstructGraph() {
 void TestBranchingGraph() {
     cout<<"\nBRANCHING GRAPH TEST\n";
     cout<<"\"empty bool\" represents whether or not there is an empty node in the vertex's adjacency list "<<
-    "(this would happen if the node is the last one)\n";
+    "(would happen if the node is the last one)\n";
     cout<<"\"contains branch\" is a boolean representing whether the vertex contains >1 adjacent vertex (a branch)\n";
 
     // no branches
     std::vector<int> vec({4,6,2,8,9,3,5,7});
     DeBruijnGraph g = DeBruijnGraph(vec, 3);
-    cout<<"Verticies in this graph that contain >1 adjacencies, or a branch: ";
+    cout<<"\nVerticies in this graph that contain >1 adjacencies, or a branch: ";
     for(int i = 0; i<int(g.get_branch_vertices().size()); ++i){
         cout <<g.get_branch_vertices()[i]<<", ";
     }
@@ -100,8 +101,7 @@ void TestBranchingGraph() {
         cout << vertex<< " empty bool-"<<g1.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g1.get_value(vertex).get_branch() << "\n"; });
 
-    cout<<"\nThis one is not in order, I think because of how the branches were added into and popped off the queue, "<<
-    "\nbut does this matter? Ask Emily about this!\n";
+    cout<<"\nNote: not in order because of traversal--\n";
 
     g1.display();
     cout<<"\n";
@@ -127,30 +127,30 @@ void TestAddSequence() {
     string str1 = "12345";
     DeBruijnGraph g = DeBruijnGraph(str1, 3);
     cout << "Original graph:\n";
-    cout<<"size "<<g.get_size()<<"\n";
+    cout<<"size "<<g.get_size()<<", num sequences "<<g.get_sequence_size()<<"\n";
     g.display();
 
     cout << "\nAfter first sequence (branch from 123, different ends):\n";
     g.add_sequence("1236");
-    cout<<"size "<<g.get_size()<<"\n";
+    cout<<"size "<<g.get_size()<<", num sequences "<<g.get_sequence_size()<<"\n";
     g.display();
 
     // multiple limbs on the same branch (at 123)
     cout << "\nAfter second sequence (another branch from 123, another different end):\n";
     g.add_sequence("1239476");
-    cout<<"size "<<g.get_size()<<"\n";
+    cout<<"size "<<g.get_size()<<", num sequences "<<g.get_sequence_size()<<"\n";
     g.display();
 
     // different beginnings
     cout << "\nAfter third sequence (different beginnings):\n";
     g.add_sequence("7239436");
-    cout<<"size "<<g.get_size()<<"\n";
+    cout<<"size "<<g.get_size()<<", num sequences "<<g.get_sequence_size()<<"\n";
     g.display();
 
     // different middles
     cout << "\nAfter fourth sequence (different middles):\n";
     g.add_sequence("723111436");
-    cout<<"size "<<g.get_size()<<"\n";
+    cout<<"size "<<g.get_size()<<", num sequences "<<g.get_sequence_size()<<"\n";
     g.display();
     ///239 visited twice
 
@@ -297,7 +297,7 @@ void TestRepetition() {
     cout<<"\nNew graph with an added sequence that creates a loop:\noriginal:\n";
     DeBruijnGraph g1 = DeBruijnGraph("1234567", 3);
     g1.display();
-    cout<<"after addition:\n";
+    cout<<"\nafter addition:\n";
     g1.add_sequence("98567123");
     g1.display();
     ///123 visited twice
@@ -315,7 +315,7 @@ void TestRepetition() {
 }
 
 void TestGenerateSequence() {
-    cout<<"\nThis is meant test the application to MABE.\n";
+    cout<<"\nGENERATE SEQUENCE: This is meant test the application to MABE.\n";
     cout<<"In a graph with multiple added sequences, a reasonable new sequence should be returned \n"<<
     "describing the new genetic information of the net generation offspring.\n\n";
 
@@ -332,7 +332,7 @@ void TestGenerateSequence() {
     cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
     cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
     cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
-    cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012")<<"\n"; 
     cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
 
     cout<<"\nAdd 8 10-bit sequences to graph: (these have same beginnings, but a loop)\n";
@@ -346,19 +346,18 @@ void TestGenerateSequence() {
     g1.add_sequence("0000000000");
     g1.add_sequence("0128764789");
     //this does get stuck so we'll fix it
-    cout<<"next genome "<<g1.modify_org(random, "012")<<"\n";
-    cout<<"next genome "<<g1.modify_org(random, "012")<<"\n";
-    cout<<"next genome "<<g1.modify_org(random, "012")<<"\n";
-    cout<<"next genome "<<g1.modify_org(random, "012")<<"\n";
-    cout<<"next genome "<<g1.modify_org(random, "012")<<"\n";
-    cout<<"next genome "<<g1.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
 
 }
 
 void TestRemoveSequence() {
     //size is weird, and repetition does not disappear from graph
-    cout<<"\nREMOVE SEQUENCE TEST\n";
-    cout<<"This is meant test the application to MABE.\n";
+    cout<<"\nREMOVE SEQUENCE TEST: This is meant test the application to MABE.\n";
     cout<<"Before the death of an organism in MABE, we should be able to remove it's genome \n"<<
     "from the existing pangenome pool.\n";
     cout<<"Count represents the number of times the kmer appears in any sequence in the graph.\n";
@@ -366,20 +365,24 @@ void TestRemoveSequence() {
     cout<<"\nTest a graph containing a single sequence:\n";
     DeBruijnGraph g = DeBruijnGraph("0128644", 3);
     cout<<"initial size: "<< g.get_size()<<"\n";
+    cout<<"initial num sequences: "<< g.get_sequence_size()<<"\n";
     g.depth_first_traversal([&g] (string vertex) { 
        cout << vertex<< " count-"<<g.get_value(vertex).get_sequence_count()<< ", "; });
     g.remove_sequence("0128644");
     cout<<"\nsize after removal: "<<g.get_size()<<"\n";
+    cout<<"num sequences after removal: "<< g.get_sequence_size()<<"\n";
     g.depth_first_traversal([&g] (string vertex) { 
         cout << vertex<< " count-"<<g.get_value(vertex).get_sequence_count()<< ", "; });
 
     cout<<"\nTest a graph containing a single repetitive sequence:\n";
     DeBruijnGraph g0 = DeBruijnGraph("01280127", 3);
     cout<<"initial size: "<< g0.get_size()<<"\n";
+    cout<<"initial num sequences: "<< g.get_sequence_size()<<"\n";
     g0.depth_first_traversal([&g0] (string vertex) { 
         cout << vertex<< " count-"<<g0.get_value(vertex).get_sequence_count()<< ", "; });
     g0.remove_sequence("01280127");
     cout<<"\nsize after removal: "<<g0.get_size()<<"\n";
+    cout<<"num sequences after removal: "<< g.get_sequence_size()<<"\n";
     g0.depth_first_traversal([&g0] (string vertex) { 
         cout << vertex<< " count-"<<g0.get_value(vertex).get_sequence_count()<< ", "; });
 
@@ -387,10 +390,12 @@ void TestRemoveSequence() {
     DeBruijnGraph g1 = DeBruijnGraph("0128675012", 3);
     g1.add_sequence("6543210");
     cout<<"initial size: "<< g1.get_size()<<"\n";
+    cout<<"initial num sequences: "<< g.get_sequence_size()<<"\n";
     g1.depth_first_traversal([&g1] (string vertex) { 
         cout << vertex<< " count-"<<g1.get_value(vertex).get_sequence_count()<< ", "; });
     g1.remove_sequence("0128012");
     cout<<"\nsize after removal: "<<g1.get_size()<<"\n";
+    cout<<"num sequences after removal: "<< g.get_sequence_size()<<"\n";
     g1.depth_first_traversal([&g1] (string vertex) { 
         cout << vertex<< " count-"<<g1.get_value(vertex).get_sequence_count()<< ", "; });
 
@@ -400,20 +405,24 @@ void TestRemoveSequence() {
     DeBruijnGraph g2 = DeBruijnGraph("0128012", 3);
     g2.add_sequence("5555555");
     cout<<"initial size: "<< g2.get_size()<<"\n";
+    cout<<"initial num sequences: "<< g.get_sequence_size()<<"\n";
     g2.depth_first_traversal([&g2] (string vertex) { 
         cout << vertex<< " count-"<<g2.get_value(vertex).get_sequence_count()<< ", "; });
     g2.remove_sequence("0128012");
     cout<<"\nsize after removal: "<<g2.get_size()<<"\n";
+    cout<<"num sequences after removal: "<< g.get_sequence_size()<<"\n";
     g2.depth_first_traversal([&g2] (string vertex) { 
         cout << vertex<< " count-"<<g2.get_value(vertex).get_sequence_count()<< ", "; });
     g2.remove_sequence("5555555");
     cout<<"\nsize after 2nd removal: "<<g2.get_size()<<"\n";
+    cout<<"num sequences after 2nd removal: "<< g.get_sequence_size()<<"\n";
     g2.depth_first_traversal([&g2] (string vertex) { 
         cout << vertex<< " count-"<<g2.get_value(vertex).get_sequence_count()<< ", "; });
     cout<<"\n";
 }
 
 void TestValid(){
+    cout<<"\nVALIDITY TEST: Make sure we can test if a function is valid.\n";
     DeBruijnGraph g = DeBruijnGraph("0128012", 3);
     cout<<g.is_valid("0128012")<<g.is_valid("0128212")<<"\n";
     DeBruijnGraph g1 = DeBruijnGraph("0128675012", 3);
@@ -432,7 +441,9 @@ void TestValid(){
 }
 
 void TestBitOrgs(){
+    cout<<"\nTEST BITSORGS\n";
     DeBruijnGraph g;
+    emp::Random random;
     g.add_sequence("1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110");
     g.add_sequence("1111111110111100011110100010101010101110010011100111010000101110001101010010110010010111110111100011");
     g.add_sequence("1101100110101001001111110000100010110001101010100100101100010000111001101001011000011010111001000001");
@@ -446,7 +457,13 @@ void TestBitOrgs(){
     g.add_sequence("1100010101110001101101101000010000001000101100011011001110101001111001101011101101011000111110110011");
     g.display();
 
-    cout<<std::endl<<g.get_sequence_size()<<std::endl;
+    cout<<"next genome "<<g.modify_org(random, "111")<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "110")<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "101")<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "110")<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "111")<<"\n"; 
+    cout<<"next genome "<<g.modify_org(random, "010")<<"\n";
+    
 }
 
 int main() {
@@ -459,7 +476,7 @@ int main() {
     // TestMultipleEnds();
     // TestRepetition();
     // TestGenerateSequence();
-    TestRemoveSequence();
+    // TestRemoveSequence();
     // TestValid();
-    // TestBitOrgs();
+     TestBitOrgs();
 }

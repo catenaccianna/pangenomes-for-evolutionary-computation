@@ -10,6 +10,13 @@
  *       creating a new sequence, we're going to want to see both locations of it
  * 
  * @todo ask Emily about the process where you look at which statements are not being used in your code (for after tests)
+ * 
+ * 
+ * NEXT:
+ * - fix seg fault by creating some kind of new endpoint detector system
+ * - figure out how to copy files to hpcc and how to run them
+ * - take out branching variable
+ * - 
  */
 
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
@@ -17,6 +24,7 @@
 
 //#include "../../Desktop/mabe/MABE2/source/orgs/BitsOrg.hpp" here?
 #include "../../../mabe/MABE2/source/third-party/empirical/include/emp/math/Random.hpp"
+//#include "../../../mabe/MABE2/source/core/MABEScript.hpp"
 
 #include "DeBruijnValue.h"
 #include <vector>
@@ -55,6 +63,34 @@ private:
     vector<string> mStarts;
 
     /**
+     * Set a vertex with no value as a place-holder
+     * @param v vertex object to add to the graph's list of vertices
+     */
+    void set_empty_vertex(string v){
+        mVertices[v];
+    }
+
+    /**
+     * Add an edge between two vertices
+     * @param start_v Starting Debruijn vertex
+     * @param end_v Vertex being pointed to
+     */
+    void add_edge(string start_v, string end_v){
+        int initial_adj_size = mVertices[start_v].adj_list_size();
+        mVertices[start_v].add_to_adj_list(end_v);
+        if(initial_adj_size > 0){ //if the adj_list is not empty, AND new adj_list size > old_adj_list.size, then
+            if(initial_adj_size < mVertices[start_v].adj_list_size()){ //this implies the vertex is a branch point
+                mVertices[start_v].set_branch(true);
+                mBranchedVertices.push_back(start_v);
+                vector<string>::iterator it;
+                mBranchedVertices.erase( std::unique( mBranchedVertices.begin(), mBranchedVertices.end() ), mBranchedVertices.end() );
+            }
+        }
+        mVertices[start_v].increment_sequence_count();
+        
+    }
+
+    /**
      * Create a useable sequence from the input to construct the graph
      * @param num_input vector of numbers to create a graph from
      * @param kmer_length length of each vertex ID
@@ -82,7 +118,6 @@ private:
             this->set_empty_vertex(input);
         }
         // if the vertex is already in the graph, then skip this and don't add to size
-        // is there anything else we should only do if it's not already in here?
         if(mVertices.count(input.substr(0, mKmerLength)) <= 0){
             mSize++;
         }
@@ -99,6 +134,7 @@ private:
             input = input.substr(1, input.length()-1);
         }
         mVertices[input].set_empty_bool(1);
+        mVertices[input].increment_endpoint();
         mVertices[input].increment_sequence_count();
     }
 
@@ -148,35 +184,6 @@ public:
         this->ConstructFromString(input, kmer_length);
     }
 
-    /**
-     * Set a vertex with no value as a place-holder
-     * @param v vertex object to add to the graph's list of vertices
-     */
-    void set_empty_vertex(string v){
-        mVertices[v];
-    }
-
-    /**
-     * Add an edge between two vertices
-     * @param start_v Starting Debruijn vertex
-     * @param end_v Vertex being pointed to
-     */
-    void add_edge(string start_v, string end_v){
-        //if the adj_list is not empty, this implies the vertex is a branch point
-        if(mVertices[start_v].adj_list_size() > 0){
-            mVertices[start_v].set_branch(true);
-            mBranchedVertices.push_back(start_v);
-            vector<string>::iterator it;
-            //it = std::unique(mBranchedVertices.begin(), mBranchedVertices.end());
-            std::sort( mBranchedVertices.begin(), mBranchedVertices.end() );
-            mBranchedVertices.erase( std::unique( mBranchedVertices.begin(), mBranchedVertices.end() ), mBranchedVertices.end() );
-            //mBranchedVertices.resize( std::distance(mBranchedVertices.begin(),it) );
-        }
-        mVertices[start_v].add_to_adj_list(end_v);
-        mVertices[start_v].increment_sequence_count();
-        
-    }
-
 ///@remark MABE FUNCTIONS (next genome, add sequence, remove sequence) /////////////////////////////////////////////////////////////
 
     /**
@@ -197,45 +204,75 @@ public:
         return path;
     }
 
+    void check_for_endpoint(string current){
+        vector<string> adj = mVertices[current].get_adj_list();
+        for(auto i : adj){
+            cout<<i<<" ";
+            if(mVertices[i].get_sequence_count() == mVertices[i].get_endpoint()){
+                mVertices[current].remove_adj_availible(i, 1);
+                cout<<"<removed ";
+            }
+        }
+        cout<<std::endl;
+
+    }
+
     /**
-     * so I either need to somehow make sure random does not land on an index that has reached it's max visitor count, OR 
-     * generate a new random seed until I reach one that has not reached max visitor count (time O(n^2)?) OR
-     * create a new vector in DBValue for possible verticies to grab (does vector '=' or 'remove' make time complexity go up?)
+     * Given the genome of an organism, do crossover (if probability allows) by randomly choosing branches of existing 
+     * genomes in the graph to pursue
      * @param random Empirical random number generator
      * @param organism whose genome we are modifying--here I am just going to insert a 3-char string to represent the start
      * 
      * @note should a sequence be availible as many times as we see it in all sequences in the graph or only 
      *       as many times as it appears in the sequence it appears most in?
+     * so I either need to somehow make sure random does not land on an index that has reached it's max visitor count
+     * or if it is going to be a premature endpoint without any adj to choose from
      */
-    string modify_org(emp::Random & random, string organism){
-        organism = organism.substr(0,mKmerLength); //make the string the first kmer if it is not already
-        string path = organism;                    //initialize string variables we use to change and go down the path
-        string current = organism;
+    string modify_org(emp::Random & random, std::string organism, double probability = 1){
+        string current = organism.substr(0,mKmerLength); //make the string the first kmer if it is not already
+        cout<<"kmer: "<<current<<"\n";
+        string path = current;                     //initialize string variables we use to change and go down the path
         string next;
-        mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1); //mark 1st kmer as visited
+        mVertices[current].change_visitor_flag(1); //mark 1st kmer as visited
         int index;
         
-        while (int(path.size()) < mSequenceLength){                 //while our path hasn't reached the sequence length
+        //If P() then we will modify this genome, else do nothing
+        if(random.P(probability)){
+            while (int(path.size()) < mSequenceLength-1){                 //while our path hasn't reached the sequence length
+                if(mVertices[current].get_visitor_flag() == 1){         
+                    mVertices[current].set_adj_availible();      //available choices = full adj_list if this is our first time seeing it
+                    check_for_endpoint(current);
+                }
+                index = random.GetUInt(mVertices[current].adj_availible_size());  //index will be randomly generated number
+                //cout<<"index "<<index<<std::endl;
+                next = mVertices[current].get_adj_availible(index);                 //record next kmer using index
+                path+= next.substr(mKmerLength-1,1);                                            //add it to path
+
+                mVertices[next].change_visitor_flag(mVertices[next].get_visitor_flag()+1);  //mark next as visited
+                if(mVertices[next].get_endpoint() == mVertices[current].get_sequence_count()){
+                    mVertices[current].remove_adj_availible(next, 1);
+                }
+                if(mVertices[next].get_visitor_flag() == mVertices[current].get_sequence_count()){
+                    //cout<<"remove "<<next<<"\n";
+                    mVertices[current].remove_adj_availible(next);  //remove kmer from availible seq.s if it has been visited as many times
+                }                                                   //as it appears in all sequences in graph
+                
+                current = next;
+            }
+            //cout<<"end of loop\n";
             if(mVertices[current].get_visitor_flag() == 1){         
                 mVertices[current].set_adj_availible();      //available choices = full adj_list if this is our first time seeing it
             }
+            mVertices[current].add_in_availible_ends();
             index = random.GetUInt(mVertices[current].adj_availible_size());  //index will be randomly generated number
             next = mVertices[current].get_adj_availible(index);                 //record next kmer using index
-            path+= next.substr(2,1);                                            //add it to path
+            path+= next.substr(mKmerLength-1,1);                                            //add it to path
 
-            mVertices[next].change_visitor_flag(mVertices[next].get_visitor_flag()+1);  //mark next as visited
-            if(mVertices[next].get_visitor_flag() == mVertices[current].get_sequence_count()){
-                mVertices[current].remove_adj_availible(next);  //remove kmer from availible seq.s if it has been visited as many times
-            }                                                   //as it appears in all sequences in graph
-            current = next;
-            /*if(mVertices[mVertices[current].get_adj_list()[index]].get_visitor_flag() <= int(mVertices[mVertices[current].get_adj_list()[index]].adj_list_size())){
-                current = mVertices[current].get_adj_list()[index];
-                path+= current.substr(2,1);
-                mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1);
-            }*/
+            this->reset_vertex_flags();
+            return path;
         }
         this->reset_vertex_flags();
-        return path;
+        return organism;
     }
 
     /**
@@ -305,6 +342,7 @@ public:
             sequence = sequence.substr(1, sequence.length()-1);
         }
         mVertices[sequence].set_empty_bool(1);
+        mVertices[sequence].increment_endpoint();
         mVertices[sequence].increment_sequence_count();
     }
 
@@ -319,7 +357,7 @@ private:
         mStarts.erase(std::remove(mStarts.begin(), mStarts.end(), sequence), mStarts.end());
         mBranchedVertices.erase(std::remove(mBranchedVertices.begin(), mBranchedVertices.end(), sequence), mBranchedVertices.end());
     }
-    
+
 public:
     /**
      * Remove a sequence from the graph
@@ -327,12 +365,13 @@ public:
      * @param sequence to remove
      */
     void remove_sequence(string sequence){
+        mSeqSize -= 1;
 
         /*if(!this->is_valid(sequence)){
             throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" );
         }*/
         if(this->is_valid(sequence)){
-            mSeqSize -= 1;
+            //mSeqSize -= 1;
             string current, next;
             bool current_duplicated, next_duplicated;
             // while we still have sequence left:
@@ -357,6 +396,7 @@ public:
 
             }
             mVertices[sequence].decrement_sequence_count();
+            mVertices[sequence].decrement_endpoint();
             if (mVertices[sequence].get_sequence_count() == 0){
                 this->remove(sequence);
             }
@@ -387,7 +427,6 @@ public:
 
 ///@remark DISPLAY AND TRAVERSAL /////////////////////////////////////////////////////////////
 
-///@todo have Emily look at the general setup of this function, because I'm not sure if time and space complexity are just too much (probably are honestly)
     template <typename FuncType>
     /**
      * Traversal function that currently prints each vertex ID
@@ -500,6 +539,12 @@ public:
      * @return vector containing branched DeBruijn vertex objects
      */
     vector<string> get_branch_vertices() { return mBranchedVertices; }
+
+    /**
+     * Return vector containing vertices that represent the beginning(s) of the graph
+     * @return vector containing beginning DeBruijn vertex objects
+     */
+    vector<string> get_start_vertices() { return mStarts; }
 
     /**
      * Given a vertex, retrun true if the vertex branches

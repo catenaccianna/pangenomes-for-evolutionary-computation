@@ -25,6 +25,8 @@ private:
 
     vector<string> mAvailableAdj;
 
+    vector<string> mAvailableEnds;
+
     // so you'd to to the adj list being pointed to, and then check the index to be accessed, and is the size == 
     // the index +1, then you know this vertex is done
     int mVisits = 0;
@@ -39,6 +41,10 @@ private:
     /// Count of the number of sequences in the graph that use this kmer
     /// Used to make sure we don't remove a duplicant sequence
     int mSequenceCount = 0;
+
+    /// This is a boolean that will be 0 if this vertex is not an endpoint
+    /// It will be appended to every time it is the endpoint of another sequence in the graph
+    int mEndpoint = 0;
 
 public:
     /// Constructors
@@ -69,23 +75,6 @@ public:
      */
     int adj_list_size(){ return mAdjList.size(); }
 
-    
-  vector<string>::iterator unique_ (vector<string>::iterator first, vector<string>::iterator last)
-    {
-        std::string f = *first;
-        std::cout<<std::endl<<"first"<<f;
-
-        std::cout<<" bool"<<(*first == *last)<<std::endl;
-        if (first==last) return last;
-
-        vector<string>::iterator result = first;
-        while (++first != last)
-        {   
-            if (!(*result == *first))  // or: if (!pred(*result,*first)) for version (2)
-            *(++result)=*first;
-        }
-        return ++result;
-    }
 
     /**
      * Add to adjacency list (creates edge)
@@ -150,8 +139,8 @@ public:
     void set_empty_bool(int value) { mEmptyAdjList = value; }
 
     /**
-     * Get the branch truth value
-     * @return true if there is more than one value in the adjacency list
+     * Get the empty_adj_list truth value
+     * @return 2 if unassigned, 1 if list contains either nothing or an empty vertex, 0 if no empty vertex
      */
     int get_empty_bool() { return mEmptyAdjList; }
 
@@ -171,11 +160,65 @@ public:
      */
     void decrement_sequence_count() { mSequenceCount--; }
 
-    void set_adj_availible() { mAvailableAdj = mAdjList; }
+    /**
+     * Set the available adjacencies to be all adjacencies of vertex
+     * Used in generating new genomes
+     */
+    void set_adj_availible() {
+        mAvailableAdj = mAdjList;
+     }
+
+    /**
+     * Get the value of an available adjacency for a new genome
+     * @param index of adjacency
+     * @return string kmer
+     */
     string get_adj_availible(int index) { return mAvailableAdj[index]; }
+
+    /**
+     * Get the number of adjacencies that are still valid&available to append to a new genome
+     * @return int 
+     */
     int adj_availible_size() { return mAvailableAdj.size(); }
-    void remove_adj_availible(string val) { 
-    mAvailableAdj.erase(std::remove(mAvailableAdj.begin(), mAvailableAdj.end(), val), mAvailableAdj.end()); }
+
+    /**
+     * When we've used a kmer in a new genome as many times it appears in our sequences, we want to make it unavailable for further use
+     * @param val kmer to remove from the list of available adjacencies
+     * @param still_an_end if true, add the kmer to a list of kmers that have used up their availibility except for as an end
+     */
+    void remove_adj_availible(string val, bool still_an_end=0) { 
+    mAvailableAdj.erase(std::remove(mAvailableAdj.begin(), mAvailableAdj.end(), val), mAvailableAdj.end());
+    if(still_an_end){
+        mAvailableEnds.push_back(val);
+    }
+    }
+
+    /**
+     * To prevent seg faults because we are appending an adjacency that is only an endpoint too soon,
+     * We will add in all endpoints at the end after the rest of the sequence has been chosen
+     */
+    void add_in_availible_ends(){
+        for(string kmer : mAvailableEnds){
+            mAvailableAdj.push_back(kmer);
+        }
+    }
+
+    /**
+     * Get the endpoint truth value
+     * @return the number of times the vertex has been observed to be an enpoint
+     */
+    int get_endpoint() { return mEndpoint; }
+
+    /**
+     * Append to the times this vertex is an endpoint if it has been observed ending another sequence
+     */
+    void increment_endpoint() { mEndpoint++; }
+
+    /**
+     * Decrement the times this vertex is an endpoint the 
+     * sequence it is in is being removed
+     */
+    void decrement_endpoint() { mEndpoint--; }
 
 };
 
