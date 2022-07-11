@@ -3,7 +3,7 @@
  * @author Anna Catenacci
  */
 
-#include "DeBruijnGraph.h"
+#include "DeBruijnGraph.hpp"
 #define CATCH_CONFIG_MAIN
 #include "../../../mabe/MABE2/source/third-party/empirical/third-party/Catch/single_include/catch2/catch.hpp"
 

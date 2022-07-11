@@ -1,4 +1,4 @@
-#include "DeBruijnGraph.h"
+#include "DeBruijnGraph.hpp"
 #include <vector>
 #include <algorithm>
 #include <string>
@@ -463,6 +463,13 @@ void TestBitOrgs(){
     cout<<"next genome "<<g.modify_org(random, "110")<<"\n";
     cout<<"next genome "<<g.modify_org(random, "111")<<"\n"; 
     cout<<"next genome "<<g.modify_org(random, "010")<<"\n";
+
+    cout<<"next genome NSC "<<g.modify_org_NSC(random, "111")<<"\n";
+    cout<<"next genome NSC "<<g.modify_org_NSC(random, "110")<<"\n";
+    cout<<"next genome NSC "<<g.modify_org_NSC(random, "101")<<"\n";
+    cout<<"next genome NSC "<<g.modify_org_NSC(random, "110")<<"\n";
+    cout<<"next genome NSC "<<g.modify_org_NSC(random, "111")<<"\n"; 
+    cout<<"next genome NSC "<<g.modify_org_NSC(random, "010")<<"\n";
     
 }
 
