@@ -17,11 +17,16 @@
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
+#include <fstream>
+#include <functional>
 
 using std::string; using std::vector; using std::map;
 using std::cout;
 
 class DeBruijnGraph {
+public:
+    using fun_t = void(std::ostream &);
+    using fun_f = void(std::ofstream &);
 private:
 
     /// Number of vertices the graph contains
@@ -45,6 +50,9 @@ private:
 
     /// Vector of all beginning verticies
     vector<string> mStarts;
+
+    std::ofstream file;
+
 
     /**
      * Set a vertex with no value as a place-holder
@@ -597,6 +605,53 @@ public:
      * @return Debruijn vertex value object
      */
     DBGraphValue get_value(string vertex) { return mVertices[vertex]; }
+    
+    std::function<fun_t> csv0(){
+        std::function<fun_t> from_fun, to_fun;
+        /*for(auto vertex : this->get_all_vertices()){
+            
+        }
+
+        std::function<fun_t> from_fun =
+        [&](std::ostream & os){
+        };
+
+        std::function<fun_t> to_fun =
+        [&](std::ostream & os){
+          //os << node.GetHistCount(bin_id);
+          depth_first_traversal([&] (string vertex) {
+             os<<vertex;
+                os<<" -> ";
+                for(int i = 0; i < int(mVertices[vertex].get_adj_list().size()-1); i++){
+                    os<<mVertices[vertex].get_adj_list()[i];
+                    os<<", ";
+                }
+                os<<mVertices[vertex].get_adj_list()[mVertices[vertex].get_adj_list().size()-1];
+                os<<" | ";
+        });
+        };*/
+        return from_fun, to_fun;
+    }
+
+    void csv(string time){
+        file.open("dbg.csv");
+        std::string header = "Time,Count,From,To";
+        file << header << "\n";
+
+        string traits = time+",";
+        for(auto vertex : this->get_all_vertices()){
+            for(auto adj : this->get_value(vertex).get_adj_list()){
+                traits+=std::to_string(this->get_value(vertex).get_sequence_count());
+                traits+=",";
+                traits+=vertex;
+                traits+=",";
+                traits+=adj;
+                traits+=",";
+                file << traits << "\n";
+                traits = time;
+            }
+        }
+    }
 
 };
 
