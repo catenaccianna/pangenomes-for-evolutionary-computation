@@ -490,7 +490,7 @@ void TestCsv(){
     g.add_sequence("1100010101110001101101101000010000001000101100011011001110101001111001101011101101011000111110110011");
     emp::DataFile data = emp::DataFile("DeBruijnGraph");
     using fun_t = void(std::ostream &);
-    g.csv("100");
+    g.csv("200");
 
 }
 

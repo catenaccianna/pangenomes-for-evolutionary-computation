@@ -25,8 +25,6 @@ private:
 
     vector<string> mAvailableAdj;
 
-    vector<string> mAvailableEnds;
-
     // so you'd to to the adj list being pointed to, and then check the index to be accessed, and is the size == 
     // the index +1, then you know this vertex is done
     int mVisits = 0;
@@ -186,16 +184,6 @@ public:
      */
     void remove_adj_availible(string val, bool still_an_end=0) { 
     mAvailableAdj.erase(std::remove(mAvailableAdj.begin(), mAvailableAdj.end(), val), mAvailableAdj.end());
-    }
-
-    /**
-     * To prevent seg faults because we are appending an adjacency that is only an endpoint too soon,
-     * We will add in all endpoints at the end after the rest of the sequence has been chosen
-     */
-    void add_in_availible_ends(){
-        for(string kmer : mAvailableEnds){
-            mAvailableAdj.push_back(kmer);
-        }
     }
 
     /**

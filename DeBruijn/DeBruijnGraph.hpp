@@ -220,49 +220,6 @@ public:
      * so I either need to somehow make sure random does not land on an index that has reached it's max visitor count
      * or if it is going to be a premature endpoint without any adj to choose from
      */
-    string modify_org_test(emp::Random & random, std::string organism, double probability = 1){
-        string current = organism.substr(0,mKmerLength); //make the string the first kmer if it is not already
-        string path = current;                     //initialize string variables we use to change and go down the path
-        string next;
-        mVertices[current].change_visitor_flag(1); //mark 1st kmer as visited
-        int index;
-        
-        //If P() then we will modify this genome, else do nothing
-        if(random.P(probability)){
-            while (int(path.size()) < mSequenceLength-1){                 //while our path hasn't reached the sequence length
-                if(mVertices[current].get_visitor_flag() == 1){         
-                    mVertices[current].set_adj_availible();      //available choices = full adj_list if this is our first time seeing it
-                    check_for_endpoint(current);
-                }
-                index = random.GetUInt(mVertices[current].adj_availible_size());  //index will be randomly generated number
-                next = mVertices[current].get_adj_availible(index);                 //record next kmer using index
-                path+= next.substr(mKmerLength-1,1);                                            //add it to path
-
-                mVertices[next].change_visitor_flag(mVertices[next].get_visitor_flag()+1);  //mark next as visited
-                if(mVertices[next].get_endpoint() == mVertices[current].get_sequence_count()){
-                    mVertices[current].remove_adj_availible(next, 1);
-                }
-                if(mVertices[next].get_visitor_flag() == mVertices[current].get_sequence_count()){
-                    mVertices[current].remove_adj_availible(next);  //remove kmer from availible seq.s if it has been visited as many times
-                }                                                   //as it appears in all sequences in graph
-                
-                current = next;
-            }
-            if(mVertices[current].get_visitor_flag() == 1){         
-                mVertices[current].set_adj_availible();      //available choices = full adj_list if this is our first time seeing it
-            }
-            mVertices[current].add_in_availible_ends();
-            index = random.GetUInt(mVertices[current].adj_availible_size());  //index will be randomly generated number
-            next = mVertices[current].get_adj_availible(index);                 //record next kmer using index
-            path+= next.substr(mKmerLength-1,1);                                            //add it to path
-
-            this->reset_vertex_flags();
-            return path;
-        }
-        this->reset_vertex_flags();
-        return organism;
-    }
-
     string modify_org(emp::Random & random, std::string organism, double probability = 1){
         organism = organism.substr(0,mKmerLength); //make the string the first kmer if it is not already
         string path = organism;                    //initialize string variables we use to change and go down the path
@@ -413,7 +370,6 @@ public:
      */
     void remove_sequence(string sequence){
         mSeqSize -= 1;
-
         /*if(!this->is_valid(sequence)){
             throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" );
         }*/
@@ -606,7 +562,7 @@ public:
      */
     DBGraphValue get_value(string vertex) { return mVertices[vertex]; }
     
-    std::function<fun_t> csv0(){
+    std::function<fun_t> csv_multiple_ofstream(){
         std::function<fun_t> from_fun, to_fun;
         /*for(auto vertex : this->get_all_vertices()){
             
@@ -633,22 +589,52 @@ public:
         return from_fun, to_fun;
     }
 
+/*
+1) put a counter for rows in the first row so it doesn't look weird
+2) make sure it's ok
+3) push
+4) run things and see how it goes
+5) be done with csv and start r things
+*/
     void csv(string time){
-        file.open("dbg.csv");
-        std::string header = "Time,Count,From,To";
-        file << header << "\n";
+        file.open("dbg_"+time+".csv");
+        file<<"Time,Count,From,To"<<"\n";
 
-        string traits = time+",";
+        string traits;
         for(auto vertex : this->get_all_vertices()){
             for(auto adj : this->get_value(vertex).get_adj_list()){
-                traits+=std::to_string(this->get_value(vertex).get_sequence_count());
-                traits+=",";
-                traits+=vertex;
-                traits+=",";
-                traits+=adj;
-                traits+=",";
+                traits+=time+",";
+                traits+=std::to_string(this->get_value(vertex).get_sequence_count())+",";
+                traits+=vertex+",";
+                traits+=adj+",";
                 file << traits << "\n";
-                traits = time;
+                traits = "";
+            }
+        }
+    }
+
+    size_t seq_count(){
+
+    }
+
+    /**
+     * @return string respresenting next sequence in graph
+     */
+    int from(){
+        for(auto vertex : this->get_all_vertices()){
+            if(mVertices[vertex].get_visitor_flag() <= mVertices[vertex].get_sequence_count()){
+                mVertices[vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
+                return std::stoi(vertex);
+            }
+        }
+    }
+
+
+    string to(){
+        for(auto vertex : this->get_all_vertices()){
+            if(mVertices[vertex].get_visitor_flag() < mVertices[vertex].get_sequence_count()){
+                mVertices[vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
+                return vertex;
             }
         }
     }
