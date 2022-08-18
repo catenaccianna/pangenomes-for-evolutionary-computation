@@ -1,5 +1,5 @@
 /**
- * @file DeBruijnGraph.h
+ * @file DeBruijnGraph.hpp
  * @author Anna Catenacci
  *
  * A class that constructs and describes a De Bruijn Graph
@@ -19,9 +19,10 @@
 #include <stdexcept>
 #include <fstream>
 #include <functional>
+#include <tuple>
 
 using std::string; using std::vector; using std::map;
-using std::cout;
+using std::cout; using std::endl; using std::tuple;
 
 class DeBruijnGraph {
 public:
@@ -70,16 +71,14 @@ private:
     void add_edge(string start_v, string end_v){
         int initial_adj_size = mVertices[start_v].adj_list_size();
         mVertices[start_v].add_to_adj_list(end_v);
-        if(initial_adj_size > 0){ //if the adj_list is not empty, AND new adj_list size > old_adj_list.size, then
+        if(initial_adj_size > 0){ //if the adj_list was not empty, AND new adj_list size > old_adj_list.size, then
             if(initial_adj_size < mVertices[start_v].adj_list_size()){ //this implies the vertex is a branch point
                 mVertices[start_v].set_branch(true);
                 mBranchedVertices.push_back(start_v);
                 vector<string>::iterator it;
                 mBranchedVertices.erase( std::unique( mBranchedVertices.begin(), mBranchedVertices.end() ), mBranchedVertices.end() );
             }
-        }
-        mVertices[start_v].increment_sequence_count();
-        
+        }        
     }
 
     /**
@@ -87,12 +86,12 @@ private:
      * @param num_input vector of numbers to create a graph from
      * @param kmer_length length of each vertex ID
      */
-    void ConstructFromSequence(vector<int> num_input, int kmer_length){
+    void construct_from_sequence(vector<int> num_input, int kmer_length){
         string input = "";
         for(int i = 0; i < int(num_input.size()); ++i){
             input += std::to_string(num_input[i]);
         }
-        this->ConstructFromString(input, kmer_length);
+        this->construct_from_string(input, kmer_length);
     }
 
     /**
@@ -100,7 +99,7 @@ private:
      * This function is the common constructor
      * @param input string containing all genetic data sequentially
      */
-    void ConstructFromString(string input, int kmer_length){
+    void construct_from_string(string input, int kmer_length){
         mSeqSize += 1;
         mSequenceLength = input.size();
         mKmerLength = kmer_length;
@@ -127,14 +126,17 @@ private:
         }
         mVertices[input].set_empty_bool(1);
         mVertices[input].increment_endpoint();
-        mVertices[input].increment_sequence_count();
+        mVertices[input].increment_kmer_occurrences();
     }
 
 public:
     DeBruijnGraph()=default;
     ~DeBruijnGraph()=default;
+    DeBruijnGraph(const DeBruijnGraph &) = default;
 
 ///@remark CONSTRUCTORS /////////////////////////////////////////////////////////////
+
+    DeBruijnGraph(int kmer_length) : mKmerLength(kmer_length) {  };
 
     /**
      * Construct a De Bruijn Graph object from a vector of strings
@@ -146,7 +148,7 @@ public:
         for(int i = 0; i < int(input.size()); ++i){
             result += input[i];
         }
-        this->ConstructFromString(result, kmer_length);
+        this->construct_from_string(result, kmer_length);
     }
 
     /**
@@ -155,7 +157,7 @@ public:
      * @param kmer_length length of indecies to pull from input to create a kmer ID
      */
     DeBruijnGraph(vector<int> input, int kmer_length){
-        this->ConstructFromSequence(input, kmer_length);
+        this->construct_from_sequence(input, kmer_length);
     }
 
     /**
@@ -164,7 +166,7 @@ public:
      * @param kmer_length length of indecies to pull from input to create a kmer ID
      */
     DeBruijnGraph(int input, int kmer_length){
-        this->ConstructFromString(std::to_string(input), kmer_length);
+        this->construct_from_string(std::to_string(input), kmer_length);
     }
 
     /**
@@ -173,7 +175,7 @@ public:
      * @param kmer_length length of indecies to pull from input to create a kmer ID
      */
     DeBruijnGraph(string input, int kmer_length){
-        this->ConstructFromString(input, kmer_length);
+        this->construct_from_string(input, kmer_length);
     }
 
 ///@remark MABE FUNCTIONS (next genome, add sequence, remove sequence) /////////////////////////////////////////////////////////////
@@ -196,19 +198,6 @@ public:
         return path;
     }
 
-    void check_for_endpoint(string current){
-        vector<string> adj = mVertices[current].get_adj_list();
-        for(auto i : adj){
-            cout<<i<<" ";
-            if(mVertices[i].get_sequence_count() == mVertices[i].get_endpoint()){
-                mVertices[current].remove_adj_availible(i, 1);
-                cout<<"<removed ";
-            }
-        }
-        cout<<std::endl;
-
-    }
-
     /**
      * Given the genome of an organism, do crossover (if probability allows) by randomly choosing branches of existing 
      * genomes in the graph to pursue
@@ -221,30 +210,32 @@ public:
      * or if it is going to be a premature endpoint without any adj to choose from
      */
     string modify_org(emp::Random & random, std::string organism, double probability = 1){
-        organism = organism.substr(0,mKmerLength); //make the string the first kmer if it is not already
-        string path = organism;                    //initialize string variables we use to change and go down the path
-        string current = organism;
+        string temp = organism.substr(0,mKmerLength); //make the string the first kmer if it is not already
+        string path = temp;                           //initialize string variables we use to change and go down the path
+        string current = temp;
         string next;
-        mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1); //mark 1st kmer as visited
+        mVertices[current].increment_visitor_flag(); //mark 1st kmer as visited
         int index;
-        
         //If P() then we will modify this genome, else do nothing
         if(random.P(probability)){
-            while (int(path.size()) < mSequenceLength){                 //while our path hasn't reached the sequence length
+            while (int(path.size()) < mSequenceLength){ //while our path hasn't reached the sequence length
                 if(mVertices[current].get_visitor_flag() == 1){         
-                    mVertices[current].set_adj_availible();      //available choices = full adj_list if this is our first time seeing it
+                    mVertices[current].set_adj_availible(); //available choices = full adj_list if this is our first time seeing it
                 }
                 index = random.GetUInt(mVertices[current].adj_availible_size());  //index will be randomly generated number
                 next = mVertices[current].get_adj_availible(index);                 //record next kmer using index
                 path+= next.substr(2,1);                                            //add it to path
 
-                mVertices[next].change_visitor_flag(mVertices[next].get_visitor_flag()+1);  //mark next as visited
-                if(mVertices[next].get_visitor_flag() == mVertices[current].get_sequence_count()){
+                mVertices[next].increment_visitor_flag();  //mark next as visited
+                if(mVertices[next].get_visitor_flag() == mVertices[current].get_kmer_occurrences()){
                     mVertices[current].remove_adj_availible(next);  //remove kmer from availible seq.s if it has been visited as many times
                 }                                                   //as it appears in all sequences in graph
                 current = next;
             }
         }
+        this->remove_sequence(organism);
+        this->add_sequence(path);
+        cout<<path<<endl;
         this->reset_vertex_flags();
         return path;
     }
@@ -258,23 +249,25 @@ public:
         string path = organism;                    //initialize string variables we use to change and go down the path
         string current = organism;
         string next;
-        mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1); //mark 1st kmer as visited
+        mVertices[current].increment_visitor_flag(); //mark 1st kmer as visited
         int index;
-        
         //If P() then we will modify this genome, else do nothing
         if(random.P(probability)){
-            while (int(path.size()) < mSequenceLength){                 //while our path hasn't reached the sequence length
+            while (int(path.size()) < mSequenceLength){ //while our path hasn't reached the sequence length
                 if(mVertices[current].get_visitor_flag() == 1){         
-                    mVertices[current].set_adj_availible();      //available choices = full adj_list if this is our first time seeing it
+                    mVertices[current].set_adj_availible(); //available choices = full adj_list if this is our first time seeing it
                 }
                 index = random.GetUInt(mVertices[current].adj_availible_size());  //index will be randomly generated number
                 next = mVertices[current].get_adj_availible(index);                 //record next kmer using index
                 path+= next.substr(2,1);                                            //add it to path
 
-                mVertices[next].change_visitor_flag(mVertices[next].get_visitor_flag()+1);  //mark next as visited
+                mVertices[next].increment_visitor_flag();  //mark next as visited
                 current = next;
             }
         }
+        this->remove_sequence(organism);
+        this->add_sequence(path);
+        cout<<path<<endl;
         this->reset_vertex_flags();
         return path;
     }
@@ -312,12 +305,9 @@ public:
     }
 
     /**
-     * Add an entirely new possible sequence into the graph
-     * Will take in a sequence much like the constructors do, but in this case, they will add a new node or a new path based on what's
-     * different from the original path, and branch out from there.
-     * (this will solve the multiple paths issue)
+     * Add an entirely new possible sequence into the graph.
      * In actual expirimentation, we will choose a "fitter" section of the landscape to pull these combinations from, and then
-     * traverse through and randomly do crossovers when we hit a branch
+     * traverse through and randomly do crossovers when we hit a branch.
      * @param sequence to add to the graph
      */
     void add_sequence(string sequence){
@@ -333,21 +323,22 @@ public:
             if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0){
                 mSize++;
             }
-            //add edge
             this->add_edge(sequence.substr(0, mKmerLength), sequence.substr(1, mKmerLength));
-            mVertices[sequence.substr(0, mKmerLength)].set_empty_bool(0);
+            mVertices[sequence.substr(0, mKmerLength)].set_empty_bool(0); //set that we know this adj_list has something in it
+            mVertices[sequence.substr(0, mKmerLength)].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
             //if future vertex is not already in map, set it as an empty vertex
             if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0){
                 this->set_empty_vertex(sequence.substr(1, mKmerLength));
             }
-            //turn empty bool true for all but last guy. However, check, because if there is a 
-            //sequence already in here, then the flag will be off for that node already and we
-            //do not want to change it
-            sequence = sequence.substr(1, sequence.length()-1);
+            sequence = sequence.substr(1, sequence.length()-1); //update our kmer and repeat!
         }
-        mVertices[sequence].set_empty_bool(1);
-        mVertices[sequence].increment_endpoint();
-        mVertices[sequence].increment_sequence_count();
+        //flag that this node's adj_list as empty only if we haven't seen it before (value of 2)
+        //if it has previously been flagged with a value of 0, we know it has something in the adj_list
+        if(mVertices[sequence].get_empty_bool() == 2){
+            mVertices[sequence].set_empty_bool(1);
+        }
+        mVertices[sequence].increment_endpoint(); //increment number of times this kmer is an endpoint of a seq in the pangenome
+        mVertices[sequence].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
     }
 
 private:
@@ -369,46 +360,42 @@ public:
      * @param sequence to remove
      */
     void remove_sequence(string sequence){
-        mSeqSize -= 1;
-        /*if(!this->is_valid(sequence)){
-            throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" );
-        }*/
         if(this->is_valid(sequence)){
-            //mSeqSize -= 1;
+            mSeqSize--;
             string current, next;
-            bool current_duplicated, next_duplicated;
+            bool current_appears_once, next_appears_once;
             // while we still have sequence left:
             while(int(sequence.size()) > mKmerLength){
 
                 current = sequence.substr(0,mKmerLength);
                 next = sequence.substr(1,mKmerLength);
-                current_duplicated = mVertices[current].get_sequence_count() > 1;
-                next_duplicated = mVertices[next].get_sequence_count() > 1;
+                current_appears_once = mVertices[current].get_kmer_occurrences() <= 1;
+                next_appears_once = mVertices[next].get_kmer_occurrences() <= 1;
 
-                mVertices[current].decrement_sequence_count();
-                //if the entire sequence is not exactly a duplicate, remove adjacency
-                if(!current_duplicated || !next_duplicated){
+                mVertices[current].decrement_kmer_occurrences();
+                //if current or next vertex only appeared once in pangenome, break adj & remove edge from graph
+                if(current_appears_once || next_appears_once){
                     mVertices[current].remove_from_adj_list(next);
                 }
-                //if current is not a duplicate, delete it from mverticies
-                if (!current_duplicated){
+                //if current kmer was only in 1 seq in the pangenome, delete it from mVerticies
+                if (current_appears_once){
                     this->remove(current);
                 }
                 sequence = sequence.substr(1, sequence.length()-1);
 
-
             }
-            mVertices[sequence].decrement_sequence_count();
+            mVertices[sequence].decrement_kmer_occurrences();
             mVertices[sequence].decrement_endpoint();
-            if (mVertices[sequence].get_sequence_count() == 0){
+            if (mVertices[sequence].get_kmer_occurrences() <= 0){
                 this->remove(sequence);
             }
         }
+        //else{ throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" ); }
     }
 
     /**
      * Iterate through graph along sequence to make sure the sequence is in the graph
-     * @note Currently in removal of a sequence, I don't check to make sure the wntire sequence is valid beforehand, 
+     * @note Currently in removal of a sequence, I don't check to make sure the entire sequence is valid beforehand, 
      * so if you were to remove a sequence where the first half of it is valid, it would remove those verticies before stopping
      * (I think). Could check like this beforehand--wasn't sure about runtime, but as long as it's not used nested, it should be ok
      * @param sequence to evaluate
@@ -461,7 +448,7 @@ public:
                             path.push_back(mVertices[current].get_adj_list()[i-1]);
                         }
                     }
-                    mVertices[current].change_visitor_flag(mVertices[current].get_visitor_flag()+1);
+                    mVertices[current].increment_visitor_flag();
                 }   
             } 
         }
@@ -526,6 +513,23 @@ public:
     int get_sequence_size() { return mSeqSize; }
 
     /**
+     * Return sequence size of graph
+     * @return number of sequences the graph has added into the total pangenome
+     */
+    int get_kmer_len() { return mKmerLength; }
+
+    /**
+     * @return int number of edges in the graph
+     */
+    int edge_count(){
+        int count = 0;
+        for(auto i : mVertices){
+            count += i.second.adj_list_size();
+        }
+        return count;
+    }
+
+    /**
      * Return vector containing all vertices in graph
      * @return vector containing all DeBruijn vertex objects
      */
@@ -561,83 +565,6 @@ public:
      * @return Debruijn vertex value object
      */
     DBGraphValue get_value(string vertex) { return mVertices[vertex]; }
-    
-    std::function<fun_t> csv_multiple_ofstream(){
-        std::function<fun_t> from_fun, to_fun;
-        /*for(auto vertex : this->get_all_vertices()){
-            
-        }
-
-        std::function<fun_t> from_fun =
-        [&](std::ostream & os){
-        };
-
-        std::function<fun_t> to_fun =
-        [&](std::ostream & os){
-          //os << node.GetHistCount(bin_id);
-          depth_first_traversal([&] (string vertex) {
-             os<<vertex;
-                os<<" -> ";
-                for(int i = 0; i < int(mVertices[vertex].get_adj_list().size()-1); i++){
-                    os<<mVertices[vertex].get_adj_list()[i];
-                    os<<", ";
-                }
-                os<<mVertices[vertex].get_adj_list()[mVertices[vertex].get_adj_list().size()-1];
-                os<<" | ";
-        });
-        };*/
-        return from_fun, to_fun;
-    }
-
-/*
-1) put a counter for rows in the first row so it doesn't look weird
-2) make sure it's ok
-3) push
-4) run things and see how it goes
-5) be done with csv and start r things
-*/
-    void csv(string time){
-        file.open("dbg_"+time+".csv");
-        file<<"Time,Count,From,To"<<"\n";
-
-        string traits;
-        for(auto vertex : this->get_all_vertices()){
-            for(auto adj : this->get_value(vertex).get_adj_list()){
-                traits+=time+",";
-                traits+=std::to_string(this->get_value(vertex).get_sequence_count())+",";
-                traits+=vertex+",";
-                traits+=adj+",";
-                file << traits << "\n";
-                traits = "";
-            }
-        }
-    }
-
-    size_t seq_count(){
-
-    }
-
-    /**
-     * @return string respresenting next sequence in graph
-     */
-    int from(){
-        for(auto vertex : this->get_all_vertices()){
-            if(mVertices[vertex].get_visitor_flag() <= mVertices[vertex].get_sequence_count()){
-                mVertices[vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
-                return std::stoi(vertex);
-            }
-        }
-    }
-
-
-    string to(){
-        for(auto vertex : this->get_all_vertices()){
-            if(mVertices[vertex].get_visitor_flag() < mVertices[vertex].get_sequence_count()){
-                mVertices[vertex].change_visitor_flag(mVertices[vertex].get_visitor_flag()+1);
-                return vertex;
-            }
-        }
-    }
 
 };
 

@@ -1,5 +1,5 @@
 /**
- * @file DeBruijnValue.h
+ * @file DeBruijnValue.hpp
  * @author Anna Catenacci
  *
  * Class describing the attributes of a DeBruijnVertex object
@@ -38,7 +38,7 @@ private:
 
     /// Count of the number of sequences in the graph that use this kmer
     /// Used to make sure we don't remove a duplicant sequence
-    int mSequenceCount = 0;
+    int mKmerOccurrences = 0;
 
     /// This is a boolean that will be 0 if this vertex is not an endpoint
     /// It will be appended to every time it is the endpoint of another sequence in the graph
@@ -70,7 +70,6 @@ public:
      * @return size
      */
     int adj_list_size(){ return mAdjList.size(); }
-
 
     /**
      * Add to adjacency list (creates edge)
@@ -116,6 +115,12 @@ public:
     void change_visitor_flag(int value) { mVisits = value; }
 
     /**
+     * Set visitor flag
+     * @param value true if visited, false if not
+     */
+    void increment_visitor_flag() { mVisits++; }
+
+    /**
      * Set the branch flag
      * A true value implies the vertex contains a branch point.
      * @param value true if the vertex has more than one value in it's adjacency list
@@ -141,20 +146,20 @@ public:
     int get_empty_bool() { return mEmptyAdjList; }
 
     /**
-     * Get the sequence count
+     * Get the count of kmer occurrences in the pangenome
      * @return number of sequences this kmer is  used in
      */
-    int get_sequence_count() { return mSequenceCount; }
+    int get_kmer_occurrences() { return mKmerOccurrences; }
 
     /**
-     * Increment the sequence count
+     * Increment number of sequences this kmer is  used in
      */
-    void increment_sequence_count() { mSequenceCount++; }
+    void increment_kmer_occurrences() { mKmerOccurrences++; }
 
     /**
-     * Decrement the sequence count
+     * Decrement number of sequences this kmer is  used in
      */
-    void decrement_sequence_count() { mSequenceCount--; }
+    void decrement_kmer_occurrences() { mKmerOccurrences--; }
 
     /**
      * Set the available adjacencies to be all adjacencies of vertex
