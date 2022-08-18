@@ -492,6 +492,138 @@ public:
             });
     }
 
+///@remark CSV GENERATOR /////////////////////////////////////////////////////////////
+
+    /**
+     * Create a CSV file that has a column for the time/generation we are recording, 
+     * the number of times each kmer appears in the graph, the kmer, and each adjacency
+     * of the kmer (there may be multiple rows per node&it's seq. count if the node has
+     * more than one adjacency)
+     * @param time (generation) in string form that we are recording that graph at
+     */
+    void csv(string time){
+        file.open("dbg_"+time+".csv");
+        file<<"Time,Count,From,To"<<"\n";
+
+        string traits;
+        for(auto vertex : this->get_all_vertices()){
+            for(auto adj : this->get_value(vertex).get_adj_list()){
+                traits+=time+",";
+                traits+=std::to_string(this->get_value(vertex).get_kmer_occurrences())+",";
+                traits+=vertex+",";
+                traits+=adj+",";
+                file << traits << "\n";
+                traits = "";
+            }
+        }
+    }
+
+    /**
+     * This function is one that I used purely to express the pattern used in the CSV helper functions below.
+     * The reason why those work is because we iterate through the graph in the same order in each function.
+     */
+    void example_iteration(){
+        for(auto vertex : mVertices){
+            for(auto adj : mVertices[vertex.first].get_adj_list()){
+                cout<<vertex.first<<"->"<<adj<<endl;
+            }
+        }
+    }
+
+    /**
+     * Helper function for MABE2 PangenomeAnalysis module.
+     * Returns first values of iteration to begin creating a CSV file representing 
+     * @return int sequence count, starting vertex, starting vertex's 1st adjacency
+     */
+    tuple<int,string,string> csv_start_values(){
+        vector<string> temp = get_all_vertices();
+        for(auto vertex : temp){
+            for(auto adj : mVertices[vertex].get_adj_list()){
+                return std::make_tuple(mVertices[vertex].get_kmer_occurrences(), vertex, adj);
+            }
+        } return std::make_tuple(-1, "", "");
+    }
+
+    /**
+     * Helper function for MABE2 PangenomeAnalysis module. 
+     * Added as a lambda to create a column in a Datafile that the module will produce.
+     * @param count sequence count of current vertex
+     * @param from kmer ID of current vertex
+     * @param to current adjacency of current vertex
+     * @return tuple<int, int> current and next sequence count
+     */
+    tuple<int, int> kmer_count(int count, string from, string to){
+        int current = 0, next = 0;
+        for(auto vertex : mVertices){
+            for(auto adj : mVertices[vertex.first].get_adj_list()){
+                //cout<<vertex.first<<" -> "<<adj<<endl;
+                if(current > 0){ // now on 234, but if 123 had 2 adjs, then we would iterate through both //now on 234 still, with current and next both being 2
+                    next = mVertices[vertex.first].get_kmer_occurrences();
+                    //cout<<"3 "<<vertex.first<<" visit flag= "<< mVertices[vertex.first].get_visitor_flag()<<" adj list size= "<<mVertices[vertex.first].adj_list_size()<<endl;
+                    return std::make_tuple(current, next);
+                }
+                if(mVertices[vertex.first].get_kmer_occurrences()==count && mVertices[vertex.first].get_visitor_flag()<mVertices[vertex.first].adj_list_size() && vertex.first==from && adj==to){ //on 123 //on 234.1
+                    current = count;
+                    //cout<<"1 "<<vertex.first<<" visit flag= "<< mVertices[vertex.first].get_visitor_flag()<<" adj list size= "<<mVertices[vertex.first].adj_list_size()<<endl;
+                    mVertices[vertex.first].increment_visitor_flag();
+                    //cout<<"2 "<<vertex.first<<" visit flag= "<< mVertices[vertex.first].get_visitor_flag()<<" adj list size= "<<mVertices[vertex.first].adj_list_size()<<endl;
+                }
+            }
+        } return std::make_tuple(-1, -1);
+    }
+
+    /**
+     * Helper function for MABE2 PangenomeAnalysis module. 
+     * Added as a lambda to create a column in a Datafile that the module will produce.
+     * @param count sequence count of current vertex
+     * @param from kmer ID of current vertex
+     * @param to current adjacency of current vertex
+     * @return tuple<string, string> current and next IDs for the kmer of the vertex
+     */
+    tuple<string, string> from(int count, string from, string to){
+        string current = "", next = "";
+        for(auto vertex : mVertices){
+            for(auto adj : mVertices[vertex.first].get_adj_list()){
+                //cout<<vertex.first<<" -> "<<adj<<endl;
+                if(!current.empty()){ //same pattern as above
+                    next = vertex.first;
+                    //cout<<"5 "<<vertex.first<<" visit flag= "<< mVertices[vertex.first].get_visitor_flag()<<" adj list size= "<<mVertices[vertex.first].adj_list_size()<<endl;
+                    return std::make_tuple(current, next);
+                }
+                if(vertex.first==from && mVertices[vertex.first].get_visitor_flag()<=mVertices[vertex.first].adj_list_size() && adj==to){ //on 123
+                    current = from;
+                    //cout<<"4 "<<vertex.first<<" visit flag= "<< mVertices[vertex.first].get_visitor_flag()<<" adj list size= "<<mVertices[vertex.first].adj_list_size()<<endl;
+                }
+            }
+        } return std::make_tuple("", "");
+    }
+
+    /**
+     * Helper function for MABE2 PangenomeAnalysis module. 
+     * Added as a lambda to create a column in a Datafile that the module will produce.
+     * @param count sequence count of current vertex
+     * @param from kmer ID of current vertex
+     * @param to current adjacency of current vertex
+     * @return tuple<string, string> current and next adjacencies to the current vertex
+     */
+    tuple<string, string> to(int count, string from, string to){
+        string current = "", next = "";
+        for(auto vertex : mVertices){
+            for(auto adj : mVertices[vertex.first].get_adj_list()){
+                //cout<<vertex.first<<" -> "<<adj<<endl;
+                if(mVertices[vertex.first].get_kmer_occurrences()==count && mVertices[vertex.first].get_visitor_flag()<=mVertices[vertex.first].adj_list_size() && vertex.first==from){ //meets requrments for new count&vertex
+                    if(mVertices[from].adj_list_size() > 1)
+                        next = mVertices[from].get_adj_list()[mVertices[vertex.first].get_visitor_flag()];
+                    else{ next = adj; }
+                    //cout<<"6 "<<vertex.first<<" visit flag= "<< mVertices[vertex.first].get_visitor_flag()<<" adj list size= "<<mVertices[vertex.first].adj_list_size()<<endl;
+                    return std::make_tuple(current, next);
+                }
+                current = adj; // update every iteration, so that we have current/past adj when we reach the if statement
+            }
+        } return std::make_tuple("", "");
+    }
+
+
 ///@remark GETTERS AND SETTERS /////////////////////////////////////////////////////////////
 
     /**
