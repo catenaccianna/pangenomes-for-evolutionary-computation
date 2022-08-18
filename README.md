@@ -16,4 +16,4 @@ The Makefile for my code is in the pangenomes-for-evolutionary-computation direc
 - **make assert** to run the unit tests for DeBruijnGraph.hpp  
 **make (as a default)** will run "make assert"  
 - **make assert_value** to run the unit tests for DeBruijnValue.hpp  
-- **make debug** [does not work yet]  
+- ***make debug** [does not work yet]*  
