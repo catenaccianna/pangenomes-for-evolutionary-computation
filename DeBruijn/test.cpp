@@ -510,7 +510,7 @@ void TestCSVHelperFunctions(){
     g.add_sequence("1110101000111");
     g.example_iteration();
 
-    int count;
+    int count, current_i;
     string to, from, current_s;
 
     tuple<int, string, string> tup = g.csv_start_values();
