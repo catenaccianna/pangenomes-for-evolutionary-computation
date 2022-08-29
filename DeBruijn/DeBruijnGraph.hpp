@@ -100,7 +100,7 @@ private:
      * @param input string containing all genetic data sequentially
      */
     void construct_from_string(string input, int kmer_length){
-        mSeqSize += 1;
+        mSeqSize ++;
         mSequenceLength = input.size();
         mKmerLength = kmer_length;
         mStarts.push_back(input.substr(0, kmer_length));
@@ -111,6 +111,7 @@ private:
         // if the vertex is already in the graph, then skip this and don't add to size
         if(mVertices.count(input.substr(0, mKmerLength)) <= 0){
             mSize++;
+            this->set_empty_vertex(input.substr(0, mKmerLength));
         }
         //add to size and add an edge for each vertex, and an empty vertex for the end
         while(int(input.length()) >= kmer_length + 1){
@@ -235,7 +236,6 @@ public:
         }
         this->remove_sequence(organism);
         this->add_sequence(path);
-        cout<<path<<endl;
         this->reset_vertex_flags();
         return path;
     }
@@ -267,9 +267,28 @@ public:
         }
         this->remove_sequence(organism);
         this->add_sequence(path);
-        cout<<path<<endl;
         this->reset_vertex_flags();
         return path;
+        /*
+        organism = organism.substr(0,mKmerLength); //make the string the first kmer if it is not already
+        string path = organism;                    //initialize string variables we use to change and go down the path
+        string current = organism;
+        string next;
+        int index;
+        //If P() then we will modify this genome, else do nothing
+        if(random.P(probability)){
+            while (int(path.size()) < mSequenceLength){ //while our path hasn't reached the sequence length
+                index = random.GetUInt(mVertices[current].adj_availible_size());  //index will be randomly generated number
+                next = mVertices[current].get_adjacency(index);                 //record next kmer using index
+                path+= next.substr(2,1);                                            //add it to path
+
+                current = next;
+            }
+        }
+        this->remove_sequence(organism);
+        this->add_sequence(path);
+        return path;
+        */
     }
 
     /**
@@ -316,6 +335,7 @@ public:
         // if the beginning string is not in the graph, add a new beginning vertex
         if(mVertices.count(sequence.substr(0, mKmerLength)) <= 0){
             mStarts.push_back(sequence.substr(0, mKmerLength));
+            this->set_empty_vertex(sequence.substr(0, mKmerLength));
             mSize++;
         }
         // go through the entire new sequence and add edges:
@@ -556,20 +576,20 @@ public:
         int current = 0, next = 0;
         for(auto vertex : mVertices){
             for(auto adj : mVertices[vertex.first].get_adj_list()){
-                //cout<<vertex.first<<" -> "<<adj<<endl;
-                if(current > 0){ // now on 234, but if 123 had 2 adjs, then we would iterate through both //now on 234 still, with current and next both being 2
+                if(current > 0){ // record the next count
                     next = mVertices[vertex.first].get_kmer_occurrences();
-                    //cout<<"3 "<<vertex.first<<" visit flag= "<< mVertices[vertex.first].get_visitor_flag()<<" adj list size= "<<mVertices[vertex.first].adj_list_size()<<endl;
                     return std::make_tuple(current, next);
                 }
-                if(mVertices[vertex.first].get_kmer_occurrences()==count && mVertices[vertex.first].get_visitor_flag()<mVertices[vertex.first].adj_list_size() && vertex.first==from && adj==to){ //on 123 //on 234.1
+                if(mVertices[vertex.first].get_kmer_occurrences()==count && mVertices[vertex.first].get_visitor_flag()<mVertices[vertex.first].adj_list_size() && vertex.first==from && adj==to){ // match current count
                     current = count;
-                    //cout<<"1 "<<vertex.first<<" visit flag= "<< mVertices[vertex.first].get_visitor_flag()<<" adj list size= "<<mVertices[vertex.first].adj_list_size()<<endl;
                     mVertices[vertex.first].increment_visitor_flag();
-                    //cout<<"2 "<<vertex.first<<" visit flag= "<< mVertices[vertex.first].get_visitor_flag()<<" adj list size= "<<mVertices[vertex.first].adj_list_size()<<endl;
                 }
             }
-        } return std::make_tuple(-1, -1);
+        }
+        if(current > 0){ // if we're on the last vertex of the graph, there will not be a next count
+            return std::make_tuple(current, -1);
+        }
+        return std::make_tuple(-1, -1); // return invalid tuple if no other case is matched
     }
 
     /**
@@ -584,18 +604,19 @@ public:
         string current = "", next = "";
         for(auto vertex : mVertices){
             for(auto adj : mVertices[vertex.first].get_adj_list()){
-                //cout<<vertex.first<<" -> "<<adj<<endl;
                 if(!current.empty()){ //same pattern as above
                     next = vertex.first;
-                    //cout<<"5 "<<vertex.first<<" visit flag= "<< mVertices[vertex.first].get_visitor_flag()<<" adj list size= "<<mVertices[vertex.first].adj_list_size()<<endl;
                     return std::make_tuple(current, next);
                 }
                 if(vertex.first==from && mVertices[vertex.first].get_visitor_flag()<=mVertices[vertex.first].adj_list_size() && adj==to){ //on 123
                     current = from;
-                    //cout<<"4 "<<vertex.first<<" visit flag= "<< mVertices[vertex.first].get_visitor_flag()<<" adj list size= "<<mVertices[vertex.first].adj_list_size()<<endl;
                 }
             }
-        } return std::make_tuple("", "");
+        } 
+        if(!current.empty()){ //same pattern as above
+            return std::make_tuple(current, "");
+        }
+        return std::make_tuple("", "");
     }
 
     /**
@@ -607,30 +628,11 @@ public:
      * @return tuple<string, string> current and next adjacencies to the current vertex
      */
     tuple<string, string> to(int count, string from, string to){
-        string current = "", next = "";
-        for(auto vertex : mVertices){
-            for(auto adj : mVertices[vertex.first].get_adj_list()){
-                //cout<<vertex.first<<" -> "<<adj<<endl;
-                if(mVertices[vertex.first].get_kmer_occurrences()==count && mVertices[vertex.first].get_visitor_flag()<=mVertices[vertex.first].adj_list_size() && vertex.first==from){ //meets requrments for new count&vertex
-                    if(mVertices[from].adj_list_size() > 1)
-                        next = mVertices[from].get_adj_list()[mVertices[vertex.first].get_visitor_flag()];
-                    else{ next = adj; }
-                    //cout<<"6 "<<vertex.first<<" visit flag= "<< mVertices[vertex.first].get_visitor_flag()<<" adj list size= "<<mVertices[vertex.first].adj_list_size()<<endl;
-                    return std::make_tuple(current, next);
-                }
-                current = adj; // update every iteration, so that we have current/past adj when we reach the if statement
-            }
-        } return std::make_tuple("", "");
+        return std::make_tuple(to, mVertices[from].get_adj_list()[mVertices[from].get_visitor_flag()]);
     }
 
 
 ///@remark GETTERS AND SETTERS /////////////////////////////////////////////////////////////
-
-    /**
-     * Set the size object
-     * @param s size of graph
-     */
-    void set_size(int s) { mSize = s; }
 
     /**
      * Return size of graph (NOT the total number of sequences in the pangenome)
@@ -697,6 +699,19 @@ public:
      * @return Debruijn vertex value object
      */
     DBGraphValue get_value(string vertex) { return mVertices[vertex]; }
+
+    /**
+     * Set the availible adj list object to have all adjacencies possible
+     * @param kmer we are currently adding
+     */
+    void set_avail_adj_list(string kmer) { mVertices[kmer].set_adj_availible(); }
+
+    /**
+     * Remove an adjacency from availible adj list
+     * @param kmer we are adjusting the value of
+     * @param adj string we are removing
+     */
+    void remove_avail_adj_list(string kmer, int adj) { mVertices[kmer].remove_adj_availible(mVertices[kmer].get_adj_availible(0)); }
 
 };
 

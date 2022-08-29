@@ -15,6 +15,8 @@
 #include <algorithm>
 #include <iterator>
 
+#include <iostream>
+
 using std::string; using std::vector;
 
 class DBGraphValue {
@@ -23,7 +25,7 @@ private:
     /// Adjacency list--vector of all verticies this vertex points to
     vector<string> mAdjList = {};
 
-    vector<string> mAvailableAdj;
+    vector<string> mAvailableAdj = {};
 
     // so you'd to to the adj list being pointed to, and then check the index to be accessed, and is the size == 
     // the index +1, then you know this vertex is done
@@ -47,7 +49,7 @@ private:
 public:
     /// Constructors
     DBGraphValue()=default;
-    DBGraphValue(vector<string> a, bool c) : mAdjList(a), mContainsBranch(c) {};
+    DBGraphValue(vector<string> a, bool c) : mAdjList(a), mContainsBranch(c), mAvailableAdj({}) {};
 
     /// Destructor                                                        
     ~DBGraphValue()=default;
@@ -165,10 +167,10 @@ public:
      * Set the available adjacencies to be all adjacencies of vertex
      * Used in generating new genomes
      */
-    void set_adj_availible() {
-        mAvailableAdj = mAdjList;
-     }
-
+    void set_adj_availible() { //mAvailableAdj = mAdjList; }
+        std::copy ( mAdjList.begin(), mAdjList.end(), back_inserter(mAvailableAdj) );
+    }
+        
     /**
      * Get the value of an available adjacency for a new genome
      * @param index of adjacency
