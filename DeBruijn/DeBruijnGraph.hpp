@@ -628,9 +628,11 @@ public:
      * @return tuple<string, string> current and next adjacencies to the current vertex
      */
     tuple<string, string> to(int count, string from, string to){
+        if(count == -1 && from.empty()){ //if this is the last edge in the whole graph iteration
+            return std::make_tuple(to, "");
+        }
         return std::make_tuple(to, mVertices[from].get_adj_list()[mVertices[from].get_visitor_flag()]);
     }
-
 
 ///@remark GETTERS AND SETTERS /////////////////////////////////////////////////////////////
 
