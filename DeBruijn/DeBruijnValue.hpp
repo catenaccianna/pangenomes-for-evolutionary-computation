@@ -167,8 +167,16 @@ public:
      * Set the available adjacencies to be all adjacencies of vertex
      * Used in generating new genomes
      */
-    void set_adj_availible() { //mAvailableAdj = mAdjList; }
+    void set_adj_availible() {
         std::copy ( mAdjList.begin(), mAdjList.end(), back_inserter(mAvailableAdj) );
+        std::cout<<"adj list"<<std::endl;
+        for(auto i : mAdjList) {
+            std::cout<<i<<std::endl;
+        }
+        std::cout<<"availible adj list"<<std::endl;
+        for(auto i : mAvailableAdj) {
+            std::cout<<i<<std::endl;
+        }
     }
         
     /**
@@ -192,6 +200,11 @@ public:
     void remove_adj_availible(string val, bool still_an_end=0) { 
     mAvailableAdj.erase(std::remove(mAvailableAdj.begin(), mAvailableAdj.end(), val), mAvailableAdj.end());
     }
+
+    /**
+     * clear availible adjacencies
+     */
+    void clear_adj_availible() { mAvailableAdj.clear(); }
 
     /**
      * Get the endpoint truth value

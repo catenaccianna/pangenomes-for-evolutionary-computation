@@ -340,12 +340,12 @@ void TestGenerateSequence() {
 
     emp::Random random;
 
-    cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
-    cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
-    cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
-    cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
-    cout<<"next genome "<<g.modify_org(random, "012")<<"\n"; 
-    cout<<"next genome "<<g.modify_org(random, "012")<<"\n";
+    cout<<"next genome "<<g.modify_org_NSC(random, "012")<<"\n";
+    cout<<"next genome "<<g.modify_org_NSC(random, "012")<<"\n";
+    cout<<"next genome "<<g.modify_org_NSC(random, "012")<<"\n";
+    cout<<"next genome "<<g.modify_org_NSC(random, "012")<<"\n";
+    cout<<"next genome "<<g.modify_org_NSC(random, "012")<<"\n"; 
+    cout<<"next genome "<<g.modify_org_NSC(random, "012")<<"\n";
 
     cout<<"\nAdd 8 10-bit sequences to graph: (these have same beginnings, but a loop)\n";
     cout<<"0128675012\n0129643789\n0125555666\n0129655688\n0120120120\n0122876012\n0000000000\n0128764789\n\n";
@@ -358,12 +358,12 @@ void TestGenerateSequence() {
     g1.add_sequence("0000000000");
     g1.add_sequence("0128764789");
     //this does get stuck so we'll fix it
-    cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
-    cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
-    cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
-    cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
-    cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
-    cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
+    // cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
+    // cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
+    // cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
+    // cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
+    // cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
+    // cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
 
 }
 
@@ -704,18 +704,18 @@ void TEST(){
 }
 
 int main() {
-    //TestConstructGraph();
-    //TestBranchingGraph();
-    //TestAddSequence();
-    //TestUniqueVerticies();
-    //TestMultipleEnds();
-    //TestRepetition();
-    //TestGenerateSequence();
-    //TestRemoveSequence();
-    //TestValid();
-    //TestBitOrgs();
-    //TestCsv();
-    //TestCSVHelperFunctions();
+    // TestConstructGraph();
+    // TestBranchingGraph();
+    // TestAddSequence();
+    // TestUniqueVerticies();
+    // TestMultipleEnds();
+    // TestRepetition();
+    // TestGenerateSequence();
+    TestRemoveSequence();
+    TestValid();
+    TestBitOrgs();
+    TestCsv();
+    TestCSVHelperFunctions();
     TEST();
 
 }
