@@ -204,13 +204,12 @@ public:
      * genomes in the graph to pursue
      * @param random Empirical random number generator
      * @param organism whose genome we are modifying--here I am just going to insert a 3-char string to represent the start
-     * 
-     * @note should a sequence be availible as many times as we see it in all sequences in the graph or only 
-     *       as many times as it appears in the sequence it appears most in?
-     * so I either need to somehow make sure random does not land on an index that has reached it's max visitor count
-     * or if it is going to be a premature endpoint without any adj to choose from
+     * @param probability that the modifcation will take place
+     * @param seq_count "Sequence Counting" - if true, kmers are labeled unavailible if they have been used the same number 
+     *                   of times that they have appeared in entire living genome.
+     * @param variable_length false if the genome must be a fixed, standard length
      */
-    string modify_org(emp::Random & random, std::string organism, double probability = 1){
+    string modify_org(emp::Random & random, std::string organism, double probability = 1, bool seq_count = 1, bool variable_length = 0){
         string path = organism.substr(0, mKmerLength);          //initialize string variables we use to change and go down the path
         string current = organism.substr(0, mKmerLength);
         string next = "";
@@ -224,62 +223,18 @@ public:
                 if(mVertices[current].get_visitor_flag() == 1){         
                     mVertices[current].set_adj_availible(); //available choices = full adj_list if this is our first time seeing it
                 }
-                std::cout<<"about to get random index"<<std::endl;
-                for (int i = 0; i <<mVertices[current].get_adj_list().size(); ++i) {
-                std::cout<<mVertices[current].get_adj_list()[i]<<" "; }
-                std::cout<<" "<<std::endl;
-
                 index = random.GetUInt(mVertices[current].adj_availible_size());  //index will be randomly generated number
                 next = mVertices[current].get_adj_availible(index);                 //record next kmer using index
                 path+= next.substr(2,1);                                            //add it to path
 
                 mVertices[next].increment_visitor_flag();  //mark next as visited
-                if(mVertices[next].get_visitor_flag() == mVertices[current].get_kmer_occurrences()){
-                    mVertices[current].remove_adj_availible(next);  //remove kmer from availible seq.s if it has been visited as many times
-                }                                                   //as it appears in all sequences in graph
-                current = next;
-            }
-
-
-            remove_sequence(organism);
-            add_sequence(path);
-            reset_vertex_flags();
-            return path;
-        }
-        else {
-            reset_vertex_flags();
-            return organism;
-        }
-        // remove_sequence(organism);
-        // add_sequence(path);
-        // reset_vertex_flags();
-        // return path;
-    }
-
-    /**
-     * Same as modify_org, but "No Sequence Count" (NSC). Kmers are no longer labeled unavailible if they have been used the same number of
-     * times that they have appeared in entire living genome.
-     */
-    string modify_org_NSC(emp::Random & random, std::string organism, double probability = 1){
-        string path = organism.substr(0, mKmerLength);        //initialize string variables we use to change and go down the path
-        string current = organism.substr(0, mKmerLength);
-        string next = "";
-        mVertices[current].increment_visitor_flag(); //mark 1st kmer as visited
-        int index;
-        //If P() then we will modify this genome, else do nothing
-        if( random.P( probability ) ){
-            while ( int(path.size()) < mSequenceLength ){ //while our path hasn't reached the sequence length
-                if(mVertices[current].get_visitor_flag() == 1){         
-                    mVertices[current].set_adj_availible(); //available choices = full adj_list if this is our first time seeing it
+                if(seq_count){
+                    if(mVertices[next].get_visitor_flag() == mVertices[current].get_kmer_occurrences()){
+                        mVertices[current].remove_adj_availible(next);  //remove kmer from availible seq.s if it has been visited as many times
+                    }//as it appears in all sequences in graph
                 }
-                index = random.GetUInt(mVertices[current].adj_availible_size());  //index will be randomly generated number
-                next = mVertices[current].get_adj_availible(index);                 //record next kmer using index
-                path+= next.substr(2,1);                                            //add it to path
-
-                mVertices[next].increment_visitor_flag();  //mark next as visited
                 current = next;
             }
-        
             remove_sequence(organism);
             add_sequence(path);
             reset_vertex_flags();
@@ -289,10 +244,6 @@ public:
             reset_vertex_flags();
             return organism;
         }
-        // remove_sequence(organism); /// @warning i want to remove just this kmer or the whole thing?
-        // add_sequence(path);
-        // reset_vertex_flags();
-        // return path;
     }
 
     /**
@@ -588,6 +539,38 @@ public:
                 if(mVertices[vertex.first].get_kmer_occurrences()==count && mVertices[vertex.first].get_visitor_flag()<mVertices[vertex.first].adj_list_size() && vertex.first==from && adj==to){ // match current count
                     current = count;
                     mVertices[vertex.first].increment_visitor_flag();
+                }
+            }
+        }
+        if(current > 0){ // if we're on the last vertex of the graph, there will not be a next count
+            return std::make_tuple(current, -1);
+        }
+        return std::make_tuple(-1, -1); // return invalid tuple if no other case is matched
+    }
+
+    /**
+     * Helper function for MABE2 PangenomeAnalysis module. 
+     * Added as a lambda to create a column in a Datafile that the module will produce.
+     * @param count sequence count of current vertex
+     * @param from kmer ID of current vertex
+     * @param to current adjacency of current vertex
+     * @return tuple<int, int> current and next sequence count
+     * 
+     * @note Do we need a count of edges as well as how frequently a kmer appears in the graph?
+     *       Currently do not have a count for specific edges of From to To, only count of From
+     *       How would we even represent this though? if From has multiple edges
+     */
+    tuple<int, int> edge_count(int count, string from, string to){
+        int current = 0, next = 0;
+        for(auto vertex : mVertices){
+            for(auto adj : mVertices[vertex.first].get_adj_list()){
+                if(current > 0){ // record the next count
+                    //next = mVertices[vertex.first].get_kmer_occurrences();
+                    return std::make_tuple(current, next);
+                }
+                if(mVertices[vertex.first].get_kmer_occurrences()==count && mVertices[vertex.first].get_visitor_flag()<mVertices[vertex.first].adj_list_size() && vertex.first==from && adj==to){ // match current count
+                    //current = count;
+                    //mVertices[vertex.first].increment_visitor_flag();
                 }
             }
         }

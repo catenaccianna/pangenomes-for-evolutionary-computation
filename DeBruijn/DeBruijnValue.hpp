@@ -14,6 +14,7 @@
 #include <vector>
 #include <algorithm>
 #include <iterator>
+#include <map>
 
 #include <iostream>
 
@@ -25,8 +26,13 @@ private:
     /// Adjacency list--vector of all verticies this vertex points to
     vector<string> mAdjList = {};
 
+    /// Count of specific edges in graph
+    std::map<string, int> mEdgeCount = {};
+
+    /// Adjacencies availible to use in genome modification
     vector<string> mAvailableAdj = {};
 
+    /// Visitor flag
     // so you'd to to the adj list being pointed to, and then check the index to be accessed, and is the size == 
     // the index +1, then you know this vertex is done
     int mVisits = 0;
@@ -169,14 +175,14 @@ public:
      */
     void set_adj_availible() {
         std::copy ( mAdjList.begin(), mAdjList.end(), back_inserter(mAvailableAdj) );
-        std::cout<<"adj list"<<std::endl;
-        for(auto i : mAdjList) {
-            std::cout<<i<<std::endl;
-        }
-        std::cout<<"availible adj list"<<std::endl;
-        for(auto i : mAvailableAdj) {
-            std::cout<<i<<std::endl;
-        }
+        //std::cout<<"adj list"<<std::endl;
+        // for(auto i : mAdjList) {
+        //     std::cout<<i<<std::endl;
+        // }
+        // std::cout<<"availible adj list"<<std::endl;
+        // for(auto i : mAvailableAdj) {
+        //     std::cout<<i<<std::endl;
+        // }
     }
         
     /**

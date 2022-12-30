@@ -340,12 +340,12 @@ void TestGenerateSequence() {
 
     emp::Random random;
 
-    cout<<"next genome "<<g.modify_org_NSC(random, "012")<<"\n";
-    cout<<"next genome "<<g.modify_org_NSC(random, "012")<<"\n";
-    cout<<"next genome "<<g.modify_org_NSC(random, "012")<<"\n";
-    cout<<"next genome "<<g.modify_org_NSC(random, "012")<<"\n";
-    cout<<"next genome "<<g.modify_org_NSC(random, "012")<<"\n"; 
-    cout<<"next genome "<<g.modify_org_NSC(random, "012")<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0)<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0)<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0)<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0)<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0)<<"\n"; 
+    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0)<<"\n";
 
     cout<<"\nAdd 8 10-bit sequences to graph: (these have same beginnings, but a loop)\n";
     cout<<"0128675012\n0129643789\n0125555666\n0129655688\n0120120120\n0122876012\n0000000000\n0128764789\n\n";
@@ -476,12 +476,12 @@ void TestBitOrgs(){
     cout<<"next genome "<<g.modify_org(random, "111")<<"\n"; 
     cout<<"next genome "<<g.modify_org(random, "010")<<"\n";
 
-    cout<<"next genome NSC "<<g.modify_org_NSC(random, "111")<<"\n";
-    cout<<"next genome NSC "<<g.modify_org_NSC(random, "110")<<"\n";
-    cout<<"next genome NSC "<<g.modify_org_NSC(random, "101")<<"\n";
-    cout<<"next genome NSC "<<g.modify_org_NSC(random, "110")<<"\n";
-    cout<<"next genome NSC "<<g.modify_org_NSC(random, "111")<<"\n"; 
-    cout<<"next genome NSC "<<g.modify_org_NSC(random, "010")<<"\n";
+    cout<<"next genome NSC "<<g.modify_org(random, "111", 1.0, 0)<<"\n";
+    cout<<"next genome NSC "<<g.modify_org(random, "110", 1.0, 0)<<"\n";
+    cout<<"next genome NSC "<<g.modify_org(random, "101", 1.0, 0)<<"\n";
+    cout<<"next genome NSC "<<g.modify_org(random, "110", 1.0, 0)<<"\n";
+    cout<<"next genome NSC "<<g.modify_org(random, "111", 1.0, 0)<<"\n"; 
+    cout<<"next genome NSC "<<g.modify_org(random, "010", 1.0, 0)<<"\n";
     
 }
 
