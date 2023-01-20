@@ -2,7 +2,7 @@
  * @file DeBruijnGraph.hpp
  * @author Anna Catenacci
  *
- * A class that constructs and describes a De Bruijn Graph
+ * A class that constructs and describes a DeBruijn Graph
  */
 
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
@@ -210,28 +210,39 @@ public:
      * @param variable_length false if the genome must be a fixed, standard length
      */
     string modify_org(emp::Random & random, std::string organism, double probability = 1, bool seq_count = 1, bool variable_length = 0){
-        string path = organism.substr(0, mKmerLength);          //initialize string variables we use to change and go down the path
+        string path = organism.substr(0, mKmerLength);          // initialize string variables we use to change and go down the path
         string current = organism.substr(0, mKmerLength);
         string next = "";
-        mVertices[current].increment_visitor_flag(); //mark 1st kmer as visited
+        mVertices[current].increment_visitor_flag(); // mark 1st kmer as visited
         int index;
+        bool variable_length_end_reached = false;
 
-        //If P() then we will modify this genome, else do nothing
-        if( random.P( probability ) ){
-            while ( int(path.size()) < mSequenceLength ){ //while our path hasn't reached the sequence length
+        // If P() then we will modify this genome, else do nothing
+        if( random.P( probability ) ) {
+            while ( int(path.size()) < mSequenceLength) { // while our path hasn't reached the sequence length
 
-                if(mVertices[current].get_visitor_flag() == 1){         
-                    mVertices[current].set_adj_availible(); //available choices = full adj_list if this is our first time seeing it
+                if(mVertices[current].get_visitor_flag() == 1) {         
+                    mVertices[current].set_adj_availible(); // available choices = full adj_list if this is our first time seeing it
                 }
-                index = random.GetUInt(mVertices[current].adj_availible_size());  //index will be randomly generated number
-                next = mVertices[current].get_adj_availible(index);                 //record next kmer using index
-                path+= next.substr(2,1);                                            //add it to path
 
-                mVertices[next].increment_visitor_flag();  //mark next as visited
+                if(variable_length && mVertices[current].get_endpoint() > 0) { // if genome can be variable length and current kmer is an availible endpoint
+                    index = random.GetUInt(mVertices[current].adj_availible_size() + 1);  // index will be randomly generated number
+                    if( index == mVertices[current].adj_availible_size() ) { // if we have randomly chosen to keep this kmer as an endpoint
+                        variable_length_end_reached = true;
+                        break;
+                    }
+                }
+                else { // if genome must be fixed length
+                    index = random.GetUInt(mVertices[current].adj_availible_size());  // index will be randomly generated number
+                }
+                next = mVertices[current].get_adj_availible(index);                 // record next kmer using index
+                path += next.substr(2,1);
+
+                mVertices[next].increment_visitor_flag();  // mark next as visited
                 if(seq_count){
                     if(mVertices[next].get_visitor_flag() == mVertices[current].get_kmer_occurrences()){
-                        mVertices[current].remove_adj_availible(next);  //remove kmer from availible seq.s if it has been visited as many times
-                    }//as it appears in all sequences in graph
+                        mVertices[current].remove_adj_availible(next);  // remove kmer from availible seq.s if it has been visited as many times
+                    } // as it appears in all sequences in graph
                 }
                 current = next;
             }

@@ -340,12 +340,12 @@ void TestGenerateSequence() {
 
     emp::Random random;
 
-    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0)<<"\n";
-    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0)<<"\n";
-    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0)<<"\n";
-    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0)<<"\n";
-    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0)<<"\n"; 
-    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0)<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0, 1)<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0, 1)<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0, 1)<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0, 1)<<"\n";
+    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0, 1)<<"\n"; 
+    cout<<"next genome "<<g.modify_org(random, "012", 1.0, 0, 1)<<"\n";
 
     cout<<"\nAdd 8 10-bit sequences to graph: (these have same beginnings, but a loop)\n";
     cout<<"0128675012\n0129643789\n0125555666\n0129655688\n0120120120\n0122876012\n0000000000\n0128764789\n\n";
@@ -357,13 +357,14 @@ void TestGenerateSequence() {
     g1.add_sequence("0122876012");
     g1.add_sequence("0000000000");
     g1.add_sequence("0128764789");
-    //this does get stuck so we'll fix it
-    // cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
-    // cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
-    // cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
-    // cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
-    // cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
-    // cout<<"next genome "<<g1.modify_org(random, "0120120120")<<"\n";
+
+    cout<<"next genome "<<g1.modify_org(random, "0120120120", 1.0, 0, 1)<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "0120120120", 1.0, 0, 1)<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "0120120120", 1.0, 0, 1)<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "0120120120", 1.0, 1, 1)<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "0120120120", 1.0, 1, 1)<<"\n";
+    cout<<"next genome "<<g1.modify_org(random, "0120120120", 1.0, 1, 1)<<"\n";
+    g1.reset_vertex_flags();
 
 }
 
@@ -569,7 +570,7 @@ void TestCSVHelperFunctions(){
     g1.reset_vertex_flags();
 }
 
-void TEST(){
+void TestMABE(){
     DeBruijnGraph pangenome_graph;
 
     pangenome_graph.add_sequence("1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110");
@@ -710,12 +711,12 @@ int main() {
     // TestUniqueVerticies();
     // TestMultipleEnds();
     // TestRepetition();
-    // TestGenerateSequence();
-    TestRemoveSequence();
-    TestValid();
-    TestBitOrgs();
-    TestCsv();
-    TestCSVHelperFunctions();
-    TEST();
+    TestGenerateSequence();
+    // TestRemoveSequence();
+    // TestValid();
+    // TestBitOrgs();
+    // TestCsv();
+    // TestCSVHelperFunctions();
+    // TestMABE();
 
 }
