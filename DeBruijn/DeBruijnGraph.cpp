@@ -4,6 +4,7 @@
  */
 
 #include "DeBruijnGraph.hpp"
+#include "DeBruijnValue.hpp"
 #define CATCH_CONFIG_MAIN
 #include "../../../mabe/MABE2/source/third-party/empirical/third-party/Catch/single_include/catch2/catch.hpp"
 
@@ -110,4 +111,53 @@ TEST_CASE("DeBruijnGraph__construction-and-removal", "[DeBruijnGraph.hpp]")
         CHECK(g.is_valid(new_genome));
 
     }
+}
+
+TEST_CASE("DeBruijnGraph__loops-and-weights", "[DeBruijnGraph.hpp]")
+//create graph with loops and stuff and test simple addition and removal, is valid, num seqs, size, contains_branch, endpoints, maybe visited value
+{
+    DeBruijnGraph g;
+    g.add_sequence("ABCDBCDE");
+    g.update_loops();
+    DBGraphValue bcd = g.get_value("BCD");
+    CHECK(bcd.get_loop_flag() == 1);
+
+    DBGraphValue cde = g.get_value("CDE");
+    CHECK(cde.get_endpoint() == 1);
+
+    g.update_weights();
+
+    /**for( auto i : g.get_all_vertices()){
+        DBGraphValue val = g.get_value(i);
+        std::cout<<"Val "<<i<<" Max "<<std::get<0>(val.get_max_len())<<" "<<std::get<1>(val.get_max_len())<<" Min "<<std::get<0>(val.get_min_len())<<" "<<std::get<1>(val.get_min_len())<<std::endl;
+    }**/
+
+    
+
+
+    DeBruijnGraph virtualCPU;
+    virtualCPU.add_sequence("cccicccdtceskcckcckeccfccdqcclcccbeccfccceskccepcc");
+    virtualCPU.add_sequence("ccckcccrcqcrdecrecrcecrcecrecrcqcrdecrecrecrcecrce");
+    virtualCPU.add_sequence("cccepcccesccrcqcrcqcrccctcesccoesccoesccrcccbeccfc");
+    virtualCPU.add_sequence("cccepccctcccqsccrcccdtceskccpskcckdcccfccdtceskccc");
+    virtualCPU.add_sequence("cccicccqsccckdccfccdtcesccrcecrecrcqcrdecrcqcrdecr");
+    virtualCPU.add_sequence("cccepccccdqcclccckdccrcccbeccfcccqsccoescccfccdtce");
+    virtualCPU.add_sequence("ccclcccescccrcccbeccfcccicccepcccqsccoescccdcnccce");
+    virtualCPU.add_sequence("cccdqcclcckccckccpskccclcccbeccfccdccccrcecrcccdtc");
+    virtualCPU.add_sequence("ccctcccbeccfcccrcccbeccfccdcncccfccdcncccfcccbeccf");
+    virtualCPU.add_sequence("cccesccoesccoesccrcqcrcecrecrecrecrcecrcecrecrcccq");
+    virtualCPU.add_sequence("cccbeccfccdqcclccclcccfcccdqcclccckeccfcccrcqcrdec");
+    virtualCPU.add_sequence("cccclcccepcccbeccfccckcccbeccfccctcccrcecrcecrecrc");
+    virtualCPU.add_sequence("cccrcqcrcecrecrcqcrdecrcecrecrcqcrdecrcecrecrecrcc");
+    virtualCPU.add_sequence("ccclcckdcccbeccfccdtceskccesccrcccesccclcckcccfccd");
+    virtualCPU.add_sequence("cckeccfccclcccepcccdqcclcccfccdctcesccoesccoesccrc");
+    virtualCPU.add_sequence("cccdqcclccckeccfccdctceskccepccckccpskccctcccciccc");
+    virtualCPU.add_sequence("ccctceskccesccrcqcrdecrccccqsccoesccoescccicccbecc");
+    virtualCPU.add_sequence("ccccdqcclcckccepcccbeccfccccdtceskccepccciccctccct");
+    virtualCPU.add_sequence("ccdctcesccoesccrcecrcecrecrecrecrcccdtceskcceskcce");
+
+    CHECK(virtualCPU.get_sequence_size() == 19);
+
+    
+
 }

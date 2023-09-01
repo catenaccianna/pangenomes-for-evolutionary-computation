@@ -20,6 +20,7 @@
 #include <fstream>
 #include <functional>
 #include <tuple>
+#include <queue>
 
 using std::string; using std::vector; using std::map;
 using std::cout; using std::endl; using std::tuple;
@@ -209,7 +210,7 @@ public:
      *                   of times that they have appeared in entire living genome.
      * @param variable_length false if the genome must be a fixed, standard length
      */
-    string modify_org(emp::Random & random, std::string organism, double probability = 1, bool seq_count = 1, bool variable_length = 0){
+    string modify_org0(emp::Random & random, std::string organism, double probability = 1, bool seq_count = 1, bool variable_length = 0){ 
         string path = organism.substr(0, mKmerLength);          // initialize string variables we use to change and go down the path
         string current = organism.substr(0, mKmerLength);
         string next = "";
@@ -258,10 +259,177 @@ public:
     }
 
     /**
+     * @brief coding for one specific base case
+     * Not using availible adj list. Just randomly select from adj_list. 
+     * May try with weights, and because of that, will keep track of visitor flag.
+     * 
+     * @param random 
+     * @param organism 
+     * @param probability 
+     * @param seq_count = 0
+     * @param variable_length = 1
+     * @return string 
+     */
+    string modify_org(emp::Random & random, std::string organism, double probability = 1, bool seq_count = 1, bool variable_length = 0){
+        string path = organism.substr(0, mKmerLength);          // Initialize string variables we use to change and go down the path
+        string current = organism.substr(0, mKmerLength);
+        string next = "";
+        mVertices[current].increment_visitor_flag();            // Mark 1st kmer as visited
+        int index;
+
+        if ( random.P ( probability ) ) {                         // If P() then we will modify this genome, else do nothing
+            if ( variable_length ) {
+                while ( true ) {
+                    //if ( mVertices[current].get_endpoint() >= mVertices[current].get_kmer_occurrences() ) { // At a Dead End Node /// is this right??? should i be using like maybe visitor flag or something?
+                    if ( mVertices[current].adj_list_size() < 1 ){
+                        // pick ending kmer from current.adj's and append to path
+                        //append endpoint i think 
+                        break;
+                    }
+
+                    else if ( path.length() + std::get<0>(mVertices[current].get_max_len()) < organism.length() ) { //curr + max1 < parent and curr + max 2 >= parent choose 2 (and mirror)
+                    //longest it can possibly be and it's still not long enough
+                    }
+
+                    else if ( path.length() + std::get<0>(mVertices[current].get_min_len()) > organism.length() ) { //curr + min 1 > parent and curr + min2 <= parent choose 2 (and mirror)
+                    }
+
+                    else if ( path.length() < organism.length() ) { //if current < parent len, (not long enough yet) take whichever fork has higher max
+                    //also dont want min len + current len significantly > parent len
+                    }
+
+///@remark if we're looking at min and max length, that'll be recorded in the current node, but then we need some way of recording/selecting the path that actually matches that description. dict in value or edge class?
+
+                    // if we are not in either of these cases, we may be theoretically capable of reaching a genome with a reasonable length, so choose a path randomly
+                    // these two cases will only be gaurd rails
+                    else { // if we are in this case, we have a chance at randomly choosing a genome of reasonable length
+                        index = random.GetUInt ( mVertices[current].adj_list_size() + 1 );  // Choose random path down graph
+                        next = mVertices[current].get_adjacency ( index );
+                        path.append ( next.substr() );
+                        // update current and next
+                        //add kmer to graph, update visitor flag
+                    }
+                }
+            }
+
+            else { // if we are NOT USING VARIABLE LENGTH, could just do a loop until we reach length?
+                    // feel like this might defeat the purpose of being able to have a genome that finds an intuitive end but good to have the option
+            }
+            
+            remove_sequence(organism);                          // Remove old, unmodified sequence from graph
+            add_sequence(path);                                 // Add new, modified sequence to graph
+            reset_vertex_flags();
+            return path;
+        }
+        else {                                                 // No modification
+            reset_vertex_flags();
+            return organism;
+        }
+    }
+
+    /**
+     * Using visitor flags, detect and mark all loops in the graph
+     */
+    void update_loops() {
+        reset_vertex_flags();
+        reset_loops();          // completely reset loop flags in case anything has changed
+        loop_detection(mStarts[0]);
+        reset_vertex_flags();
+    }
+
+    /**
+     * Recursive function for loop detection in a cyclic graph
+     * @param node to begin the recursion on
+     */
+    void loop_detection(string node) {
+        depth_first_traversal( [&] (string node) { 
+            if (mVertices[node].get_visitor_flag()>0){
+                mVertices[node].set_loop_flag(1); 
+            }
+            });
+    }
+
+    /**
+     * Update minimum and maximum length attributes of each vertex within the graph
+     */
+    void update_weights() {
+        update_loops();
+        for(auto & vertex : mVertices) {
+            if(vertex.second.get_endpoint() > 0) { // possible endpoint, min = 0
+                vertex.second.set_min_len(0, vertex.first);
+            }
+            else {
+                // min length of path is an endpoint vertex ahead of this point
+                // maybe do a dfs/bfs search to find an endpoint, while keeping a count, 
+                // dfs would probably have a better chance of keeping a count, 
+                // but we'd have to set it back to 0 every once in a while on a new branch exploration
+                // WAIT CAN WE USE DJIKSTRAS (pronounce dyke-stra's) ALGORITHM HERE AND SEARCH FOR SHORTEST PATH? 
+                // for unweighted graphs, DA = bfs
+                // idk because we'd need the shortest path to each endpoint and then compare them
+                // could make a case where we set shortest and longest path this way (when we already have all dists) if both are needed i guess
+                reset_vertex_flags();
+                std::queue<std::string> node_q;
+                vertex.second.increment_visitor_flag();
+                node_q.push(vertex.first);
+                int count = 0;
+                while(!node_q.empty()) {
+                    std::string current = node_q.front();
+                    if ( mVertices[current].get_endpoint() > 0 ) {
+                        count++;
+                        vertex.second.set_min_len(count, current); /// @remark this might need to change because the string is going to be further down the line than the initial adj
+                        break;
+                    }
+                    node_q.pop();
+                    count++;
+                    for ( auto & adj : mVertices[current].get_adj_list() ) {
+                        if ( mVertices[adj].get_visitor_flag() == 0 ) {
+                            mVertices[adj].increment_visitor_flag();
+                            node_q.push(adj);
+                        }
+                    }
+                }
+                reset_vertex_flags();
+            }
+            if(vertex.second.get_loop_flag() == 1) { // possible loop, max = infinity
+                vertex.second.set_max_len(std::numeric_limits<int>::max(), vertex.first); /// @remark this might need to change for the string to take to get to the loop
+            }
+            else {
+                // so at this point, any mode we encounter on any path that has a loop is infinity
+                // and otherwise we have the count numerical value
+                reset_vertex_flags();
+                std::queue<std::string> node_q;
+                vertex.second.increment_visitor_flag();
+                node_q.push(vertex.first);
+                int count = 0;
+                while(!node_q.empty()) {
+                    std::string current = node_q.front();
+                    if ( mVertices[current].get_loop_flag() > 0 ) { // found a loop, so max_len = infinity
+                        count++;
+                        vertex.second.set_max_len(std::numeric_limits<int>::max(), current);
+                        break;
+                    }
+                    node_q.pop();
+                    count++;
+                    for ( auto & adj : mVertices[current].get_adj_list() ) {
+                        if ( mVertices[adj].get_visitor_flag() == 0 ) {
+                            mVertices[adj].increment_visitor_flag();
+                            node_q.push(adj);
+                        }
+                    }
+                    if ( node_q.empty() ) { // if the queue is empty and we still haven't broken yet, then max len is not infinity
+                        vertex.second.set_max_len(count, vertex.first);     /// @note that this is not the right string for what path to take, but also this case says that there's a reasonable length to reach, so might not matter
+                    }
+                }
+                reset_vertex_flags();
+            }
+        }
+    }
+
+    /**
      * Add an entirely new possible sequence into the graph
      * @param sequence to add to the graph
      */
-    void add_sequence(int sequence){
+    void add_sequence(int sequence) {
         add_sequence(std::to_string(sequence));
     }
 
@@ -269,7 +437,7 @@ public:
      * Add an entirely new possible sequence into the graph
      * @param sequence to add to the graph
      */
-    void add_sequence(vector<int> sequence){
+    void add_sequence(vector<int> sequence) {
         string input = "";
         for(int i = 0; i < mKmerLength; ++i){
             input += std::to_string(sequence[i]);
@@ -281,7 +449,7 @@ public:
      * Add an entirely new possible sequence into the graph
      * @param sequence to add to the graph
      */
-    void add_sequence(vector<string> sequence){
+    void add_sequence(vector<string> sequence) {
         string input = "";
         for(int i = 0; i < mKmerLength; ++i){
             input += sequence[i];
@@ -295,7 +463,7 @@ public:
      * traverse through and randomly do crossovers when we hit a branch.
      * @param sequence to add to the graph
      */
-    void add_sequence(string sequence){
+    void add_sequence(string sequence) {
         mSeqSize += 1;
         mSequenceLength = sequence.size();
         // if the beginning string is not in the graph, add a new beginning vertex
@@ -446,10 +614,18 @@ public:
      * To be used in traversals
      */
     void reset_vertex_flags() {
-        vector<string> all_vertices;
         for (auto & element : mVertices) {
             element.second.change_visitor_flag(0);
             element.second.clear_adj_availible();
+        }
+    }
+
+    /**
+     * Reset all loop flags to 0 or False
+     */
+    void reset_loops() {
+        for (auto & element : mVertices) {
+            element.second.set_loop_flag(0);
         }
     }
 
@@ -506,7 +682,7 @@ public:
     }
 
     /**
-     * This function is one that I used purely to express the pattern used in the CSV helper functions below.
+     * This function is one that I used ONLY to express the pattern used in the CSV helper functions below.
      * The reason why those work is because we iterate through the graph in the same order in each function.
      */
     void example_iteration(){

@@ -15,10 +15,12 @@
 #include <algorithm>
 #include <iterator>
 #include <map>
+#include <limits>
+#include <tuple>
 
 #include <iostream>
 
-using std::string; using std::vector;
+using std::string; using std::vector; using std::map; using std::tuple;
 
 class DBGraphValue {
 private:
@@ -26,11 +28,11 @@ private:
     /// Adjacency list--vector of all verticies this vertex points to
     vector<string> mAdjList = {};
 
-    /// Count of specific edges in graph
-    std::map<string, int> mEdgeCount = {};
-
     /// Adjacencies availible to use in genome modification
     vector<string> mAvailableAdj = {};
+
+    // /// Map of each adj to their min value and max value
+    // map<string, tuple<int, int> > mMinMax;
 
     /// Visitor flag
     // so you'd to to the adj list being pointed to, and then check the index to be accessed, and is the size == 
@@ -51,6 +53,24 @@ private:
     /// This is a boolean that will be 0 if this vertex is not an endpoint
     /// It will be appended to every time it is the endpoint of another sequence in the graph
     int mEndpoint = 0;
+
+    /// This is a boolean value that is true if this vertex leads to a loop in the graph, and false if not
+    int mLoop = 0;
+
+    /// Maximum path length possible through adjacencies and adj that allows it 
+    tuple<int, string> mMax = std::make_tuple(std::numeric_limits<int>::max(), "");
+
+    /// Minimum path length possible through adjacencies and adj that allows it 
+    tuple<int, string> mMin = std::make_tuple(0, "");
+
+    // /// Maximum path length possible through adjacencies
+    // int mMaxLen = std::numeric_limits<int>::max();
+
+    // /// Minimum path length possible through adjacencies
+    // int mMinLen = 0;
+
+    // /// Unsure if i will use this variable, but weight/probability of choosing this path in modify_org
+    // int mWeight = 0;
 
 public:
     /// Constructors
@@ -129,6 +149,18 @@ public:
     void increment_visitor_flag() { mVisits++; }
 
     /**
+     * Get the loop flag object
+     * @return true if this vertex leads to a loop in the graph, false if not
+     */
+    int get_loop_flag(){ return mLoop; }
+
+    /**
+     * Set loop flag
+     * @param value true if this vertex leads to a loop in the graph, false if not
+     */
+    void set_loop_flag(int value) { mLoop = value; }
+
+    /**
      * Set the branch flag
      * A true value implies the vertex contains a branch point.
      * @param value true if the vertex has more than one value in it's adjacency list
@@ -175,14 +207,6 @@ public:
      */
     void set_adj_availible() {
         std::copy ( mAdjList.begin(), mAdjList.end(), back_inserter(mAvailableAdj) );
-        //std::cout<<"adj list"<<std::endl;
-        // for(auto i : mAdjList) {
-        //     std::cout<<i<<std::endl;
-        // }
-        // std::cout<<"availible adj list"<<std::endl;
-        // for(auto i : mAvailableAdj) {
-        //     std::cout<<i<<std::endl;
-        // }
     }
         
     /**
@@ -228,6 +252,56 @@ public:
      * sequence it is in is being removed
      */
     void decrement_endpoint() { mEndpoint--; }
+
+    // /**
+    //  * Set maximum path length from this vertex
+    //  */
+    // void set_max_len(int l) { mMaxLen = l; }
+    //   
+    // /**
+    //  * Get maximum path length from this vertex
+    //  */
+    // int get_max_len() { return mMaxLen; }
+    //
+    // /**
+    //  * Set minimum path length from this vertex
+    //  */
+    // void set_min_len(int l) { mMinLen = l; }
+    //
+    // /**
+    //  * Get minimum path length from this vertex
+    //  */
+    // int get_min_len() { return mMinLen; }
+    //
+    // /**
+    //  * Set weight
+    //  */
+    // void set_weight(int w) { mWeight = w; }
+    //  
+    // /**
+    //  * Get weight
+    //  */
+    // int get_weight() { return mWeight; }
+
+    /**
+     * Set maximum path length from this vertex
+     */
+    void set_max_len(int l, string s) { mMax = std::make_tuple(l, s); }
+        
+    /**
+     * Get maximum path length from this vertex
+     */
+    tuple<int, string> get_max_len() { return mMax; }
+
+    /**
+     * Set minimum path length from this vertex
+     */
+    void set_min_len(int l, string s) { mMin = std::make_tuple(l, s); }
+        
+    /**
+     * Get minimum path length from this vertex
+     */
+    tuple<int, string> get_min_len() { return mMin; }
 
 };
 

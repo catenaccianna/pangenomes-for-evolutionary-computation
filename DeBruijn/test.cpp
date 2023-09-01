@@ -711,7 +711,7 @@ int main() {
     // TestUniqueVerticies();
     // TestMultipleEnds();
     // TestRepetition();
-    TestGenerateSequence();
+    //TestGenerateSequence();
     // TestRemoveSequence();
     // TestValid();
     // TestBitOrgs();
