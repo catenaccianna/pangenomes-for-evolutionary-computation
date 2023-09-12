@@ -129,6 +129,7 @@ private:
         mVertices[input].set_empty_bool(1);
         mVertices[input].increment_endpoint();
         mVertices[input].increment_kmer_occurrences();
+        update_loops();
     }
 
 public:
@@ -342,7 +343,7 @@ public:
      * @param node to begin the recursion on
      */
     void loop_detection(string node) {
-        depth_first_traversal( [&] (string node) { 
+        depth_first_traversal( [&] (string node) {
             if (mVertices[node].get_visitor_flag()>0){
                 mVertices[node].set_loop_flag(1); 
             }
@@ -439,7 +440,7 @@ public:
      */
     void add_sequence(vector<int> sequence) {
         string input = "";
-        for(int i = 0; i < mKmerLength; ++i){
+        for(int i = 0; i < sequence.size(); ++i){
             input += std::to_string(sequence[i]);
         }
         add_sequence(input);
@@ -451,7 +452,7 @@ public:
      */
     void add_sequence(vector<string> sequence) {
         string input = "";
-        for(int i = 0; i < mKmerLength; ++i){
+        for(int i = 0; i < sequence.size(); ++i){
             input += sequence[i];
         }
         add_sequence(input);
@@ -493,6 +494,7 @@ public:
         }
         mVertices[sequence].increment_endpoint(); //increment number of times this kmer is an endpoint of a seq in the pangenome
         mVertices[sequence].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
+        update_loops();
     }
 
 private:
@@ -603,6 +605,7 @@ public:
                         }
                     }
                     mVertices[current].increment_visitor_flag();
+
                 }   
             } 
         }
@@ -635,7 +638,7 @@ public:
      */
     void display(){
         depth_first_traversal( [&] (string vertex) { 
-            cout<<vertex;
+            cout<<vertex<<" ";
             // if there is one, non-empty vertex in the list, print it
             if (mVertices[vertex].get_empty_bool()==0 && mVertices[vertex].adj_list_size() == 1){
                 cout<<" -> "<<mVertices[vertex].get_adj_list()[0];
@@ -650,6 +653,10 @@ public:
             // if the adj_list contains an endpoint/empty vertex, show that
             if (mVertices[vertex].get_empty_bool()==1){
                 cout << "(an endpoint)";
+            }
+            // if the vertex is a loop, show that
+            if (mVertices[vertex].get_loop_flag()>0){
+                cout << " (a loop at " << vertex << " = " << mVertices[vertex].get_loop_flag() << ")";
             }
             cout<<"\n";
             });

@@ -704,6 +704,43 @@ void TestMABE(){
       }*/
 }
 
+void TestLoops() {
+    cout<<"\nLOOPING GRAPH TEST\n";
+    cout<<"Are loops tracked correctly?\n";
+
+    std::vector<int> vec({1,2,3,4,1,2,3}); //123>234>341>412>123 loop
+    std::vector<int> vec2({1,2,3,4,1,8,8}); //123>234>341>418>188 no loop
+
+    // in display() is mVertices[vertex] the vertex of the adj?
+
+    // no loops
+    DeBruijnGraph g(vec, 3);
+    //cout<<"\nLoop counter values when there is no loop: \n";
+    /*for(int i = 0; i<int(g.get_branch_vertices().size()); ++i){
+        cout <<g.get_branch_vertices()[i]<<", ";
+    }
+    cout<<"\n";*/
+    //g.depth_first_traversal([&g] (string vertex) {
+    //    cout << vertex<< " empty bool-"<<g.get_value(vertex).get_empty_bool()<<
+    //    " contains branch-"<<g.get_value(vertex).get_branch() <<
+    //    " contains loops-"<<g.get_value(vertex).get_loop_flag() << "\n"; });
+
+    // one loop
+    g.add_sequence(vec2);
+    //cout<<"\nLoop counter values with one loop: \n";
+    /*for(int i = 0; i<int(g.get_branch_vertices().size()); ++i){
+        cout <<g.get_branch_vertices()[i]<<", ";
+    }
+    cout<<"\n";*/
+    //g.depth_first_traversal([&g] (string vertex) { 
+    //    cout << vertex<< " empty bool-"<<g.get_value(vertex).get_empty_bool()<<
+    //    " contains branch-"<<g.get_value(vertex).get_branch() <<
+    //    " contains loops-"<<g.get_value(vertex).get_loop_flag() << "\n"; });
+
+    //cout<<"\n";
+    g.display();
+}
+
 int main() {
     // TestConstructGraph();
     // TestBranchingGraph();
@@ -711,12 +748,13 @@ int main() {
     // TestUniqueVerticies();
     // TestMultipleEnds();
     // TestRepetition();
-    //TestGenerateSequence();
+    // TestGenerateSequence();
     // TestRemoveSequence();
     // TestValid();
     // TestBitOrgs();
     // TestCsv();
     // TestCSVHelperFunctions();
     // TestMABE();
+    TestLoops();
 
 }
