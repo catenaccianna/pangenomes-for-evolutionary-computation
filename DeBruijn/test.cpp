@@ -713,7 +713,6 @@ void TestLoops() {
 
     // in display() is mVertices[vertex] the vertex of the adj?
 
-    // no loops
     DeBruijnGraph g(vec, 3);
     //cout<<"\nLoop counter values when there is no loop: \n";
     /*for(int i = 0; i<int(g.get_branch_vertices().size()); ++i){
@@ -725,7 +724,6 @@ void TestLoops() {
     //    " contains branch-"<<g.get_value(vertex).get_branch() <<
     //    " contains loops-"<<g.get_value(vertex).get_loop_flag() << "\n"; });
 
-    // one loop
     g.add_sequence(vec2);
     //cout<<"\nLoop counter values with one loop: \n";
     /*for(int i = 0; i<int(g.get_branch_vertices().size()); ++i){
@@ -739,6 +737,71 @@ void TestLoops() {
 
     //cout<<"\n";
     g.display();
+}
+
+void TestPathLength() {
+    cout<<"\nPATH LENGTH TEST\n";
+    cout<<"Track minimum and maximum possible path lengths from current node.\n";
+    /** 
+     * idea: iterate through graph before second sequence is added and print min and max path values.
+     * for no loop, should just be length of path left. when loop is added, there should be infinity somewhere.
+     * how to print infinity? maybe if statement
+     * this should cover like the construction of a graph and add_sequence
+     * next step would be to make sure it updates when you subtract a sequence
+     */
+    /**
+    void set_max_len(int l, string s) { mMax = std::make_tuple(l, s); }
+    tuple<int, string> get_max_len() { return mMax; }
+    void set_min_len(int l, string s) { mMin = std::make_tuple(l, s); }
+    tuple<int, string> get_min_len() { return mMin; }
+    */
+
+    std::vector<int> vec({1,2,3,4,1,2,3}); //123>234>341>412>123 loop
+    std::vector<int> vec2({1,2,3,4,1,8,8}); //123>234>341>418>188 no loop
+
+    // print min and mac path length at every node with no loop
+    DeBruijnGraph g(vec2, 3);
+
+    g.depth_first_traversal( [&] (string vertex) { 
+            cout<<vertex;
+            // if there is one, non-empty vertex in the list, print it
+            if (g.get_value(vertex).get_empty_bool()==0 && g.get_value(vertex).adj_list_size() == 1){
+                cout<<" -> "<<g.get_value(vertex).get_adj_list()[0];
+            }
+            // if the adj_list has more than one node in it, print them
+            else if (g.get_value(vertex).adj_list_size() >= 1){
+                cout<<" -> ";
+                for(auto i: g.get_value(vertex).get_adj_list()){
+                    cout<<i<<", ";
+                }
+            }
+            cout<<" (min_path_length from "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
+            cout<<", max_path_length from "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len())<<")";
+            cout<<"\n";
+            });
+
+    // add sequence with loop and repeat
+    cout<<"\n* added loop sequence *\n";
+    g.add_sequence(vec);
+
+    g.depth_first_traversal( [&] (string vertex) { 
+            cout<<vertex;
+            // if there is one, non-empty vertex in the list, print it
+            if (g.get_value(vertex).get_empty_bool()==0 && g.get_value(vertex).adj_list_size() == 1){
+                cout<<" -> "<<g.get_value(vertex).get_adj_list()[0];
+            }
+            // if the adj_list has more than one node in it, print them
+            else if (g.get_value(vertex).adj_list_size() >= 1){
+                cout<<" -> ";
+                for(auto i: g.get_value(vertex).get_adj_list()){
+                    cout<<i<<", ";
+                }
+            }
+            cout<<" (min_path_length from "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
+            cout<<", max_path_length from "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len())<<")";
+            cout<<"\n";
+            });
+
 }
 
 int main() {
@@ -756,5 +819,6 @@ int main() {
     // TestCSVHelperFunctions();
     // TestMABE();
     TestLoops();
+    TestPathLength();
 
 }
