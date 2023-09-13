@@ -22,54 +22,42 @@
 
 using std::string; using std::vector;
 
-class DBGraphEdge {
+class DeBruijnEdge {
 private:
-    /// Weight of edge
-    int mWeight = 0;
 
-    /// Head node (pointing to)
-    std::shared_ptr<DBGraphValue> mHead = nullptr;
+    /// Head node (pointing to, which nodes go out from this one, looking forward)
+    std::vector<std::shared_ptr<DBGraphValue>> mHead;
 
-    /// Tail node (pointing from)
-    std::shared_ptr<DBGraphValue> mTail = nullptr;
+    /// Tail node (pointing from, which nodes lead TO this one, looking backwards)
+    std::vector<std::shared_ptr<DBGraphValue>> mTail;
 
 public:
     /// Constructors
-    DBGraphEdge()=default;
+    DeBruijnEdge()=default;
     //DBGraphEdge(vector<string> a, bool c) : mWeight(w), mContainsBranch(c), mAvailableAdj({}) {};
 
     /// Destructor                                                        
-    ~DBGraphEdge()=default;
-
-    /**
-     * Set weight
-     */
-    void set_weight(int w) { mWeight = w; }
-        
-    /**
-     * Get weight
-     */
-    int get_weight() { return mWeight; }
+    ~DeBruijnEdge()=default;
 
     /**
      * Set head node
      */
-    void set_head(std::shared_ptr<DBGraphValue> h) { mHead = h; }
+    void set_head(std::shared_ptr<DBGraphValue> h) { mHead.push_back(h); }
         
     /**
      * Get head node
      */
-    std::shared_ptr<DBGraphValue> get_head() { return mHead; }
+    std::vector<std::shared_ptr<DBGraphValue>> get_head() { return mHead; }
 
     /**
      * Set tail node
      */
-    void set_tail(std::shared_ptr<DBGraphValue> t) { mTail = t; }
+    void set_tail(std::shared_ptr<DBGraphValue> t) { mTail.push_back(t); }
         
     /**
      * Get tail node
      */
-    std::shared_ptr<DBGraphValue> get_tail() { return mTail; }
+    std::vector<std::shared_ptr<DBGraphValue>> get_tail() { return mTail; }
 
 };
 
