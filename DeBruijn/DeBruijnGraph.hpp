@@ -60,8 +60,30 @@ private:
      * Set a vertex with no value as a place-holder
      * @param v vertex object to add to the graph's list of vertices
      */
-    void set_empty_vertex(string v){
+    void set_empty_vertex(string v) {
         mVertices[v];
+    }
+
+    /**
+     * Set minimum and maximum possible path lengths from this node
+     * @param v vertex object
+     * @param path_length from this node to an endpoint
+     * @param adj next node after v
+     * @param new_node true if there's nothing in the adj list, and min and max length should both be set to this length
+     */
+    void set_path_length(string v, int path_length, string adj, int node_occurences) {
+        if (node_occurences == 0){
+            mVertices[v].set_min_len(path_length, adj);
+            mVertices[v].set_max_len(path_length, adj);
+        }
+        else{
+            if (path_length >= std::get<0>(mVertices[v].get_max_len())) {
+                mVertices[v].set_max_len(path_length, adj);
+            }
+            if (path_length <= std::get<0>(mVertices[v].get_min_len())) {
+                mVertices[v].set_min_len(path_length, adj);
+            }
+        }
     }
 
     /**
@@ -72,6 +94,8 @@ private:
     void add_edge(string start_v, string end_v){
         int initial_adj_size = mVertices[start_v].adj_list_size();
         mVertices[start_v].add_to_adj_list(end_v);
+        mVertices[start_v].set_out_edge(end_v);
+        mVertices[start_v].set_in_edge(start_v);
         if(initial_adj_size > 0){ //if the adj_list was not empty, AND new adj_list size > old_adj_list.size, then
             if(initial_adj_size < mVertices[start_v].adj_list_size()){ //this implies the vertex is a branch point
                 mVertices[start_v].set_branch(true);
@@ -109,26 +133,29 @@ private:
         if(int(input.length()) == kmer_length){
             set_empty_vertex(input);
         }
-        // if the vertex is already in the graph, then skip this and don't add to size
+        // if the vertex is already in the graph, then skip this and don't add to size //uh???????????
         if(mVertices.count(input.substr(0, mKmerLength)) <= 0){
             mSize++;
             set_empty_vertex(input.substr(0, mKmerLength));
         }
-        //add to size and add an edge for each vertex, and an empty vertex for the end
+        // add to size and add an edge for each vertex, and an empty vertex for the end
         while(int(input.length()) >= kmer_length + 1){
             if(mVertices.count(input.substr(1, mKmerLength)) <= 0){
                 mSize++;
             }
             add_edge(input.substr(0, kmer_length), input.substr(1, kmer_length));
-            //change the set_empty_bool here so we don't run into endpoint troubles later.
+            // change the set_empty_bool here so we don't run into endpoint troubles later.
             mVertices[input.substr(0, kmer_length)].set_empty_bool(0);
             set_empty_vertex(input.substr(1, kmer_length));
-            //take one character off the input, continue
+            // min/max path length from this node
+            set_path_length(input.substr(0, kmer_length), (input.size()/kmer_length), input.substr(1, kmer_length), mVertices.count(input.substr(0, mKmerLength)));
+            // take one character off the input, continue
             input = input.substr(1, input.length()-1);
         }
         mVertices[input].set_empty_bool(1);
         mVertices[input].increment_endpoint();
-        mVertices[input].increment_kmer_occurrences();
+        mVertices[input].increment_kmer_occurrences(); //delete, count function works the same way
+        set_path_length(input, 0, "", mVertices.count(input));
         update_loops();
     }
 
@@ -261,17 +288,16 @@ public:
 
     /**
      * @brief coding for one specific base case
-     * Not using availible adj list. Just randomly select from adj_list. 
+     * Availible adj list used to track which adj can lead to reasonable length
      * May try with weights, and because of that, will keep track of visitor flag.
      * 
      * @param random 
      * @param organism 
-     * @param probability 
-     * @param seq_count = 0
+     * @param probability
      * @param variable_length = 1
      * @return string 
      */
-    string modify_org(emp::Random & random, std::string organism, double probability = 1, bool seq_count = 1, bool variable_length = 0){
+    string modify_org(emp::Random & random, std::string organism, double probability = 1, bool variable_length = 0){
         string path = organism.substr(0, mKmerLength);          // Initialize string variables we use to change and go down the path
         string current = organism.substr(0, mKmerLength);
         string next = "";
@@ -312,11 +338,9 @@ public:
                     }
                 }
             }
-
             else { // if we are NOT USING VARIABLE LENGTH, could just do a loop until we reach length?
                     // feel like this might defeat the purpose of being able to have a genome that finds an intuitive end but good to have the option
             }
-            
             remove_sequence(organism);                          // Remove old, unmodified sequence from graph
             add_sequence(path);                                 // Add new, modified sequence to graph
             reset_vertex_flags();
