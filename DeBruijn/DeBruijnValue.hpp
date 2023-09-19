@@ -10,6 +10,7 @@
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNVALUE_H
 #define PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNVALUE_H
 
+#include "DeBruijnEdge.hpp"
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -58,19 +59,14 @@ private:
     int mLoop = 0;
 
     /// Maximum path length possible through adjacencies and adj that allows it 
-    tuple<int, string> mMax = std::make_tuple(std::numeric_limits<int>::max(), "");
+    tuple<int, string> mMax = std::make_tuple(0, "");
 
     /// Minimum path length possible through adjacencies and adj that allows it 
-    tuple<int, string> mMin = std::make_tuple(0, "");
+    tuple<int, string> mMin = std::make_tuple(std::numeric_limits<int>::max(), "");
 
-    // /// Maximum path length possible through adjacencies
-    // int mMaxLen = std::numeric_limits<int>::max();
-
-    // /// Minimum path length possible through adjacencies
-    // int mMinLen = 0;
-
-    // /// Unsure if i will use this variable, but weight/probability of choosing this path in modify_org
-    // int mWeight = 0;
+    /// Edges into and out of this node
+    DeBruijnEdge mInEdge;
+    DeBruijnEdge mOutEdge;
 
 public:
     /// Constructors
@@ -253,36 +249,6 @@ public:
      */
     void decrement_endpoint() { mEndpoint--; }
 
-    // /**
-    //  * Set maximum path length from this vertex
-    //  */
-    // void set_max_len(int l) { mMaxLen = l; }
-    //   
-    // /**
-    //  * Get maximum path length from this vertex
-    //  */
-    // int get_max_len() { return mMaxLen; }
-    //
-    // /**
-    //  * Set minimum path length from this vertex
-    //  */
-    // void set_min_len(int l) { mMinLen = l; }
-    //
-    // /**
-    //  * Get minimum path length from this vertex
-    //  */
-    // int get_min_len() { return mMinLen; }
-    //
-    // /**
-    //  * Set weight
-    //  */
-    // void set_weight(int w) { mWeight = w; }
-    //  
-    // /**
-    //  * Get weight
-    //  */
-    // int get_weight() { return mWeight; }
-
     /**
      * Set maximum path length from this vertex
      */
@@ -302,6 +268,27 @@ public:
      * Get minimum path length from this vertex
      */
     tuple<int, string> get_min_len() { return mMin; }
+
+    /**
+     * Set edge into this node
+     */
+    void set_in_edge(string in) { mInEdge.set_head(in); }
+        
+    /**
+     * Get edge into this node
+     */
+    DeBruijnEdge get_in_edge() { return mInEdge; }
+
+    /**
+     * Set edge out of this node
+     */
+    void set_out_edge(string out) { mOutEdge.set_tail(out); }
+        
+    /**
+     * Get edge out of this node
+     */
+    DeBruijnEdge get_out_edge() { return mOutEdge; }
+
 
 };
 
