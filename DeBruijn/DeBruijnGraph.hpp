@@ -293,24 +293,6 @@ public:
         }
     }
 
-    void delete_long_paths(DBGraphValue node){
-        node.clear_adj_availible();
-        for(string i : node.get_adj_list()){
-            if(get<0>(mVertices[i].get_max_len()) != std::numeric_limits<int>::max()){
-                node.append_adj_availible(i);
-            }
-        }
-    }
-
-    void only_infinite_paths(DBGraphValue node){
-        node.clear_adj_availible();
-        for(string i : node.get_adj_list()){
-            if(get<0>(mVertices[i].get_max_len()) == std::numeric_limits<int>::max()){
-                node.append_adj_availible(i);
-            }
-        }
-    }
-
 /**
  * @brief old crossover logic
  * if ( current_len + get<0>(node.get_max_len()) < parent_len ) { //curr + max1 < parent and curr + max 2 >= parent choose 2 (and mirror)
@@ -411,82 +393,6 @@ public:
             }
             });
     }
-
-    /**
-     * Update minimum and maximum length attributes of each vertex within the graph
-     */
-    /**void update_weights() {
-        update_loops();
-        for(auto & vertex : mVertices) {
-            if(vertex.second.get_endpoint() > 0) { // possible endpoint, min = 0
-                vertex.second.set_min_len(0, vertex.first);
-            }
-            else {
-                // min length of path is an endpoint vertex ahead of this point
-                // maybe do a dfs/bfs search to find an endpoint, while keeping a count, 
-                // dfs would probably have a better chance of keeping a count, 
-                // but we'd have to set it back to 0 every once in a while on a new branch exploration
-                // WAIT CAN WE USE DJIKSTRAS (pronounce dyke-stra's) ALGORITHM HERE AND SEARCH FOR SHORTEST PATH? 
-                // for unweighted graphs, DA = bfs
-                // idk because we'd need the shortest path to each endpoint and then compare them
-                // could make a case where we set shortest and longest path this way (when we already have all dists) if both are needed i guess
-                reset_vertex_flags();
-                std::queue<std::string> node_q;
-                vertex.second.increment_visitor_flag();
-                node_q.push(vertex.first);
-                int count = 0;
-                while(!node_q.empty()) {
-                    std::string current = node_q.front();
-                    if ( mVertices[current].get_endpoint() > 0 ) {
-                        count++;
-                        vertex.second.set_min_len(count, current); /// @remark this might need to change because the string is going to be further down the line than the initial adj
-                        break;
-                    }
-                    node_q.pop();
-                    count++;
-                    for ( auto & adj : mVertices[current].get_adj_list() ) {
-                        if ( mVertices[adj].get_visitor_flag() == 0 ) {
-                            mVertices[adj].increment_visitor_flag();
-                            node_q.push(adj);
-                        }
-                    }
-                }
-                reset_vertex_flags();
-            }
-            if(vertex.second.get_loop_flag() == 1) { // possible loop, max = infinity
-                vertex.second.set_max_len(std::numeric_limits<int>::max(), vertex.first); /// @remark this might need to change for the string to take to get to the loop
-            }
-            else {
-                // so at this point, any mode we encounter on any path that has a loop is infinity
-                // and otherwise we have the count numerical value
-                reset_vertex_flags();
-                std::queue<std::string> node_q;
-                vertex.second.increment_visitor_flag();
-                node_q.push(vertex.first);
-                int count = 0;
-                while(!node_q.empty()) {
-                    std::string current = node_q.front();
-                    if ( mVertices[current].get_loop_flag() > 0 ) { // found a loop, so max_len = infinity
-                        count++;
-                        vertex.second.set_max_len(std::numeric_limits<int>::max(), current);
-                        break;
-                    }
-                    node_q.pop();
-                    count++;
-                    for ( auto & adj : mVertices[current].get_adj_list() ) {
-                        if ( mVertices[adj].get_visitor_flag() == 0 ) {
-                            mVertices[adj].increment_visitor_flag();
-                            node_q.push(adj);
-                        }
-                    }
-                    if ( node_q.empty() ) { // if the queue is empty and we still haven't broken yet, then max len is not infinity
-                        vertex.second.set_max_len(count, vertex.first);     /// @note that this is not the right string for what path to take, but also this case says that there's a reasonable length to reach, so might not matter
-                    }
-                }
-                reset_vertex_flags();
-            }
-        }
-    }*/
 
     /**
      * Add an entirely new possible sequence into the graph
