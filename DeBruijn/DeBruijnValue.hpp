@@ -224,7 +224,11 @@ public:
      * @param still_an_end if true, add the kmer to a list of kmers that have used up their availibility except for as an end
      */
     void remove_adj_availible(string val, bool still_an_end=0) { 
-    mAvailableAdj.erase(std::remove(mAvailableAdj.begin(), mAvailableAdj.end(), val), mAvailableAdj.end());
+        mAvailableAdj.erase(std::remove(mAvailableAdj.begin(), mAvailableAdj.end(), val), mAvailableAdj.end());
+    }
+
+    void append_adj_availible(string val) { 
+        mAvailableAdj.push_back(val);
     }
 
     /**
@@ -283,7 +287,7 @@ public:
      * Set edge out of this node
      */
     void set_out_edge(string out) { mOutEdge.set_tail(out); }
-        
+
     /**
      * Get edge out of this node
      */

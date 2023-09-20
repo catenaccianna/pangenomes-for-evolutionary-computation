@@ -21,9 +21,11 @@
 #include <functional>
 #include <tuple>
 #include <queue>
+#include <limits>
 
 using std::string; using std::vector; using std::map;
 using std::cout; using std::endl; using std::tuple;
+using std::get;
 
 class DeBruijnGraph {
 public:
@@ -77,13 +79,14 @@ private:
             mVertices[v].set_max_len(path_length, adj);
         }
         else{
-            if (path_length >= std::get<0>(mVertices[v].get_max_len())) {
+            if (path_length >= get<0>(mVertices[v].get_max_len())) {
                 mVertices[v].set_max_len(path_length, adj);
             }
-            if (path_length <= std::get<0>(mVertices[v].get_min_len())) {
+            if (path_length <= get<0>(mVertices[v].get_min_len())) {
                 mVertices[v].set_min_len(path_length, adj);
             }
         }
+        std::cout<<path_length<<std::endl;
     }
 
     /**
@@ -137,6 +140,9 @@ private:
         if(mVertices.count(input.substr(0, mKmerLength)) <= 0){
             mSize++;
             set_empty_vertex(input.substr(0, mKmerLength));
+            // min/max path length from this node
+            int path_len = input.size() - 3;
+            set_path_length(input.substr(0, kmer_length), path_len, input.substr(1, kmer_length), mVertices.count(input.substr(0, mKmerLength)));
         }
         // add to size and add an edge for each vertex, and an empty vertex for the end
         while(int(input.length()) >= kmer_length + 1){
@@ -148,7 +154,8 @@ private:
             mVertices[input.substr(0, kmer_length)].set_empty_bool(0);
             set_empty_vertex(input.substr(1, kmer_length));
             // min/max path length from this node
-            set_path_length(input.substr(0, kmer_length), (input.size()/kmer_length), input.substr(1, kmer_length), mVertices.count(input.substr(0, mKmerLength)));
+            int path_len = input.size() - 3;
+            set_path_length(input.substr(0, kmer_length), path_len, input.substr(1, kmer_length), mVertices.count(input.substr(0, mKmerLength)));
             // take one character off the input, continue
             input = input.substr(1, input.length()-1);
         }
@@ -286,6 +293,59 @@ public:
         }
     }
 
+    void delete_long_paths(DBGraphValue node){
+        node.clear_adj_availible();
+        for(string i : node.get_adj_list()){
+            if(get<0>(mVertices[i].get_max_len()) != std::numeric_limits<int>::max()){
+                node.append_adj_availible(i);
+            }
+        }
+    }
+
+    void only_infinite_paths(DBGraphValue node){
+        node.clear_adj_availible();
+        for(string i : node.get_adj_list()){
+            if(get<0>(mVertices[i].get_max_len()) == std::numeric_limits<int>::max()){
+                node.append_adj_availible(i);
+            }
+        }
+    }
+
+/**
+ * @brief old crossover logic
+ * if ( current_len + get<0>(node.get_max_len()) < parent_len ) { //curr + max1 < parent and curr + max 2 >= parent choose 2 (and mirror)
+                //longest it can possibly be and it's still not long enough
+            }
+
+            else if ( path.length() + get<0>(mVertices[current].get_min_len()) > organism.length() ) { //curr + min 1 > parent and curr + min2 <= parent choose 2 (and mirror)
+                // if the next value already extends the path beyond the parent length
+            }
+
+            else if ( path.length() < organism.length() ) { //if current < parent len, (not long enough yet) take whichever fork has higher max
+                //also dont want min len + current len significantly > parent len
+            }
+            
+            // if we are not in either of these cases, we may be theoretically capable of reaching a genome with a reasonable length, so choose a path randomly
+            // these two cases will only be gaurd rails
+            else { // if we are in this case, we have a chance at randomly choosing a genome of reasonable length
+                node.append_adj_availible(i);
+            }
+ */
+
+/**
+ * current + min > parent is unreasonable
+ * current + max < parent is unreasonable
+ */
+    void make_adj_availible(DBGraphValue node, int current_len, int parent_len){
+        node.clear_adj_availible();
+        for(string i : node.get_adj_list()){
+            if ( (current_len + get<0>(node.get_max_len()) > parent_len) && 
+                (current_len + get<0>(node.get_min_len()) < parent_len)) {
+                node.append_adj_availible(i);
+            }
+        }
+    }
+
     /**
      * @brief coding for one specific base case
      * Availible adj list used to track which adj can lead to reasonable length
@@ -298,13 +358,12 @@ public:
      * @return string 
      */
     string modify_org(emp::Random & random, std::string organism, double probability = 1, bool variable_length = 0){
-        string path = organism.substr(0, mKmerLength);          // Initialize string variables we use to change and go down the path
+        string path = organism.substr(0, mKmerLength); // Initialize string variables we use to change and go down the path
         string current = organism.substr(0, mKmerLength);
         string next = "";
-        mVertices[current].increment_visitor_flag();            // Mark 1st kmer as visited
+        mVertices[current].increment_visitor_flag(); // Mark 1st kmer as visited
         int index;
-
-        if ( random.P ( probability ) ) {                         // If P() then we will modify this genome, else do nothing
+        if ( random.P ( probability ) ) { // If P() then we will modify this genome, else do nothing
             if ( variable_length ) {
                 while ( true ) {
                     //if ( mVertices[current].get_endpoint() >= mVertices[current].get_kmer_occurrences() ) { // At a Dead End Node /// is this right??? should i be using like maybe visitor flag or something?
@@ -313,33 +372,12 @@ public:
                         //append endpoint i think 
                         break;
                     }
-
-                    else if ( path.length() + std::get<0>(mVertices[current].get_max_len()) < organism.length() ) { //curr + max1 < parent and curr + max 2 >= parent choose 2 (and mirror)
-                    //longest it can possibly be and it's still not long enough
-                    }
-
-                    else if ( path.length() + std::get<0>(mVertices[current].get_min_len()) > organism.length() ) { //curr + min 1 > parent and curr + min2 <= parent choose 2 (and mirror)
-                    }
-
-                    else if ( path.length() < organism.length() ) { //if current < parent len, (not long enough yet) take whichever fork has higher max
-                    //also dont want min len + current len significantly > parent len
-                    }
-
-///@remark if we're looking at min and max length, that'll be recorded in the current node, but then we need some way of recording/selecting the path that actually matches that description. dict in value or edge class?
-
-                    // if we are not in either of these cases, we may be theoretically capable of reaching a genome with a reasonable length, so choose a path randomly
-                    // these two cases will only be gaurd rails
-                    else { // if we are in this case, we have a chance at randomly choosing a genome of reasonable length
-                        index = random.GetUInt ( mVertices[current].adj_list_size() + 1 );  // Choose random path down graph
-                        next = mVertices[current].get_adjacency ( index );
-                        path.append ( next.substr() );
-                        // update current and next
-                        //add kmer to graph, update visitor flag
-                    }
+                    make_adj_availible(mVertices[current], path.length(), organism.length());
+                    index = random.GetUInt ( mVertices[current].adj_availible_size() + 1 );  // Choose random path down graph
+                    next = mVertices[current].get_adj_availible ( index );
+                    path += next.substr(2,1);
+                    current = next;
                 }
-            }
-            else { // if we are NOT USING VARIABLE LENGTH, could just do a loop until we reach length?
-                    // feel like this might defeat the purpose of being able to have a genome that finds an intuitive end but good to have the option
             }
             remove_sequence(organism);                          // Remove old, unmodified sequence from graph
             add_sequence(path);                                 // Add new, modified sequence to graph
@@ -377,7 +415,7 @@ public:
     /**
      * Update minimum and maximum length attributes of each vertex within the graph
      */
-    void update_weights() {
+    /**void update_weights() {
         update_loops();
         for(auto & vertex : mVertices) {
             if(vertex.second.get_endpoint() > 0) { // possible endpoint, min = 0
@@ -448,7 +486,7 @@ public:
                 reset_vertex_flags();
             }
         }
-    }
+    }*/
 
     /**
      * Add an entirely new possible sequence into the graph
@@ -502,6 +540,9 @@ public:
             if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0){
                 mSize++;
             }
+            // min/max path length from this node
+            int path_len = sequence.size() - 3;
+            set_path_length(sequence.substr(0, mKmerLength), path_len, sequence.substr(1, mKmerLength), mVertices.count(sequence.substr(0, mKmerLength)));
             add_edge(sequence.substr(0, mKmerLength), sequence.substr(1, mKmerLength));
             mVertices[sequence.substr(0, mKmerLength)].set_empty_bool(0); //set that we know this adj_list has something in it
             mVertices[sequence.substr(0, mKmerLength)].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
@@ -518,6 +559,7 @@ public:
         }
         mVertices[sequence].increment_endpoint(); //increment number of times this kmer is an endpoint of a seq in the pangenome
         mVertices[sequence].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
+        set_path_length(sequence, 0, "", mVertices.count(sequence));
         update_loops();
     }
 
@@ -675,8 +717,8 @@ public:
                 }
             }
             // if the adj_list contains an endpoint/empty vertex, show that
-            if (mVertices[vertex].get_empty_bool()==1){
-                cout << "(an endpoint)";
+            if (mVertices[vertex].get_endpoint()>0){
+                cout << " (an endpoint)";
             }
             // if the vertex is a loop, show that
             if (mVertices[vertex].get_loop_flag()>0){

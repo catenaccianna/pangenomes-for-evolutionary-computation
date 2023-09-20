@@ -762,7 +762,7 @@ void TestPathLength() {
     // print min and mac path length at every node with no loop
     DeBruijnGraph g(vec2, 3);
 
-    g.depth_first_traversal( [&] (string vertex) { 
+    g.depth_first_traversal( [&] (string vertex) {
             cout<<vertex;
             // if there is one, non-empty vertex in the list, print it
             if (g.get_value(vertex).get_empty_bool()==0 && g.get_value(vertex).adj_list_size() == 1){
@@ -775,10 +775,10 @@ void TestPathLength() {
                     cout<<i<<", ";
                 }
             }
-            cout<<" (min_path_length from "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
-            cout<<", max_path_length from "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len())<<")";
+            cout<<" (min_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
+            cout<<", max_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len())<<")";
             cout<<"\n";
-            });
+        });
 
     // add sequence with loop and repeat
     cout<<"\n* added loop sequence *\n";
@@ -800,8 +800,7 @@ void TestPathLength() {
             cout<<" (min_path_length from "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
             cout<<", max_path_length from "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len())<<")";
             cout<<"\n";
-            });
-
+        });
 }
 
 int main() {
@@ -818,7 +817,7 @@ int main() {
     // TestCsv();
     // TestCSVHelperFunctions();
     // TestMABE();
-    TestLoops();
+    // TestLoops();
     TestPathLength();
 
 }
