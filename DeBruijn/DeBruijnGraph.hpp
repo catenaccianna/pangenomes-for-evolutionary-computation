@@ -78,7 +78,7 @@ private:
             mVertices[v].set_min_len(path_length, adj);
             mVertices[v].set_max_len(path_length, adj);
         }
-        else{
+        else {
             if (path_length >= get<0>(mVertices[v].get_max_len())) {
                 mVertices[v].set_max_len(path_length, adj);
             }
@@ -86,7 +86,6 @@ private:
                 mVertices[v].set_min_len(path_length, adj);
             }
         }
-        std::cout<<path_length<<std::endl;
     }
 
     /**
@@ -161,7 +160,7 @@ private:
         }
         mVertices[input].set_empty_bool(1);
         mVertices[input].increment_endpoint();
-        mVertices[input].increment_kmer_occurrences(); //delete, count function works the same way
+        mVertices[input].increment_kmer_occurrences();
         set_path_length(input, 0, "", mVertices.count(input));
         update_loops();
     }
@@ -245,13 +244,12 @@ public:
      *                   of times that they have appeared in entire living genome.
      * @param variable_length false if the genome must be a fixed, standard length
      */
-    string modify_org0(emp::Random & random, std::string organism, double probability = 1, bool seq_count = 1, bool variable_length = 0){ 
+    string modify_org(emp::Random & random, std::string organism, double probability = 1, bool seq_count = 1, bool variable_length = 0){ 
         string path = organism.substr(0, mKmerLength);          // initialize string variables we use to change and go down the path
         string current = organism.substr(0, mKmerLength);
         string next = "";
         mVertices[current].increment_visitor_flag(); // mark 1st kmer as visited
         int index;
-        bool variable_length_end_reached = false;
 
         // If P() then we will modify this genome, else do nothing
         if( random.P( probability ) ) {
@@ -264,7 +262,6 @@ public:
                 if(variable_length && mVertices[current].get_endpoint() > 0) { // if genome can be variable length and current kmer is an availible endpoint
                     index = random.GetUInt(mVertices[current].adj_availible_size() + 1);  // index will be randomly generated number
                     if( index == mVertices[current].adj_availible_size() ) { // if we have randomly chosen to keep this kmer as an endpoint
-                        variable_length_end_reached = true;
                         break;
                     }
                 }
@@ -336,30 +333,27 @@ public:
      * @param random 
      * @param organism 
      * @param probability
-     * @param variable_length = 1
      * @return string 
      */
-    string modify_org(emp::Random & random, std::string organism, double probability = 1, bool variable_length = 0){
+    string modify_org_variable_len(emp::Random & random, std::string organism, double probability = 1){
         string path = organism.substr(0, mKmerLength); // Initialize string variables we use to change and go down the path
         string current = organism.substr(0, mKmerLength);
         string next = "";
         mVertices[current].increment_visitor_flag(); // Mark 1st kmer as visited
         int index;
         if ( random.P ( probability ) ) { // If P() then we will modify this genome, else do nothing
-            if ( variable_length ) {
-                while ( true ) {
-                    //if ( mVertices[current].get_endpoint() >= mVertices[current].get_kmer_occurrences() ) { // At a Dead End Node /// is this right??? should i be using like maybe visitor flag or something?
-                    if ( mVertices[current].adj_list_size() < 1 ){
-                        // pick ending kmer from current.adj's and append to path
-                        //append endpoint i think 
-                        break;
-                    }
-                    make_adj_availible(mVertices[current], path.length(), organism.length());
-                    index = random.GetUInt ( mVertices[current].adj_availible_size() + 1 );  // Choose random path down graph
-                    next = mVertices[current].get_adj_availible ( index );
-                    path += next.substr(2,1);
-                    current = next;
+            while ( true ) {
+                //if ( mVertices[current].get_endpoint() >= mVertices[current].get_kmer_occurrences() ) { // At a Dead End Node /// is this right??? should i be using like maybe visitor flag or something?
+                if ( mVertices[current].adj_list_size() < 1 ){
+                    // pick ending kmer from current.adj's and append to path
+                    //append endpoint i think 
+                    break;
                 }
+                make_adj_availible(mVertices[current], path.length(), organism.length());
+                index = random.GetUInt ( mVertices[current].adj_availible_size() + 1 );  // Choose random path down graph
+                next = mVertices[current].get_adj_availible ( index );
+                path += next.substr(2,1);
+                current = next;
             }
             remove_sequence(organism);                          // Remove old, unmodified sequence from graph
             add_sequence(path);                                 // Add new, modified sequence to graph
@@ -389,9 +383,25 @@ public:
     void loop_detection(string node) {
         depth_first_traversal( [&] (string node) {
             if (mVertices[node].get_visitor_flag()>0){
-                mVertices[node].set_loop_flag(1); 
+                mVertices[node].set_loop_flag(1);
+                infinity_length(node);
             }
             });
+    }
+
+    void infinity_length(string node) {
+        std::queue<std::string> Q;
+        Q.push(node);
+        string current;
+        while(!Q.empty()) {
+            current = Q.front();
+            Q.pop();
+            mVertices[current].set_max_len(std::numeric_limits<int>::max(), "");
+            DeBruijnEdge edge = mVertices[current].get_in_edge();
+            for (auto i : edge.get_head() ){
+                Q.push(i);
+            }
+        }
     }
 
     /**
