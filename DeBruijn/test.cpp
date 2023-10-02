@@ -803,18 +803,66 @@ void TestPathLength() {
         });
 }
 
-void TestEdges() {
-    cout<<"\nPATH LENGTH TEST\n";
-    cout<<"Track minimum and maximum possible path lengths from current node.\n";
+void TestEdges() { // loop length gets stuck like a seg fault and maybe it's got to do with edges
+    cout<<"\nDeBruijn EDGES TEST\n";
+    cout<<"Edges into and out of a node.";
 
     std::vector<int> vec({1,2,3,4,1,2,3}); //123>234>341>412>123 loop
     std::vector<int> vec2({1,2,3,4,1,8,8}); //123>234>341>418>188 no loop
+    // 123 (head "", tail "234"), 234 (head "123", tail "341") ... 188 (head "418", tail "")
 
     DeBruijnGraph g(vec2, 3);
     g.add_sequence(vec);
+    
+    g.depth_first_traversal( [&] (string vertex) {
+        cout<<"\nvertex = "<<vertex<<" HEAD IN: ";
+            for(auto i : g.get_value(vertex).get_in_edge().get_head()){
+                cout<<i<<" ";
+            }
+        cout<<"TAIL IN: ";
+            for(auto i : g.get_value(vertex).get_in_edge().get_tail()){
+                cout<<i<<" ";
+            }
+        cout<<"HEAD OUT: ";
+            for(auto i : g.get_value(vertex).get_out_edge().get_head()){
+                cout<<i<<" ";
+            }
+        cout<<"TAIL OUT: ";
+            for(auto i : g.get_value(vertex).get_out_edge().get_tail()){
+                cout<<i<<" ";
+            }
+        });
+}
+
+
+void TestTest() { // loop length gets stuck like a seg fault and maybe it's got to do with edges
+    cout<<"\nDeBruijn\n";
+
+    std::vector<int> vec({1,2,3,4,1,2,3}); //123>234>341>412>123 loop
+    std::vector<int> vec2({1,2,3,4,1,8,8}); //123>234>341>418>188 no loop
+    // 123 (head "", tail "234"), 234 (head "123", tail "341") ... 188 (head "418", tail "")
+
+    DeBruijnGraph g(vec2, 3);
+
+    g.add_sequence(vec);
+    std::cout<<"\n";
 
     g.depth_first_traversal( [&] (string vertex) {
             cout<<vertex;
+            // if there is one, non-empty vertex in the list, print it
+            if (g.get_value(vertex).get_empty_bool()==0 && g.get_value(vertex).adj_list_size() == 1){
+                cout<<" -> "<<g.get_value(vertex).get_adj_list()[0];
+            }
+            // if the adj_list has more than one node in it, print them
+            else if (g.get_value(vertex).adj_list_size() >= 1){
+                cout<<" -> ";
+                for(auto i: g.get_value(vertex).get_adj_list()){
+                    cout<<i<<", ";
+                }
+            }
+            cout<<" (min_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
+            cout<<", max_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len())<<")";
+            cout<<"\n";
         });
 }
 
@@ -834,6 +882,7 @@ int main() {
     // TestMABE();
     // TestLoops();
     TestPathLength();
-    TestEdges();
+    //TestEdges();
+    //TestTest();
 
 }
