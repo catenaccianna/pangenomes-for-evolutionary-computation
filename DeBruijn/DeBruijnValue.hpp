@@ -276,7 +276,7 @@ public:
     /**
      * Set edge into this node
      */
-    void set_in_edge(string in) { mInEdge.set_head(in); }
+    void set_in_edge(string head, string tail) { mInEdge.set_head(head); mInEdge.set_tail(tail); }
         
     /**
      * Get edge into this node
@@ -286,7 +286,7 @@ public:
     /**
      * Set edge out of this node
      */
-    void set_out_edge(string out) { mOutEdge.set_tail(out); }
+    void set_out_edge(string head, string tail) { mOutEdge.set_head(head); mOutEdge.set_tail(tail); }
 
     /**
      * Get edge out of this node

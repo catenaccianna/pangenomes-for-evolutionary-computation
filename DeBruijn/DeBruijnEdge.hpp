@@ -45,7 +45,11 @@ public:
      * Set head node
      */
     //void set_head(std::shared_ptr<DBGraphValue> h) { mHead.push_back(h); }
-    void set_head(string h) { mHead.push_back(h); }
+    void set_head(string h) { 
+        mHead.push_back(h);
+        std::sort(mHead.begin(), mHead.end());
+        auto iter = std::unique(mHead.begin(), mHead.end());
+        mHead.erase(iter, mHead.end()); }
         
     /**
      * Get head node
@@ -57,7 +61,11 @@ public:
      * Set tail node
      */
     //void set_tail(std::shared_ptr<DBGraphValue> t) { mTail.push_back(t); }
-    void set_tail(string t) { mTail.push_back(t); }
+    void set_tail(string t) { 
+        mTail.push_back(t);
+        std::sort(mTail.begin(), mTail.end());
+        auto iter = std::unique(mTail.begin(), mTail.end());
+        mTail.erase(iter, mTail.end()); }
         
     /**
      * Get tail node
