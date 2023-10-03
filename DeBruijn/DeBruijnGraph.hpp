@@ -93,11 +93,11 @@ private:
      * @param start_v Starting Debruijn vertex
      * @param end_v Vertex being pointed to
      */
-    void add_edge(string start_v, string end_v){
+    void add_edge(string past_v, string start_v, string end_v){
         int initial_adj_size = mVertices[start_v].adj_list_size();
         mVertices[start_v].add_to_adj_list(end_v);
-        mVertices[start_v].set_out_edge(end_v);
-        mVertices[start_v].set_in_edge(start_v);
+        mVertices[start_v].set_out_edge(start_v, end_v);
+        mVertices[start_v].set_in_edge(past_v, start_v);
         if(initial_adj_size > 0){ //if the adj_list was not empty, AND new adj_list size > old_adj_list.size, then
             if(initial_adj_size < mVertices[start_v].adj_list_size()){ //this implies the vertex is a branch point
                 mVertices[start_v].set_branch(true);
@@ -126,11 +126,12 @@ private:
      * This function is the common constructor
      * @param input string containing all genetic data sequentially
      */
-    void construct_from_string(string input, int kmer_length){
+    void construct_from_string(string input, int kmer_length) {
         mSeqSize ++;
         mSequenceLength = input.size();
         mKmerLength = kmer_length;
         mStarts.push_back(input.substr(0, kmer_length));
+        string past = "";
         //if the graph is one vertex long:
         if(int(input.length()) == kmer_length){
             set_empty_vertex(input);
@@ -148,7 +149,7 @@ private:
             if(mVertices.count(input.substr(1, mKmerLength)) <= 0){
                 mSize++;
             }
-            add_edge(input.substr(0, kmer_length), input.substr(1, kmer_length));
+            add_edge(past, input.substr(0, kmer_length), input.substr(1, kmer_length));
             // change the set_empty_bool here so we don't run into endpoint troubles later.
             mVertices[input.substr(0, kmer_length)].set_empty_bool(0);
             set_empty_vertex(input.substr(1, kmer_length));
@@ -156,11 +157,14 @@ private:
             int path_len = input.size() - 3;
             set_path_length(input.substr(0, kmer_length), path_len, input.substr(1, kmer_length), mVertices.count(input.substr(0, mKmerLength)));
             // take one character off the input, continue
+            past = input.substr(0, mKmerLength);
             input = input.substr(1, input.length()-1);
         }
         mVertices[input].set_empty_bool(1);
         mVertices[input].increment_endpoint();
         mVertices[input].increment_kmer_occurrences();
+        mVertices[input].set_out_edge(input, "");
+        mVertices[input].set_in_edge(past, input);
         set_path_length(input, 0, "", mVertices.count(input));
         update_loops();
     }
@@ -370,10 +374,12 @@ public:
      * Using visitor flags, detect and mark all loops in the graph
      */
     void update_loops() {
+        reset_edge_flags();
         reset_vertex_flags();
         reset_loops();          // completely reset loop flags in case anything has changed
         loop_detection(mStarts[0]);
         reset_vertex_flags();
+        reset_edge_flags();
     }
 
     /**
@@ -381,6 +387,7 @@ public:
      * @param node to begin the recursion on
      */
     void loop_detection(string node) {
+        reset_vertex_flags();
         depth_first_traversal( [&] (string node) {
             if (mVertices[node].get_visitor_flag()>0){
                 mVertices[node].set_loop_flag(1);
@@ -390,17 +397,24 @@ public:
     }
 
     void infinity_length(string node) {
+        //std::cout<<node<<"\n";
+        //reset_vertex_flags();
         std::queue<std::string> Q;
         Q.push(node);
         string current;
         while(!Q.empty()) {
             current = Q.front();
+            //std::cout<<current<<"\n";
             Q.pop();
-            mVertices[current].set_max_len(std::numeric_limits<int>::max(), "");
             DeBruijnEdge edge = mVertices[current].get_in_edge();
-            for (auto i : edge.get_head() ){
-                Q.push(i);
+            if(edge.get_visitor_flag() == 1) { // what if i said if current is already infinity assuming that if anything is infinity all its children also are already? problem if a new sequence was added that crosses it?
+                mVertices[current].set_max_len(std::numeric_limits<int>::max(), "");
+                for (auto i : edge.get_head() ){
+                    //std::cout<<"       "<<i<<"\n";
+                    Q.push(i);
+                }
             }
+            edge.increment_visitor_flag();
         }
     }
 
@@ -445,6 +459,7 @@ public:
     void add_sequence(string sequence) {
         mSeqSize += 1;
         mSequenceLength = sequence.size();
+        string past = "";
         // if the beginning string is not in the graph, add a new beginning vertex
         if(mVertices.count(sequence.substr(0, mKmerLength)) <= 0){
             mStarts.push_back(sequence.substr(0, mKmerLength));
@@ -459,13 +474,14 @@ public:
             // min/max path length from this node
             int path_len = sequence.size() - 3;
             set_path_length(sequence.substr(0, mKmerLength), path_len, sequence.substr(1, mKmerLength), mVertices.count(sequence.substr(0, mKmerLength)));
-            add_edge(sequence.substr(0, mKmerLength), sequence.substr(1, mKmerLength));
+            add_edge(past, sequence.substr(0, mKmerLength), sequence.substr(1, mKmerLength));
             mVertices[sequence.substr(0, mKmerLength)].set_empty_bool(0); //set that we know this adj_list has something in it
             mVertices[sequence.substr(0, mKmerLength)].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
             //if future vertex is not already in map, set it as an empty vertex
             if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0){
                 set_empty_vertex(sequence.substr(1, mKmerLength));
             }
+            past = sequence.substr(0, mKmerLength);
             sequence = sequence.substr(1, sequence.length()-1); //update our kmer and repeat!
         }
         //flag that this node's adj_list as empty only if we haven't seen it before (value of 2)
@@ -475,6 +491,8 @@ public:
         }
         mVertices[sequence].increment_endpoint(); //increment number of times this kmer is an endpoint of a seq in the pangenome
         mVertices[sequence].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
+        mVertices[sequence].set_out_edge(sequence, "");
+        mVertices[sequence].set_in_edge(past, sequence);
         set_path_length(sequence, 0, "", mVertices.count(sequence));
         update_loops();
     }
@@ -602,6 +620,17 @@ public:
         for (auto & element : mVertices) {
             element.second.change_visitor_flag(0);
             element.second.clear_adj_availible();
+        }
+    }
+
+     /**
+     * Reset all edge flags to show they are Unvisited
+     * To be used in update_loops functions
+     */
+    void reset_edge_flags() {
+        for (auto & element : mVertices) {
+            element.second.get_in_edge().change_visitor_flag(0);
+            element.second.get_out_edge().change_visitor_flag(0);
         }
     }
 

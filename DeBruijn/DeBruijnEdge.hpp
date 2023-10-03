@@ -33,6 +33,9 @@ private:
     //std::vector<std::shared_ptr<DBGraphValue>> mTail;
     std::vector<string> mTail;
 
+    /// Visitor flag
+    int mVisits = 0;
+
 public:
     /// Constructors
     DeBruijnEdge()=default;
@@ -72,6 +75,24 @@ public:
      */
     //std::vector<std::shared_ptr<DBGraphValue>> get_tail() { return mTail; }
     std::vector<string> get_tail() { return mTail; }
+
+    /**
+     * Get the visitor flag object
+     * @return true if this vertex has already been visited in a traversal
+     */
+    int get_visitor_flag(){ return mVisits; }
+
+    /**
+     * Set visitor flag
+     * @param value true if visited, false if not
+     */
+    void change_visitor_flag(int value) { mVisits = value; }
+
+    /**
+     * Set visitor flag
+     * @param value true if visited, false if not
+     */
+    void increment_visitor_flag() { mVisits++; }
 
 };
 

@@ -881,8 +881,8 @@ int main() {
     // TestCSVHelperFunctions();
     // TestMABE();
     // TestLoops();
-    TestPathLength();
+    //TestPathLength();
     //TestEdges();
-    //TestTest();
+    TestTest();
 
 }
