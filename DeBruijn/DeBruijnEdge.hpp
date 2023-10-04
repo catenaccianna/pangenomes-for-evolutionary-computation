@@ -52,7 +52,8 @@ public:
         mHead.push_back(h);
         std::sort(mHead.begin(), mHead.end());
         auto iter = std::unique(mHead.begin(), mHead.end());
-        mHead.erase(iter, mHead.end()); }
+        mHead.erase(iter, mHead.end()); 
+    }
         
     /**
      * Get head node
@@ -68,7 +69,8 @@ public:
         mTail.push_back(t);
         std::sort(mTail.begin(), mTail.end());
         auto iter = std::unique(mTail.begin(), mTail.end());
-        mTail.erase(iter, mTail.end()); }
+        mTail.erase(iter, mTail.end()); 
+    }
         
     /**
      * Get tail node
@@ -80,19 +82,21 @@ public:
      * Get the visitor flag object
      * @return true if this vertex has already been visited in a traversal
      */
-    int get_visitor_flag(){ return mVisits; }
+    int get_visits(){ return this->mVisits; }
 
     /**
      * Set visitor flag
      * @param value true if visited, false if not
      */
-    void change_visitor_flag(int value) { mVisits = value; }
+    void change_visitor_flag(int value) { this->mVisits = value; }
 
     /**
      * Set visitor flag
      * @param value true if visited, false if not
      */
-    void increment_visitor_flag() { mVisits++; }
+    void increment_visitor_flag() { this->mVisits+=1; }
+
+    void show_edge() { std::cout<<this<<"\n";}
 
 };
 

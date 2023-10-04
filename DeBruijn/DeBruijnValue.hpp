@@ -61,6 +61,9 @@ private:
     /// Maximum path length possible through adjacencies and adj that allows it 
     tuple<int, string> mMax = std::make_tuple(0, "");
 
+    /// Maximum path length possible through adjacencies and adj that allows it 
+    tuple<int, string> mMaxNonInfinite = std::make_tuple(0, "");
+
     /// Minimum path length possible through adjacencies and adj that allows it 
     tuple<int, string> mMin = std::make_tuple(std::numeric_limits<int>::max(), "");
 
@@ -264,6 +267,16 @@ public:
     tuple<int, string> get_max_len() { return mMax; }
 
     /**
+     * Set maximum path length that is NOT infinity from this vertex
+     */
+    void set_non_inf_max_len(int l, string s) { mMaxNonInfinite = std::make_tuple(l, s); }
+        
+    /**
+     * Get maximum path length that is NOT infinity from this vertex
+     */
+    tuple<int, string> get_non_inf_max_len() { return mMaxNonInfinite; }
+
+    /**
      * Set minimum path length from this vertex
      */
     void set_min_len(int l, string s) { mMin = std::make_tuple(l, s); }
@@ -281,7 +294,7 @@ public:
     /**
      * Get edge into this node
      */
-    DeBruijnEdge get_in_edge() { return mInEdge; }
+    DeBruijnEdge & get_in_edge() { return mInEdge; }
 
     /**
      * Set edge out of this node
@@ -291,7 +304,7 @@ public:
     /**
      * Get edge out of this node
      */
-    DeBruijnEdge get_out_edge() { return mOutEdge; }
+    DeBruijnEdge & get_out_edge() { return mOutEdge; }
 
 
 };

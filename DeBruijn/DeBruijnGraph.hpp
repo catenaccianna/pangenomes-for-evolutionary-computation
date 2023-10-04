@@ -25,7 +25,7 @@
 
 using std::string; using std::vector; using std::map;
 using std::cout; using std::endl; using std::tuple;
-using std::get;
+using std::get; using std::make_tuple; using std::count;
 
 class DeBruijnGraph {
 public:
@@ -55,6 +55,8 @@ private:
     /// Vector of all beginning verticies
     vector<string> mStarts;
 
+    //vector<tuple<string, string>> mEdges;
+
     std::ofstream file;
 
 
@@ -81,6 +83,7 @@ private:
         else {
             if (path_length >= get<0>(mVertices[v].get_max_len())) {
                 mVertices[v].set_max_len(path_length, adj);
+                mVertices[v].set_non_inf_max_len(path_length, adj);
             }
             if (path_length <= get<0>(mVertices[v].get_min_len())) {
                 mVertices[v].set_min_len(path_length, adj);
@@ -96,8 +99,18 @@ private:
     void add_edge(string past_v, string start_v, string end_v){
         int initial_adj_size = mVertices[start_v].adj_list_size();
         mVertices[start_v].add_to_adj_list(end_v);
-        mVertices[start_v].set_out_edge(start_v, end_v);
         mVertices[start_v].set_in_edge(past_v, start_v);
+        mVertices[start_v].set_out_edge(start_v, end_v);
+        /**tuple<string, string> out_edge = make_tuple(start_v, end_v);
+        tuple<string, string> in_edge = make_tuple(past_v, start_v);
+        if(count(mEdges.begin(), mEdges.end(), out_edge) <= 0) {
+            mVertices[start_v].set_out_edge(start_v, end_v);
+            mEdges.push_back(out_edge);
+        }
+        if(count(mEdges.begin(), mEdges.end(), in_edge) <= 0) {
+            mVertices[start_v].set_in_edge(past_v, start_v);
+            mEdges.push_back(in_edge);
+        }*/
         if(initial_adj_size > 0){ //if the adj_list was not empty, AND new adj_list size > old_adj_list.size, then
             if(initial_adj_size < mVertices[start_v].adj_list_size()){ //this implies the vertex is a branch point
                 mVertices[start_v].set_branch(true);
@@ -393,24 +406,21 @@ public:
                 mVertices[node].set_loop_flag(1);
                 infinity_length(node);
             }
-            });
+            reset_edge_flags();
+        });
     }
 
     void infinity_length(string node) {
-        //std::cout<<node<<"\n";
-        //reset_vertex_flags();
         std::queue<std::string> Q;
         Q.push(node);
         string current;
         while(!Q.empty()) {
             current = Q.front();
-            //std::cout<<current<<"\n";
             Q.pop();
-            DeBruijnEdge edge = mVertices[current].get_in_edge();
-            if(edge.get_visitor_flag() == 1) { // what if i said if current is already infinity assuming that if anything is infinity all its children also are already? problem if a new sequence was added that crosses it?
+            DeBruijnEdge & edge = mVertices[current].get_in_edge();
+            if(edge.get_visits() == 0) {
                 mVertices[current].set_max_len(std::numeric_limits<int>::max(), "");
                 for (auto i : edge.get_head() ){
-                    //std::cout<<"       "<<i<<"\n";
                     Q.push(i);
                 }
             }

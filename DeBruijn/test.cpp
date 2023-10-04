@@ -511,7 +511,7 @@ void TestCSVHelperFunctions(){
     g.add_sequence("1110101000111");
     g.example_iteration();
 
-    int count, current_i;
+    int count;
     string to, from, current_s;
 
     tuple<int, string, string> tup = g.csv_start_values();
@@ -522,7 +522,6 @@ void TestCSVHelperFunctions(){
 
     for(int i = 0; i < g.edge_count()-1; ++i){
         tuple<int, int> tup1 = g.kmer_count(count, from, to);
-        current_i = std::get<0>(tup1);
         count = std::get<1>(tup1);
         //cout<<"g.kmer_count: seq count = "<<count<<" from = "<<from<<" to = "<<to<<endl;
 
@@ -552,7 +551,6 @@ void TestCSVHelperFunctions(){
 
     for(int i = 0; i < g1.edge_count()-1; ++i){
         tuple<int, int> tup1 = g1.kmer_count(count, from, to);
-        current_i = std::get<0>(tup1);
         count = std::get<1>(tup1);
         //cout<<"g.kmer_count: seq count = "<<count<<" from = "<<from<<" to = "<<to<<endl;
 
@@ -805,7 +803,7 @@ void TestPathLength() {
 
 void TestEdges() { // loop length gets stuck like a seg fault and maybe it's got to do with edges
     cout<<"\nDeBruijn EDGES TEST\n";
-    cout<<"Edges into and out of a node.";
+    cout<<"Edges into and out of a node.\n";
 
     std::vector<int> vec({1,2,3,4,1,2,3}); //123>234>341>412>123 loop
     std::vector<int> vec2({1,2,3,4,1,8,8}); //123>234>341>418>188 no loop
@@ -836,7 +834,7 @@ void TestEdges() { // loop length gets stuck like a seg fault and maybe it's got
 
 
 void TestTest() { // loop length gets stuck like a seg fault and maybe it's got to do with edges
-    cout<<"\nDeBruijn\n";
+    cout<<"\n\nDeBruijn\n";
 
     std::vector<int> vec({1,2,3,4,1,2,3}); //123>234>341>412>123 loop
     std::vector<int> vec2({1,2,3,4,1,8,8}); //123>234>341>418>188 no loop
@@ -845,7 +843,14 @@ void TestTest() { // loop length gets stuck like a seg fault and maybe it's got 
     DeBruijnGraph g(vec2, 3);
 
     g.add_sequence(vec);
-    std::cout<<"\n";
+
+    DeBruijnEdge out_edge = g.get_value("123").get_out_edge();
+    
+    std::cout<<"\n"<<out_edge.get_visits()<<"= FLAG "<<"\n";
+    out_edge.show_edge();
+    out_edge.increment_visitor_flag();
+    std::cout<<"FLAG AGAIN "<<out_edge.get_visits()<<"\n";
+    out_edge.show_edge();
 
     g.depth_first_traversal( [&] (string vertex) {
             cout<<vertex;
@@ -882,7 +887,7 @@ int main() {
     // TestMABE();
     // TestLoops();
     //TestPathLength();
-    //TestEdges();
+    TestEdges();
     TestTest();
 
 }
