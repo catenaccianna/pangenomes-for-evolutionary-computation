@@ -845,12 +845,6 @@ void TestTest() { // loop length gets stuck like a seg fault and maybe it's got 
     g.add_sequence(vec);
 
     DeBruijnEdge out_edge = g.get_value("123").get_out_edge();
-    
-    std::cout<<"\n"<<out_edge.get_visits()<<"= FLAG "<<"\n";
-    out_edge.show_edge();
-    out_edge.increment_visitor_flag();
-    std::cout<<"FLAG AGAIN "<<out_edge.get_visits()<<"\n";
-    out_edge.show_edge();
 
     g.depth_first_traversal( [&] (string vertex) {
             cout<<vertex;
@@ -866,7 +860,7 @@ void TestTest() { // loop length gets stuck like a seg fault and maybe it's got 
                 }
             }
             cout<<" (min_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
-            cout<<", max_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len())<<")";
+            cout<<", max_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_max_len())<<" = "<<std::get<0>(g.get_value(vertex).get_max_len())<<")";
             cout<<"\n";
         });
 }
