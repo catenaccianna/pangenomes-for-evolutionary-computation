@@ -737,46 +737,34 @@ void TestLoops() {
     g.display();
 }
 
+void PathLenHelper(string vertex, DeBruijnGraph & g) {
+    cout<<vertex;
+    // if there is one, non-empty vertex in the list, print it
+    if (g.get_value(vertex).get_empty_bool()==0 && g.get_value(vertex).adj_list_size() == 1){
+        cout<<" -> "<<g.get_value(vertex).get_adj_list()[0];
+    }
+    // if the adj_list has more than one node in it, print them
+    else if (g.get_value(vertex).adj_list_size() >= 1){
+        cout<<" -> ";
+        for(auto i: g.get_value(vertex).get_adj_list()){
+            cout<<i<<", ";
+        }
+    }
+    cout<<" (min_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
+    cout<<", max_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len())<<")";
+    cout<<"\n";
+}
+
 void TestPathLength() {
     cout<<"\nPATH LENGTH TEST\n";
     cout<<"Track minimum and maximum possible path lengths from current node.\n";
-    /** 
-     * idea: iterate through graph before second sequence is added and print min and max path values.
-     * for no loop, should just be length of path left. when loop is added, there should be infinity somewhere.
-     * how to print infinity? maybe if statement
-     * this should cover like the construction of a graph and add_sequence
-     * next step would be to make sure it updates when you subtract a sequence
-     */
-    /**
-    void set_max_len(int l, string s) { mMax = std::make_tuple(l, s); }
-    tuple<int, string> get_max_len() { return mMax; }
-    void set_min_len(int l, string s) { mMin = std::make_tuple(l, s); }
-    tuple<int, string> get_min_len() { return mMin; }
-    */
 
-    std::vector<int> vec({1,2,3,4,1,2,3}); //123>234>341>412>123 loop
-    std::vector<int> vec2({1,2,3,4,1,8,8}); //123>234>341>418>188 no loop
+    string vec = "1234123"; //123>234>341>412>123 loop
+    string vec2 = "1234188"; //123>234>341>418>188 no loop
 
-    // print min and mac path length at every node with no loop
+    // print min and max path length at every node with no loop
     DeBruijnGraph g(vec2, 3);
-
-    g.depth_first_traversal( [&] (string vertex) {
-            cout<<vertex;
-            // if there is one, non-empty vertex in the list, print it
-            if (g.get_value(vertex).get_empty_bool()==0 && g.get_value(vertex).adj_list_size() == 1){
-                cout<<" -> "<<g.get_value(vertex).get_adj_list()[0];
-            }
-            // if the adj_list has more than one node in it, print them
-            else if (g.get_value(vertex).adj_list_size() >= 1){
-                cout<<" -> ";
-                for(auto i: g.get_value(vertex).get_adj_list()){
-                    cout<<i<<", ";
-                }
-            }
-            cout<<" (min_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
-            cout<<", max_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len())<<")";
-            cout<<"\n";
-        });
+    g.depth_first_traversal( [&g] (string vertex) { PathLenHelper(vertex, g); } );
 
     // add sequence with loop and repeat
     cout<<"\n* added loop sequence *\n";
@@ -796,9 +784,21 @@ void TestPathLength() {
                 }
             }
             cout<<" (min_path_length from "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
-            cout<<", max_path_length from "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len())<<")";
+            cout<<", max_path_length from "<<std::get<1>(g.get_value(vertex).get_max_len())<<" = "<<std::get<0>(g.get_value(vertex).get_max_len())<<")";
             cout<<"\n";
         });
+
+    // remove sequence without loop
+    cout<<"\n* remove sequence without the loop *\n";
+    g.remove_sequence(vec2);
+    g.depth_first_traversal( [&g] (string vertex) { PathLenHelper(vertex, g); } );
+
+    // remove squence with loop
+    cout<<"\n* add seq back in and remove sequnce with loop *\n";
+    g.add_sequence(vec2);
+    g.remove_sequence(vec);
+    g.depth_first_traversal( [&g] (string vertex) { PathLenHelper(vertex, g); } );
+
 }
 
 void TestEdges() { // loop length gets stuck like a seg fault and maybe it's got to do with edges
@@ -833,38 +833,6 @@ void TestEdges() { // loop length gets stuck like a seg fault and maybe it's got
 }
 
 
-void TestTest() { // loop length gets stuck like a seg fault and maybe it's got to do with edges
-    cout<<"\n\nDeBruijn\n";
-
-    std::vector<int> vec({1,2,3,4,1,2,3}); //123>234>341>412>123 loop
-    std::vector<int> vec2({1,2,3,4,1,8,8}); //123>234>341>418>188 no loop
-    // 123 (head "", tail "234"), 234 (head "123", tail "341") ... 188 (head "418", tail "")
-
-    DeBruijnGraph g(vec2, 3);
-
-    g.add_sequence(vec);
-
-    DeBruijnEdge out_edge = g.get_value("123").get_out_edge();
-
-    g.depth_first_traversal( [&] (string vertex) {
-            cout<<vertex;
-            // if there is one, non-empty vertex in the list, print it
-            if (g.get_value(vertex).get_empty_bool()==0 && g.get_value(vertex).adj_list_size() == 1){
-                cout<<" -> "<<g.get_value(vertex).get_adj_list()[0];
-            }
-            // if the adj_list has more than one node in it, print them
-            else if (g.get_value(vertex).adj_list_size() >= 1){
-                cout<<" -> ";
-                for(auto i: g.get_value(vertex).get_adj_list()){
-                    cout<<i<<", ";
-                }
-            }
-            cout<<" (min_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
-            cout<<", max_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_max_len())<<" = "<<std::get<0>(g.get_value(vertex).get_max_len())<<")";
-            cout<<"\n";
-        });
-}
-
 int main() {
     // TestConstructGraph();
     // TestBranchingGraph();
@@ -880,8 +848,7 @@ int main() {
     // TestCSVHelperFunctions();
     // TestMABE();
     // TestLoops();
-    //TestPathLength();
-    TestEdges();
-    TestTest();
+    TestPathLength();
+    // TestEdges();
 
 }
