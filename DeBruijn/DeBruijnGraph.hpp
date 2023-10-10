@@ -101,16 +101,6 @@ private:
         mVertices[start_v].add_to_adj_list(end_v);
         mVertices[start_v].set_in_edge(past_v, start_v);
         mVertices[start_v].set_out_edge(start_v, end_v);
-        /**tuple<string, string> out_edge = make_tuple(start_v, end_v);
-        tuple<string, string> in_edge = make_tuple(past_v, start_v);
-        if(count(mEdges.begin(), mEdges.end(), out_edge) <= 0) {
-            mVertices[start_v].set_out_edge(start_v, end_v);
-            mEdges.push_back(out_edge);
-        }
-        if(count(mEdges.begin(), mEdges.end(), in_edge) <= 0) {
-            mVertices[start_v].set_in_edge(past_v, start_v);
-            mEdges.push_back(in_edge);
-        }*/
         if(initial_adj_size > 0){ //if the adj_list was not empty, AND new adj_list size > old_adj_list.size, then
             if(initial_adj_size < mVertices[start_v].adj_list_size()){ //this implies the vertex is a branch point
                 mVertices[start_v].set_branch(true);
@@ -163,6 +153,7 @@ private:
                 mSize++;
             }
             add_edge(past, input.substr(0, kmer_length), input.substr(1, kmer_length));
+            mVertices[input.substr(0, kmer_length)].increment_kmer_occurrences();
             // change the set_empty_bool here so we don't run into endpoint troubles later.
             mVertices[input.substr(0, kmer_length)].set_empty_bool(0);
             set_empty_vertex(input.substr(1, kmer_length));
@@ -532,23 +523,18 @@ public:
             bool current_appears_once, next_appears_once;
             // while we still have sequence left:
             while(int(sequence.size()) > mKmerLength){
-
                 current = sequence.substr(0,mKmerLength);
                 next = sequence.substr(1,mKmerLength);
                 current_appears_once = mVertices[current].get_kmer_occurrences() <= 1;
                 next_appears_once = mVertices[next].get_kmer_occurrences() <= 1;
-
                 mVertices[current].decrement_kmer_occurrences();
                 //if current or next vertex only appeared once in pangenome, break adj & remove edge from graph
                 if(current_appears_once || next_appears_once){
                     mVertices[current].remove_from_adj_list(next);
                 }
                 //if current kmer was only in 1 seq in the pangenome, delete it from mVerticies
-                if (current_appears_once){
-                    remove(current);
-                }
+                if (current_appears_once){ remove(current); }
                 sequence = sequence.substr(1, sequence.length()-1);
-
             }
             mVertices[sequence].decrement_kmer_occurrences();
             mVertices[sequence].decrement_endpoint();
@@ -556,6 +542,7 @@ public:
                 remove(sequence);
             }
         }
+        update_loops();
         //else{ throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" ); }
     }
 
@@ -650,6 +637,8 @@ public:
     void reset_loops() {
         for (auto & element : mVertices) {
             element.second.set_loop_flag(0);
+            tuple<int, string> non_inf_max = element.second.get_non_inf_max_len();
+            element.second.set_max_len(get<0>(non_inf_max), get<1>(non_inf_max));
         }
     }
 

@@ -751,7 +751,7 @@ void PathLenHelper(string vertex, DeBruijnGraph & g) {
         }
     }
     cout<<" (min_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
-    cout<<", max_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len())<<")";
+    cout<<", max_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_max_len())<<" = "<<std::get<0>(g.get_value(vertex).get_max_len())<<")";
     cout<<"\n";
 }
 
