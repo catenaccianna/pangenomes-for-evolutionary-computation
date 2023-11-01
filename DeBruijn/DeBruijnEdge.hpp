@@ -62,6 +62,13 @@ public:
     std::vector<string> get_head() { return mHead; }
 
     /**
+     * Remove a head node
+     */
+    void remove_head(string h) { 
+        mHead.erase(std::remove(mHead.begin(), mHead.end(), h), mHead.end());
+    }
+
+    /**
      * Set tail node
      */
     //void set_tail(std::shared_ptr<DBGraphValue> t) { mTail.push_back(t); }
@@ -77,6 +84,13 @@ public:
      */
     //std::vector<std::shared_ptr<DBGraphValue>> get_tail() { return mTail; }
     std::vector<string> get_tail() { return mTail; }
+
+    /**
+     * Remove a tail node
+     */
+    void remove_tail(string t) { 
+        mTail.erase(std::remove(mTail.begin(), mTail.end(), t), mTail.end());
+    }
 
     /**
      * Get the visitor flag object

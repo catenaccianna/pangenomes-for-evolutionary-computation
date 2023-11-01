@@ -605,28 +605,29 @@ void TestMABE(){
     pangenome_graph.add_sequence("1101000100111101100111001111110111010101011000011110101100111001011101100001010100111000010001000001");
 
 
-    for(auto i:pangenome_graph.get_all_vertices()){
+    /*for(auto i:pangenome_graph.get_all_vertices()){
           cout<<i<<" adj_list_sz= "<<pangenome_graph.get_value(i).adj_list_size()<<" kmer_count= "<<pangenome_graph.get_value(i).get_kmer_occurrences()<<" -> ";
           for(auto j:pangenome_graph.get_value(i).get_adj_list()){
             cout<<j<<" (kmer occurrence "<<pangenome_graph.get_value(j).get_kmer_occurrences()<<") ";
           }
           cout<<endl<<endl;
-      }
+      }*/
 
     emp::Random random;
 
-    for(int i=0; i<3; ++i){
-    pangenome_graph.modify_org(random,"1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110");
-    pangenome_graph.modify_org(random,"1111111110111100011110100010101010101110010011100111010000101110001101010010110010010111110111100011");
-    pangenome_graph.modify_org(random,"1101100110101001001111110000100010110001101010100100101100010000111001101001011000011010111001000001");
-    pangenome_graph.modify_org(random,"1001010100101010100101111100111001101100000101110110001010010011110110110010111111111111101101101111");
-    pangenome_graph.modify_org(random,"1110001001111100101011001011011100101000101000000000011110100101001100010101000000001010111011101010");
-    pangenome_graph.modify_org(random,"0101000101001000001011010110101010011101000100101100000111000100000010010010011111101011101001010011");
-    pangenome_graph.modify_org(random,"0100011001111111010100010011000100001101101001100011011001101101111001000110001110110000110101111011");
-    pangenome_graph.modify_org(random,"1100000000000101101010001010000101001000011011001111110100110101101011101010101101100101010110100111");
-    pangenome_graph.modify_org(random,"1101011111110101101010010011110101001011010101100011000000001011111110110101100110110111010101010111");
-    pangenome_graph.modify_org(random,"1010110110001010000011000111000101101101100101010001101111000111001000011010101111010110110000001010");
-
+    //for(int i=0; i<3; ++i){
+    cout<<"generated genomes:\n"<<
+    pangenome_graph.modify_org_variable_len(random,"1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"1111111110111100011110100010101010101110010011100111010000101110001101010010110010010111110111100011")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"1101100110101001001111110000100010110001101010100100101100010000111001101001011000011010111001000001")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"1001010100101010100101111100111001101100000101110110001010010011110110110010111111111111101101101111")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"1110001001111100101011001011011100101000101000000000011110100101001100010101000000001010111011101010")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"0101000101001000001011010110101010011101000100101100000111000100000010010010011111101011101001010011")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"0100011001111111010100010011000100001101101001100011011001101101111001000110001110110000110101111011")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"1100000000000101101010001010000101001000011011001111110100110101101011101010101101100101010110100111")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"1101011111110101101010010011110101001011010101100011000000001011111110110101100110110111010101010111")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"1010110110001010000011000111000101101101100101010001101111000111001000011010101111010110110000001010")<<"\n";
+/*
     pangenome_graph.modify_org(random,"1100010101110001101101101000010000001000101100011011001110101001111001101011101101011000111110110011");
     pangenome_graph.modify_org(random,"0100100111000010110000001000001101101111001100011100110100001000010001000111010100001111000010010010");
     pangenome_graph.modify_org(random,"1110010111001111101100101100001100001111110110000110101111011010100001010110111001111111101000100101");
@@ -637,8 +638,9 @@ void TestMABE(){
     pangenome_graph.modify_org(random,"0001100101100011000001111000011100010000010110111000100010101101001010101111110000001101010001000101");
     pangenome_graph.modify_org(random,"0011101001110000110001111111110101011100011011101101010100101010000111111010111001001010010011110011");
     pangenome_graph.modify_org(random,"0001011111111000000001000100110000110010010101111101111011011011000110110101011010000001100111011001");
-}
-
+*/
+//}
+/*
     cout<<endl;
     for(auto i:pangenome_graph.get_all_vertices()){
           cout<<i<<" adj_list_sz= "<<pangenome_graph.get_value(i).adj_list_size()<<" kmer_count= "<<pangenome_graph.get_value(i).get_kmer_occurrences()<<" -> ";
@@ -647,7 +649,7 @@ void TestMABE(){
           }
           cout<<endl<<endl;
       }
-/*
+
     pangenome_graph.remove_sequence("1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110");
     pangenome_graph.remove_sequence("1111111110111100011110100010101010101110010011100111010000101110001101010010110010010111110111100011");
     pangenome_graph.remove_sequence("1101100110101001001111110000100010110001101010100100101100010000111001101001011000011010111001000001");
@@ -702,6 +704,57 @@ void TestMABE(){
       }*/
 }
 
+void TestMABEAvida(){
+    DeBruijnGraph pangenome_graph;
+
+    pangenome_graph.add_sequence("cccdaccnnccclccnncccocccbtcccqfccgookccccbhccptccqfccclccnccc");
+    pangenome_graph.add_sequence("nnccctjctbccocccdccc");
+    pangenome_graph.add_sequence("cccnncccsccnncccoccclccncccccfccgookcccfcccbhccptccbhccptccr");
+    pangenome_graph.add_sequence("cccbtcctbccocccsccnnccccttccqfccgoocccocccoocccdaccnccclccnccc");
+    pangenome_graph.add_sequence("cccslccncccocccncccnncccocccbfcccqfccptcctjctbccoocccfccc");
+    pangenome_graph.add_sequence("cccslccncccscccdcccttccbtccr");
+    pangenome_graph.add_sequence("cccqfccgooccclccncccooccctjctbccoocccslccncccdccclccnccc");
+    pangenome_graph.add_sequence("cccslccncccslccncccncccbfccptccbtccr");
+    pangenome_graph.add_sequence("cmccbfccgoocccbtcccqfccclccncccocccttcccscccslccncccsccc");
+    pangenome_graph.add_sequence("cccoccctbccocccttccbhccptcctbccoocccttccr");
+
+    pangenome_graph.add_sequence("cccfccptcctqccncccdcccbtcccclccnccccscccttcctqccdcccbtccr");
+    pangenome_graph.add_sequence("ccctqccdcccqfcccfccgoocccqfcccscccscccfccgooccclccnccc");
+    pangenome_graph.add_sequence("cccbhccptcccqfccptccbhccptccttcccdcccctgcctgcctcctccr");
+    pangenome_graph.add_sequence("cccsccclccncccocccocccdcccslccnccccdcccncccocccqfccgooccc");
+    pangenome_graph.add_sequence("cccttcccfqccdcccdccclccnccccqfcccscccoocccslccncccnccc");
+    pangenome_graph.add_sequence("cccqfccgoocccnccclccncccdcccctgcktqccncccdccctgcctcctccr");
+    pangenome_graph.add_sequence("cccdccccfqccdcccbhccptcccbfccptcctbccooccclccncccqfccc");
+    pangenome_graph.add_sequence("ccctqccdccclccncccdcccncccdcccqfccptccbfcccnccctgcctqccnccc");
+    pangenome_graph.add_sequence("cccncccfqccncccoocccfqccncccfccptccclccnccctjctbccoccc");
+    pangenome_graph.add_sequence("cccocccncccdccctjctbccoocccscccqfccgoocccqfccptccr");
+
+    pangenome_graph.remove_sequence("cccfccptcctqccncccdcccbtcccclccnccccscccttcctqccdcccbtccr");
+    pangenome_graph.remove_sequence("ccctqccdcccqfcccfccgoocccqfcccscccscccfccgooccclccnccc");
+    pangenome_graph.remove_sequence("cccbhccptcccqfccptccbhccptccttcccdcccctgcctgcctcctccr");
+    pangenome_graph.remove_sequence("cccsccclccncccocccocccdcccslccnccccdcccncccocccqfccgooccc");
+    pangenome_graph.remove_sequence("cccttcccfqccdcccdccclccnccccqfcccscccoocccslccncccnccc");
+    pangenome_graph.remove_sequence("cccqfccgoocccnccclccncccdcccctgcktqccncccdccctgcctcctccr");
+    pangenome_graph.remove_sequence("cccdccccfqccdcccbhccptcccbfccptcctbccooccclccncccqfccc");
+    pangenome_graph.remove_sequence("ccctqccdccclccncccdcccncccdcccqfccptccbfcccnccctgcctqccnccc");
+    pangenome_graph.remove_sequence("cccncccfqccncccoocccfqccncccfccptccclccnccctjctbccoccc");
+    pangenome_graph.remove_sequence("cccocccncccdccctjctbccoocccscccqfccgoocccqfccptccr");
+
+    emp::Random random;
+
+    cout<<"generated genomes:\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccfccptcctqccncccdcccbtcccclccnccccscccttcctqccdcccbtccr")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccbhccptcccqfccptccbhccptccttcccdcccctgcctgcctcctccr")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccoccctbccocccttccbhccptcctbccoocccttccr")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccslccncccslccncccncccbfccptccbtccr")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccbtcctbccocccsccnnccccttccqfccgoocccocccoocccdaccnccclccnccc")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"nnccctjctbccocccdccc")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccncccfqccncccoocccfqccncccfccptccclccnccctjctbccoccc")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccocccncccdccctjctbccoocccscccqfccgoocccqfccptccr")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccslccncccscccdcccttccbtccr")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccdaccnnccclccnncccocccbtcccqfccgookccccbhccptccqfccclccnccc")<<"\n";
+}
+
 void TestLoops() {
     cout<<"\nLOOPING GRAPH TEST\n";
     cout<<"Are loops tracked correctly?\n";
@@ -752,6 +805,9 @@ void PathLenHelper(string vertex, DeBruijnGraph & g) {
     }
     cout<<" (min_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
     cout<<", max_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_max_len())<<" = "<<std::get<0>(g.get_value(vertex).get_max_len())<<")";
+    if (g.get_value(vertex).get_endpoint() > 0) {
+        cout<<" (an endpoint) ";
+    }
     cout<<"\n";
 }
 
@@ -770,23 +826,7 @@ void TestPathLength() {
     cout<<"\n* added loop sequence *\n";
     g.add_sequence(vec);
 
-    g.depth_first_traversal( [&] (string vertex) { 
-            cout<<vertex;
-            // if there is one, non-empty vertex in the list, print it
-            if (g.get_value(vertex).get_empty_bool()==0 && g.get_value(vertex).adj_list_size() == 1){
-                cout<<" -> "<<g.get_value(vertex).get_adj_list()[0];
-            }
-            // if the adj_list has more than one node in it, print them
-            else if (g.get_value(vertex).adj_list_size() >= 1){
-                cout<<" -> ";
-                for(auto i: g.get_value(vertex).get_adj_list()){
-                    cout<<i<<", ";
-                }
-            }
-            cout<<" (min_path_length from "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
-            cout<<", max_path_length from "<<std::get<1>(g.get_value(vertex).get_max_len())<<" = "<<std::get<0>(g.get_value(vertex).get_max_len())<<")";
-            cout<<"\n";
-        });
+    g.depth_first_traversal( [&] (string vertex) { PathLenHelper(vertex, g); });
 
     // remove sequence without loop
     cout<<"\n* remove sequence without the loop *\n";
@@ -804,6 +844,26 @@ void TestPathLength() {
 void TestEdges() { // loop length gets stuck like a seg fault and maybe it's got to do with edges
     cout<<"\nDeBruijn EDGES TEST\n";
     cout<<"Edges into and out of a node.\n";
+
+    DeBruijnEdge test_edge("abc", "xyz");
+    cout<<"Single Edge Object\nHead: ";
+    for (auto i : test_edge.get_head() ){
+        cout<<i<<", ";
+    }
+    test_edge.remove_head("abc");
+    cout<<"    Head after removal: ";
+    for (auto i : test_edge.get_head() ){
+        cout<<i<<", ";
+    }cout<<"\nTail: ";
+    for (auto i : test_edge.get_tail() ){
+        cout<<i<<", ";
+    }
+    test_edge.remove_tail("xyz");
+    cout<<"    Tail after removal: ";
+    for (auto i : test_edge.get_tail() ){
+        cout<<i<<", ";
+    }
+    cout<<"\n\n";
 
     std::vector<int> vec({1,2,3,4,1,2,3}); //123>234>341>412>123 loop
     std::vector<int> vec2({1,2,3,4,1,8,8}); //123>234>341>418>188 no loop
@@ -832,6 +892,20 @@ void TestEdges() { // loop length gets stuck like a seg fault and maybe it's got
         });
 }
 
+void TestReasonableLengthGeneration() {
+    cout<<"\nREASONABLE PATH LENGTH GENERATION TEST\n";
+    cout<<"Can we get a path length that isn't too long or short?\n";
+
+    string vec = "1234123"; //123>234>341>412>123 loop
+    string vec2 = "1234188"; //123>234>341>418>188 no loop
+    emp::Random random;
+
+    DeBruijnGraph g(vec2, 3);
+    g.add_sequence(vec);
+
+    string new_path0 = g.modify_org_variable_len(random, vec2);
+    std::cout<<vec<<"\n"; // only 1234123 is being made
+}
 
 int main() {
     // TestConstructGraph();
@@ -847,8 +921,10 @@ int main() {
     // TestCsv();
     // TestCSVHelperFunctions();
     // TestMABE();
+    // TestMABEAvida();
     // TestLoops();
-    TestPathLength();
+    // TestPathLength();
     // TestEdges();
+    // TestReasonableLengthGeneration();
 
 }

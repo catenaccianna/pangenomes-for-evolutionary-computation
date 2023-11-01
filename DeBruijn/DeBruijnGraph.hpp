@@ -99,8 +99,10 @@ private:
     void add_edge(string past_v, string start_v, string end_v){
         int initial_adj_size = mVertices[start_v].adj_list_size();
         mVertices[start_v].add_to_adj_list(end_v);
-        mVertices[start_v].set_in_edge(past_v, start_v);
-        mVertices[start_v].set_out_edge(start_v, end_v);
+        if(past_v.length() > 0) { mVertices[start_v].set_in_head(past_v); }
+        mVertices[start_v].set_in_tail(start_v);
+        mVertices[start_v].set_out_head(start_v);
+        mVertices[start_v].set_out_tail(end_v);
         if(initial_adj_size > 0){ //if the adj_list was not empty, AND new adj_list size > old_adj_list.size, then
             if(initial_adj_size < mVertices[start_v].adj_list_size()){ //this implies the vertex is a branch point
                 mVertices[start_v].set_branch(true);
@@ -167,10 +169,11 @@ private:
         mVertices[input].set_empty_bool(1);
         mVertices[input].increment_endpoint();
         mVertices[input].increment_kmer_occurrences();
-        mVertices[input].set_out_edge(input, "");
-        mVertices[input].set_in_edge(past, input);
+        mVertices[input].set_out_head(input);
+        mVertices[input].set_in_head(past);
+        mVertices[input].set_in_tail(input);
         set_path_length(input, 0, "", mVertices.count(input));
-        update_loops();
+        update_loops(); 
     }
 
 public:
@@ -225,156 +228,6 @@ public:
 ///@remark MABE FUNCTIONS (next genome, add sequence, remove sequence) /////////////////////////////////////////////////////////////
 
     /**
-     * Recursive function to traverse through a single path in the graph, with branches chosen at random
-     * To be used in selecting the genetic information for the next generation organism
-     * @param seed random seed to be used when choosing a branching path
-     * @param organism whose genome we are modifying--here I am just going to insert a 3-char string to represent the start
-     */
-    string next_genome_logic(emp::Random & random, string organism){
-        string path = organism;
-        string current = organism;
-        // this will work while all sequences are the same length (looks like this is the case in MABE)
-        while (int(path.size()) < mSequenceLength){
-            // generate index using the empirical random library when we have empirical hooked up
-            current = mVertices[current].get_adj_list()[random.GetUInt(mVertices[current].adj_list_size()-1)]; ///random seed here?!
-            path+= current.substr(2,1);
-        }
-        return path;
-    }
-
-    /**
-     * Given the genome of an organism, do crossover (if probability allows) by randomly choosing branches of existing 
-     * genomes in the graph to pursue
-     * @param random Empirical random number generator
-     * @param organism whose genome we are modifying--here I am just going to insert a 3-char string to represent the start
-     * @param probability that the modifcation will take place
-     * @param seq_count "Sequence Counting" - if true, kmers are labeled unavailible if they have been used the same number 
-     *                   of times that they have appeared in entire living genome.
-     * @param variable_length false if the genome must be a fixed, standard length
-     */
-    string modify_org(emp::Random & random, std::string organism, double probability = 1, bool seq_count = 1, bool variable_length = 0){ 
-        string path = organism.substr(0, mKmerLength);          // initialize string variables we use to change and go down the path
-        string current = organism.substr(0, mKmerLength);
-        string next = "";
-        mVertices[current].increment_visitor_flag(); // mark 1st kmer as visited
-        int index;
-
-        // If P() then we will modify this genome, else do nothing
-        if( random.P( probability ) ) {
-            while ( int(path.size()) < mSequenceLength) { // while our path hasn't reached the sequence length
-
-                if(mVertices[current].get_visitor_flag() == 1) {         
-                    mVertices[current].set_adj_availible(); // available choices = full adj_list if this is our first time seeing it
-                }
-
-                if(variable_length && mVertices[current].get_endpoint() > 0) { // if genome can be variable length and current kmer is an availible endpoint
-                    index = random.GetUInt(mVertices[current].adj_availible_size() + 1);  // index will be randomly generated number
-                    if( index == mVertices[current].adj_availible_size() ) { // if we have randomly chosen to keep this kmer as an endpoint
-                        break;
-                    }
-                }
-                else { // if genome must be fixed length
-                    index = random.GetUInt(mVertices[current].adj_availible_size());  // index will be randomly generated number
-                }
-                next = mVertices[current].get_adj_availible(index);                 // record next kmer using index
-                path += next.substr(2,1);
-
-                mVertices[next].increment_visitor_flag();  // mark next as visited
-                if(seq_count){
-                    if(mVertices[next].get_visitor_flag() == mVertices[current].get_kmer_occurrences()){
-                        mVertices[current].remove_adj_availible(next);  // remove kmer from availible seq.s if it has been visited as many times
-                    } // as it appears in all sequences in graph
-                }
-                current = next;
-            }
-            remove_sequence(organism);
-            add_sequence(path);
-            reset_vertex_flags();
-            return path;
-        }
-        else {
-            reset_vertex_flags();
-            return organism;
-        }
-    }
-
-/**
- * @brief old crossover logic
- * if ( current_len + get<0>(node.get_max_len()) < parent_len ) { //curr + max1 < parent and curr + max 2 >= parent choose 2 (and mirror)
-                //longest it can possibly be and it's still not long enough
-            }
-
-            else if ( path.length() + get<0>(mVertices[current].get_min_len()) > organism.length() ) { //curr + min 1 > parent and curr + min2 <= parent choose 2 (and mirror)
-                // if the next value already extends the path beyond the parent length
-            }
-
-            else if ( path.length() < organism.length() ) { //if current < parent len, (not long enough yet) take whichever fork has higher max
-                //also dont want min len + current len significantly > parent len
-            }
-            
-            // if we are not in either of these cases, we may be theoretically capable of reaching a genome with a reasonable length, so choose a path randomly
-            // these two cases will only be gaurd rails
-            else { // if we are in this case, we have a chance at randomly choosing a genome of reasonable length
-                node.append_adj_availible(i);
-            }
- */
-
-/**
- * current + min > parent is unreasonable
- * current + max < parent is unreasonable
- */
-    void make_adj_availible(DBGraphValue node, int current_len, int parent_len){
-        node.clear_adj_availible();
-        for(string i : node.get_adj_list()){
-            if ( (current_len + get<0>(node.get_max_len()) > parent_len) && 
-                (current_len + get<0>(node.get_min_len()) < parent_len)) {
-                node.append_adj_availible(i);
-            }
-        }
-    }
-
-    /**
-     * @brief coding for one specific base case
-     * Availible adj list used to track which adj can lead to reasonable length
-     * May try with weights, and because of that, will keep track of visitor flag.
-     * 
-     * @param random 
-     * @param organism 
-     * @param probability
-     * @return string 
-     */
-    string modify_org_variable_len(emp::Random & random, std::string organism, double probability = 1){
-        string path = organism.substr(0, mKmerLength); // Initialize string variables we use to change and go down the path
-        string current = organism.substr(0, mKmerLength);
-        string next = "";
-        mVertices[current].increment_visitor_flag(); // Mark 1st kmer as visited
-        int index;
-        if ( random.P ( probability ) ) { // If P() then we will modify this genome, else do nothing
-            while ( true ) {
-                //if ( mVertices[current].get_endpoint() >= mVertices[current].get_kmer_occurrences() ) { // At a Dead End Node /// is this right??? should i be using like maybe visitor flag or something?
-                if ( mVertices[current].adj_list_size() < 1 ){
-                    // pick ending kmer from current.adj's and append to path
-                    //append endpoint i think 
-                    break;
-                }
-                make_adj_availible(mVertices[current], path.length(), organism.length());
-                index = random.GetUInt ( mVertices[current].adj_availible_size() + 1 );  // Choose random path down graph
-                next = mVertices[current].get_adj_availible ( index );
-                path += next.substr(2,1);
-                current = next;
-            }
-            remove_sequence(organism);                          // Remove old, unmodified sequence from graph
-            add_sequence(path);                                 // Add new, modified sequence to graph
-            reset_vertex_flags();
-            return path;
-        }
-        else {                                                 // No modification
-            reset_vertex_flags();
-            return organism;
-        }
-    }
-
-    /**
      * Using visitor flags, detect and mark all loops in the graph
      */
     void update_loops() {
@@ -401,6 +254,11 @@ public:
         });
     }
 
+    /**
+     * If we have a node that we know is in a loop, we'll mark every node that leads to it as a maximum possible path
+     * length of infinity, so that we don't end up in an endless loop when we try to randomly generate a new genome.
+     * @param node kmer that we KNOW is part of a loop
+     */
     void infinity_length(string node) {
         std::queue<std::string> Q;
         Q.push(node);
@@ -479,7 +337,7 @@ public:
             mVertices[sequence.substr(0, mKmerLength)].set_empty_bool(0); //set that we know this adj_list has something in it
             mVertices[sequence.substr(0, mKmerLength)].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
             //if future vertex is not already in map, set it as an empty vertex
-            if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0){
+            if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0 && sequence.length() != (mKmerLength)){
                 set_empty_vertex(sequence.substr(1, mKmerLength));
             }
             past = sequence.substr(0, mKmerLength);
@@ -489,11 +347,12 @@ public:
         //if it has previously been flagged with a value of 0, we know it has something in the adj_list
         if(mVertices[sequence].get_empty_bool() == 2){
             mVertices[sequence].set_empty_bool(1);
-        }
+        }        
         mVertices[sequence].increment_endpoint(); //increment number of times this kmer is an endpoint of a seq in the pangenome
         mVertices[sequence].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
-        mVertices[sequence].set_out_edge(sequence, "");
-        mVertices[sequence].set_in_edge(past, sequence);
+        mVertices[sequence].set_out_head(sequence);
+        mVertices[sequence].set_in_head(past);
+        mVertices[sequence].set_in_tail(sequence);
         set_path_length(sequence, 0, "", mVertices.count(sequence));
         update_loops();
     }
@@ -511,41 +370,7 @@ private:
     }
 
 public:
-    /**
-     * Remove a sequence from the graph
-     * To be used in BeforeDeath in MABE
-     * @param sequence to remove
-     */
-    void remove_sequence(string sequence){
-        if(is_valid(sequence)){
-            mSeqSize--;
-            string current, next;
-            bool current_appears_once, next_appears_once;
-            // while we still have sequence left:
-            while(int(sequence.size()) > mKmerLength){
-                current = sequence.substr(0,mKmerLength);
-                next = sequence.substr(1,mKmerLength);
-                current_appears_once = mVertices[current].get_kmer_occurrences() <= 1;
-                next_appears_once = mVertices[next].get_kmer_occurrences() <= 1;
-                mVertices[current].decrement_kmer_occurrences();
-                //if current or next vertex only appeared once in pangenome, break adj & remove edge from graph
-                if(current_appears_once || next_appears_once){
-                    mVertices[current].remove_from_adj_list(next);
-                }
-                //if current kmer was only in 1 seq in the pangenome, delete it from mVerticies
-                if (current_appears_once){ remove(current); }
-                sequence = sequence.substr(1, sequence.length()-1);
-            }
-            mVertices[sequence].decrement_kmer_occurrences();
-            mVertices[sequence].decrement_endpoint();
-            if (mVertices[sequence].get_kmer_occurrences() <= 0){
-                remove(sequence);
-            }
-        }
-        update_loops();
-        //else{ throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" ); }
-    }
-
+    
     /**
      * Iterate through graph along sequence to make sure the sequence is in the graph
      * @note Currently in removal of a sequence, I don't check to make sure the entire sequence is valid beforehand, 
@@ -566,6 +391,224 @@ public:
             sequence = sequence.substr(1, sequence.length()-1);
         }
         return true;
+    }
+
+    /**
+     * Remove a sequence from the graph
+     * To be used in BeforeDeath in MABE
+     * @param sequence to remove
+     */
+    void remove_sequence(string sequence){
+        if(is_valid(sequence)){
+            mSeqSize--;
+            string current, next;
+            bool current_appears_once, next_appears_once;
+            // while we still have sequence left:
+            while(int(sequence.size()) > mKmerLength){
+                current = sequence.substr(0,mKmerLength);
+                next = sequence.substr(1,mKmerLength);
+                current_appears_once = mVertices[current].get_kmer_occurrences() <= 1;
+                next_appears_once = mVertices[next].get_kmer_occurrences() <= 1;
+                mVertices[current].decrement_kmer_occurrences();
+                // if next is being completely removed, remove it from all adj lists, or when current is being removed 
+                //if current kmer was only in 1 seq in the pangenome, delete it from mVerticies
+                if (current_appears_once){ 
+                    mVertices[current].remove_from_adj_list(next);
+                    mVertices[current].get_out_edge().remove_tail(next);
+                    mVertices[next].get_in_edge().remove_head(current);
+                    remove(current);
+                }
+                sequence = sequence.substr(1, sequence.length()-1);
+            }
+            mVertices[sequence].decrement_kmer_occurrences();
+            mVertices[sequence].decrement_endpoint();
+            if (mVertices[sequence].get_kmer_occurrences() <= 0){
+                remove(sequence);
+            }
+        }
+        update_loops();
+        //else{ throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" ); }
+    }
+
+    /**
+     * Recursive function to traverse through a single path in the graph, with branches chosen at random
+     * To be used in selecting the genetic information for the next generation organism
+     * @param seed random seed to be used when choosing a branching path
+     * @param organism whose genome we are modifying--here I am just going to insert a 3-char string to represent the start
+     */
+    string next_genome_logic(emp::Random & random, string organism){
+        string path = organism;
+        string current = organism;
+        // this will work while all sequences are the same length (looks like this is the case in MABE)
+        while (int(path.size()) < mSequenceLength){
+            // generate index using the empirical random library when we have empirical hooked up
+            current = mVertices[current].get_adj_list()[random.GetUInt(mVertices[current].adj_list_size()-1)]; ///random seed here?!
+            path+= current.substr(2,1);
+        }
+        return path;
+    }
+
+    /**
+     * Given the genome of an organism, do crossover (if probability allows) by randomly choosing branches of existing 
+     * genomes in the graph to pursue
+     * @param random Empirical random number generator
+     * @param organism whose genome we are modifying--here I am just going to insert a 3-char string to represent the start
+     * @param probability that the modifcation will take place
+     * @param seq_count "Sequence Counting" - if true, kmers are labeled unavailible if they have been used the same number 
+     *                   of times that they have appeared in entire living genome.
+     * @param variable_length false if the genome must be a fixed, standard length
+     */
+    string modify_org(emp::Random & random, std::string organism, double probability = 1, bool seq_count = 1, bool variable_length = 0){ 
+        string path = organism.substr(0, mKmerLength);          // initialize string variables we use to change and go down the path
+        string current = organism.substr(0, mKmerLength);
+        string next = "";
+        mVertices[current].increment_visitor_flag(); // mark 1st kmer as visited
+        int index;
+
+        // If P() then we will modify this genome, else do nothing
+        if( random.P( probability ) ) {
+            while ( int(path.size()) < mSequenceLength) { // while our path hasn't reached the sequence length
+
+                if(mVertices[current].get_visitor_flag() == 1) {         
+                    mVertices[current].set_adj_availible(); // available choices = full adj_list if this is our first time seeing it
+                }
+
+                if(variable_length && mVertices[current].get_endpoint() > 0) { // if genome can be variable length and current kmer is an availible endpoint
+                    index = random.GetUInt(mVertices[current].adj_availible_size() + 1);  // index will be randomly generated number
+                    if( index == mVertices[current].adj_availible_size() ) { // if we have randomly chosen to keep this kmer as an endpoint
+                        break;
+                    }
+                }
+                else { // if genome must be fixed length
+                    index = random.GetUInt(mVertices[current].adj_availible_size());  // index will be randomly generated number
+                }
+                next = mVertices[current].get_adj_availible(index);                 // record next kmer using index
+                path += next.substr(2,1);
+
+                mVertices[next].increment_visitor_flag();  // mark next as visited
+                if(seq_count){
+                    if(mVertices[next].get_visitor_flag() == mVertices[current].get_kmer_occurrences()){
+                        mVertices[current].remove_adj_availible(next);  // remove kmer from availible seq.s if it has been visited as many times
+                    } // as it appears in all sequences in graph
+                }
+                current = next;
+            }
+            remove_sequence(organism);
+            add_sequence(path);
+            reset_vertex_flags();
+            return path;
+        }
+        else {
+            reset_vertex_flags();
+            return organism;
+        }
+    }
+
+    /**
+     * Out of all the adjacencies, possible paths we could take through the graph, 
+     * which path will generate the most reasonably lengthed genome?
+     * current + min > parent is unreasonable and current + max < parent is unreasonable
+     * @param node node value that we're currently on. last node value added to our new genome that is currently being generated.
+     * @param current_len current length of the new genome we are generating
+     * @param parent_len length of genome of parent organism, this is our general target of a length to generate
+     * @return 2 if there is no endpoint yet
+     *         1 is we have an ednpoint and are stopping the path building
+     *         0 if we want to get to the closest endpoint but need to iterate a bit to get there.
+    */
+    int make_adj_availible(DBGraphValue & node, int current_len, int parent_len){
+        node.clear_adj_availible();
+        if ( current_len < parent_len && ((current_len + get<0>(node.get_max_len()) >= parent_len) ||  get<0>(node.get_max_len()) == std::numeric_limits<int>::max())) { // if we're underneath the target length, and the path is not too short, add it
+            for(string i : node.get_adj_list()){ 
+                node.append_adj_availible(i); 
+            }
+            return 2;
+        }
+        else{ //if we are already at the target length, choose endpoint or lowest min path and break out of while loop
+            string closest_endpoint = get<1>(node.get_min_len());
+            node.append_adj_availible(closest_endpoint);
+            if (mVertices[closest_endpoint].get_endpoint() > 0){
+                return 1;
+            }
+            else { return 0; }
+        }
+    }
+
+    string reach_closest_endpoint(string current, string path) {
+    // if there is an ednpoint in the adj list, choose that, otherwise choose the adj with the lowest lenght
+    //min_len of 0 should mean it has an endpoint. if there's two paths with the same min length, should randomize that in the future. 
+        info(current);
+        if (mVertices[current].get_endpoint() > 0 || mVertices[current].get_empty_bool() == 1) {
+            return path;
+        }
+        else {
+            string next = get<1>(mVertices[current].get_min_len());
+if (next == ""){
+    std::cout<<"\non line 341"; //reached
+    info(next);
+    std::cout<<"\ncurrent\n";
+    info(current);
+}
+            path += next.substr(mKmerLength-1,1);
+            current = next;
+            return reach_closest_endpoint(current, path);
+        }
+    }
+
+    /**
+     * @brief coding for one specific base case
+     * Availible adj list used to track which adj can lead to reasonable length
+     * May try with weights, and because of that, will keep track of visitor flag.
+     * 
+     * @param random 
+     * @param organism 
+     * @param probability
+     * @return string 
+     */
+    string modify_org_variable_len(emp::Random & random, std::string organism, double probability = 1){
+        string path = organism.substr(0, mKmerLength);
+        string current = organism.substr(0, mKmerLength);
+        string next = "";
+        mVertices[current].increment_visitor_flag(); // Mark 1st kmer as visited
+        int index;
+        if ( random.P ( probability ) ) { // If P() then we will modify this genome, else do nothing
+            while ( true ) {
+                if ( mVertices[current].adj_list_size() < 1 ){ // if we have no possible adjacencies, we are at an endpoint with no options (besides turning around)
+                    break;
+                }
+                int endpoint_flag = make_adj_availible(mVertices[current], path.length(), organism.length());
+                if ( endpoint_flag == 1 ){ // we are AT an endpoint, and that is the only thing in the adj list
+                    next = mVertices[current].get_adj_availible ( 0 );
+        if (next == ""){
+                std::cout<<"\non line 408"; //not reached yet
+                info(next);
+                info(current);
+            }
+                    path += next.substr(2,1);
+                    break;
+                } else if ( endpoint_flag == 0 && path.length() >= organism.length()){ // we are looking for the closest endpoint, and can make the reach_closest_endpoint function return a full graph with only the closest endpoint nodes tacked on
+                    string full_path = reach_closest_endpoint(current, path);
+                    path = full_path;
+                    break;
+                }
+                index = random.GetUInt ( mVertices[current].adj_availible_size() );  // Choose random path down graph
+                next = mVertices[current].get_adj_availible(index);
+        if (next == ""){
+            std::cout<<"\non line 421"; //reached
+            info(next);
+            info(current);
+        }
+                path += next.substr(2,1);
+                current = next;
+            }
+            remove_sequence(organism);                          // Remove old, unmodified sequence from graph
+            add_sequence(path);                                 // Add new, modified sequence to graph
+            reset_vertex_flags();
+            return path;
+        }
+        else {                                                 // No modification
+            reset_vertex_flags();
+            return organism;
+        }
     }
 
 ///@remark DISPLAY AND TRAVERSAL /////////////////////////////////////////////////////////////
@@ -670,6 +713,43 @@ public:
             }
             cout<<"\n";
             });
+    }
+
+    /**
+     * Print attribute information about a certain node in the graph
+     * @param current node to display
+     */
+    void info (string current) {
+        std::cout<<"\nstring = "<<current;
+        std::cout<<"\nin edge head ("<<mVertices[current].get_in_edge().get_head().size()<<") = ";
+        for (auto i : mVertices[current].get_in_edge().get_head()){
+            std::cout<<i<<", ";
+        }
+        std::cout<<"\nin edge tail ("<<mVertices[current].get_in_edge().get_tail().size()<<") = ";
+        for (auto i : mVertices[current].get_in_edge().get_tail()){
+            std::cout<<i<<", ";
+        }
+        std::cout<<"\nout edge head ("<<mVertices[current].get_out_edge().get_head().size()<<") = ";
+        for (auto i : mVertices[current].get_out_edge().get_head()){
+            std::cout<<i<<", ";
+        }
+        std::cout<<"\nout edge tail ("<<mVertices[current].get_out_edge().get_tail().size()<<") = ";
+        for (auto i : mVertices[current].get_out_edge().get_tail()){
+            std::cout<<i<<", ";
+        }
+        std::cout<<"\nendpoint flag = "<<mVertices[current].get_endpoint();
+        std::cout<<"\nkmer occurances = "<<mVertices[current].get_kmer_occurrences();
+        std::cout<<"\navail adj list size = "<<mVertices[current].adj_availible_size();
+        std::cout<<"\nempty bool = "<<mVertices[current].get_empty_bool();
+        std::cout<<"\nmax len = "<<get<0>(mVertices[current].get_max_len());
+        std::cout<<"\nmin len = "<<get<0>(mVertices[current].get_min_len());
+        std::cout<<"\nmax non inf len = "<<get<0>(mVertices[current].get_non_inf_max_len());
+        std::cout<<"\nloop = "<<mVertices[current].get_loop_flag();
+        std::cout<<"\nbranch = "<<mVertices[current].get_branch();
+        std::cout<<"\nvisits = "<<mVertices[current].get_visitor_flag();
+        std::cout<<std::endl;
+        std::cout<<std::endl;
+        //display();
     }
 
 ///@remark CSV GENERATOR /////////////////////////////////////////////////////////////

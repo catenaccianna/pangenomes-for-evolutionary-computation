@@ -29,6 +29,10 @@ private:
     /// Adjacency list--vector of all verticies this vertex points to
     vector<string> mAdjList = {};
 
+    /// Adjacency list with path lengths attached
+    /// all possible path langths to all the adjs that lead there
+    map<int, vector<string>> mAdjList = {};
+
     /// Adjacencies availible to use in genome modification
     vector<string> mAvailableAdj = {};
 
@@ -216,6 +220,12 @@ public:
     string get_adj_availible(int index) { return mAvailableAdj[index]; }
 
     /**
+     * Get all availible adjacencies
+     * @return vecotr containing strings of all adjacent kmers
+     */
+    vector<string> get_avail_adj() { return mAvailableAdj; }
+
+    /**
      * Get the number of adjacencies that are still valid&available to append to a new genome
      * @return int 
      */
@@ -289,7 +299,12 @@ public:
     /**
      * Set edge into this node
      */
-    void set_in_edge(string head, string tail) { mInEdge.set_head(head); mInEdge.set_tail(tail); }
+    void set_in_head(string head) { mInEdge.set_head(head); }
+
+    /**
+     * Set edge into this node
+     */
+    void set_in_tail(string tail) { mInEdge.set_tail(tail); }
         
     /**
      * Get edge into this node
@@ -299,7 +314,12 @@ public:
     /**
      * Set edge out of this node
      */
-    void set_out_edge(string head, string tail) { mOutEdge.set_head(head); mOutEdge.set_tail(tail); }
+    void set_out_head(string head) { mOutEdge.set_head(head); }
+
+    /**
+     * Set edge out of this node
+     */
+    void set_out_tail(string tail) { mOutEdge.set_tail(tail); }
 
     /**
      * Get edge out of this node
