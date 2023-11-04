@@ -803,8 +803,8 @@ void PathLenHelper(string vertex, DeBruijnGraph & g) {
             cout<<i<<", ";
         }
     }
-    cout<<" (min_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_min_len())<<" = "<<std::get<0>(g.get_value(vertex).get_min_len());
-    cout<<", max_path_length allowed by "<<std::get<1>(g.get_value(vertex).get_max_len())<<" = "<<std::get<0>(g.get_value(vertex).get_max_len())<<")";
+    cout<<" (min_path_length = "<<std::get<0>(g.get_value(vertex).get_min_length());
+    cout<<", max_path_length = "<<std::get<0>(g.get_value(vertex).get_max_length())<<")";
     if (g.get_value(vertex).get_endpoint() > 0) {
         cout<<" (an endpoint) ";
     }
@@ -838,6 +838,10 @@ void TestPathLength() {
     g.add_sequence(vec2);
     g.remove_sequence(vec);
     g.depth_first_traversal( [&g] (string vertex) { PathLenHelper(vertex, g); } );
+
+
+    g.add_sequence(vec);
+
 
 }
 
@@ -923,7 +927,7 @@ int main() {
     // TestMABE();
     // TestMABEAvida();
     // TestLoops();
-    // TestPathLength();
+    TestPathLength();
     // TestEdges();
     // TestReasonableLengthGeneration();
 

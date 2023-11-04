@@ -75,20 +75,8 @@ private:
      * @param adj next node after v
      * @param new_node true if there's nothing in the adj list, and min and max length should both be set to this length
      */
-    void set_path_length(string v, int path_length, string adj, int node_occurences) {
-        if (node_occurences == 0){
-            mVertices[v].set_min_len(path_length, adj);
-            mVertices[v].set_max_len(path_length, adj);
-        }
-        else {
-            if (path_length >= get<0>(mVertices[v].get_max_len())) {
-                mVertices[v].set_max_len(path_length, adj);
-                mVertices[v].set_non_inf_max_len(path_length, adj);
-            }
-            if (path_length <= get<0>(mVertices[v].get_min_len())) {
-                mVertices[v].set_min_len(path_length, adj);
-            }
-        }
+    void set_path_length(string v, int path_length, string adj) {
+        mVertices[v].append_path_len_adj_list(path_length, adj);
     }
 
     /**
@@ -147,7 +135,7 @@ private:
             set_empty_vertex(input.substr(0, mKmerLength));
             // min/max path length from this node
             int path_len = input.size() - 3;
-            set_path_length(input.substr(0, kmer_length), path_len, input.substr(1, kmer_length), mVertices.count(input.substr(0, mKmerLength)));
+            set_path_length(input.substr(0, kmer_length), path_len, input.substr(1, kmer_length));
         }
         // add to size and add an edge for each vertex, and an empty vertex for the end
         while(int(input.length()) >= kmer_length + 1){
@@ -161,7 +149,7 @@ private:
             set_empty_vertex(input.substr(1, kmer_length));
             // min/max path length from this node
             int path_len = input.size() - 3;
-            set_path_length(input.substr(0, kmer_length), path_len, input.substr(1, kmer_length), mVertices.count(input.substr(0, mKmerLength)));
+            set_path_length(input.substr(0, kmer_length), path_len, input.substr(1, kmer_length));
             // take one character off the input, continue
             past = input.substr(0, mKmerLength);
             input = input.substr(1, input.length()-1);
@@ -172,7 +160,7 @@ private:
         mVertices[input].set_out_head(input);
         mVertices[input].set_in_head(past);
         mVertices[input].set_in_tail(input);
-        set_path_length(input, 0, "", mVertices.count(input));
+        set_path_length(input, 0, "");
         update_loops(); 
     }
 
@@ -227,6 +215,17 @@ public:
 
 ///@remark MABE FUNCTIONS (next genome, add sequence, remove sequence) /////////////////////////////////////////////////////////////
 
+    void update_path_lens(string node) {
+        reset_vertex_flags();
+        depth_first_traversal( [&] (string node) {
+            if (mVertices[node].get_visitor_flag()>0){
+                mVertices[node].set_loop_flag(1);
+                infinity_length(node);
+            }
+            reset_edge_flags();
+        });
+    }
+
     /**
      * Using visitor flags, detect and mark all loops in the graph
      */
@@ -268,7 +267,7 @@ public:
             Q.pop();
             DeBruijnEdge & edge = mVertices[current].get_in_edge();
             if(edge.get_visits() == 0) {
-                mVertices[current].set_max_len(std::numeric_limits<int>::max(), "");
+                mVertices[current].append_path_len_adj_list(std::numeric_limits<int>::max(), "");
                 for (auto i : edge.get_head() ){
                     Q.push(i);
                 }
@@ -332,7 +331,7 @@ public:
             }
             // min/max path length from this node
             int path_len = sequence.size() - 3;
-            set_path_length(sequence.substr(0, mKmerLength), path_len, sequence.substr(1, mKmerLength), mVertices.count(sequence.substr(0, mKmerLength)));
+            set_path_length(sequence.substr(0, mKmerLength), path_len, sequence.substr(1, mKmerLength));
             add_edge(past, sequence.substr(0, mKmerLength), sequence.substr(1, mKmerLength));
             mVertices[sequence.substr(0, mKmerLength)].set_empty_bool(0); //set that we know this adj_list has something in it
             mVertices[sequence.substr(0, mKmerLength)].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
@@ -353,7 +352,7 @@ public:
         mVertices[sequence].set_out_head(sequence);
         mVertices[sequence].set_in_head(past);
         mVertices[sequence].set_in_tail(sequence);
-        set_path_length(sequence, 0, "", mVertices.count(sequence));
+        set_path_length(sequence, 0, "");
         update_loops();
     }
 
@@ -362,11 +361,14 @@ private:
      * remove_sequence helper function to make sure sequence is removed from all containers
      * @param sequence to remove
      */
-    void remove(string sequence){
+    void remove(string kmer){
         mSize--;
-        mVertices.erase(sequence);
-        mStarts.erase(std::remove(mStarts.begin(), mStarts.end(), sequence), mStarts.end());
-        mBranchedVertices.erase(std::remove(mBranchedVertices.begin(), mBranchedVertices.end(), sequence), mBranchedVertices.end());
+        mVertices.erase(kmer);
+        mStarts.erase(std::remove(mStarts.begin(), mStarts.end(), kmer), mStarts.end());
+        mBranchedVertices.erase(std::remove(mBranchedVertices.begin(), mBranchedVertices.end(), kmer), mBranchedVertices.end());
+        for(auto i : mVertices) {
+            i.second.remove_path_len_adj_list(kmer);
+        }
     }
 
 public:
@@ -412,7 +414,7 @@ public:
                 mVertices[current].decrement_kmer_occurrences();
                 // if next is being completely removed, remove it from all adj lists, or when current is being removed 
                 //if current kmer was only in 1 seq in the pangenome, delete it from mVerticies
-                if (current_appears_once){ 
+                if (current_appears_once){
                     mVertices[current].remove_from_adj_list(next);
                     mVertices[current].get_out_edge().remove_tail(next);
                     mVertices[next].get_in_edge().remove_head(current);
@@ -426,6 +428,7 @@ public:
                 remove(sequence);
             }
         }
+        update_path_lens(mStarts[0]);
         update_loops();
         //else{ throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" ); }
     }
@@ -470,7 +473,7 @@ public:
             while ( int(path.size()) < mSequenceLength) { // while our path hasn't reached the sequence length
 
                 if(mVertices[current].get_visitor_flag() == 1) {         
-                    mVertices[current].set_adj_availible(); // available choices = full adj_list if this is our first time seeing it
+                    mVertices[current].make_all_adj_availible(); // available choices = full adj_list if this is our first time seeing it
                 }
 
                 if(variable_length && mVertices[current].get_endpoint() > 0) { // if genome can be variable length and current kmer is an availible endpoint
@@ -511,46 +514,18 @@ public:
      * @param node node value that we're currently on. last node value added to our new genome that is currently being generated.
      * @param current_len current length of the new genome we are generating
      * @param parent_len length of genome of parent organism, this is our general target of a length to generate
-     * @return 2 if there is no endpoint yet
-     *         1 is we have an ednpoint and are stopping the path building
-     *         0 if we want to get to the closest endpoint but need to iterate a bit to get there.
+     * @return 1 if there is for sure no endpoint yet
+     *         0 if there is a possible endpoint
     */
     int make_adj_availible(DBGraphValue & node, int current_len, int parent_len){
         node.clear_adj_availible();
-        if ( current_len < parent_len && ((current_len + get<0>(node.get_max_len()) >= parent_len) ||  get<0>(node.get_max_len()) == std::numeric_limits<int>::max())) { // if we're underneath the target length, and the path is not too short, add it
-            for(string i : node.get_adj_list()){ 
-                node.append_adj_availible(i); 
-            }
-            return 2;
+        if ( current_len < parent_len ) { // if we're underneath the target length, and the path is not too short, add it
+            node.not_too_short(current_len, parent_len); // only the not too short ones
+            return 1;
         }
-        else{ //if we are already at the target length, choose endpoint or lowest min path and break out of while loop
-            string closest_endpoint = get<1>(node.get_min_len());
-            node.append_adj_availible(closest_endpoint);
-            if (mVertices[closest_endpoint].get_endpoint() > 0){
-                return 1;
-            }
-            else { return 0; }
-        }
-    }
-
-    string reach_closest_endpoint(string current, string path) {
-    // if there is an ednpoint in the adj list, choose that, otherwise choose the adj with the lowest lenght
-    //min_len of 0 should mean it has an endpoint. if there's two paths with the same min length, should randomize that in the future. 
-        info(current);
-        if (mVertices[current].get_endpoint() > 0 || mVertices[current].get_empty_bool() == 1) {
-            return path;
-        }
-        else {
-            string next = get<1>(mVertices[current].get_min_len());
-if (next == ""){
-    std::cout<<"\non line 341"; //reached
-    info(next);
-    std::cout<<"\ncurrent\n";
-    info(current);
-}
-            path += next.substr(mKmerLength-1,1);
-            current = next;
-            return reach_closest_endpoint(current, path);
+        else { //if we are already at the target length, choose endpoint or lowest min path and break out of while loop
+            node.append_adj_availible(get<1>(node.get_min_length())); // put minimum path length adjs into the list of availible adjs
+            return 0;
         }
     }
 
@@ -575,29 +550,14 @@ if (next == ""){
                 if ( mVertices[current].adj_list_size() < 1 ){ // if we have no possible adjacencies, we are at an endpoint with no options (besides turning around)
                     break;
                 }
-                int endpoint_flag = make_adj_availible(mVertices[current], path.length(), organism.length());
-                if ( endpoint_flag == 1 ){ // we are AT an endpoint, and that is the only thing in the adj list
-                    next = mVertices[current].get_adj_availible ( 0 );
-        if (next == ""){
-                std::cout<<"\non line 408"; //not reached yet
-                info(next);
-                info(current);
-            }
-                    path += next.substr(2,1);
-                    break;
-                } else if ( endpoint_flag == 0 && path.length() >= organism.length()){ // we are looking for the closest endpoint, and can make the reach_closest_endpoint function return a full graph with only the closest endpoint nodes tacked on
-                    string full_path = reach_closest_endpoint(current, path);
-                    path = full_path;
-                    break;
-                }
+                int flag = make_adj_availible(mVertices[current], path.length(), organism.length());
                 index = random.GetUInt ( mVertices[current].adj_availible_size() );  // Choose random path down graph
                 next = mVertices[current].get_adj_availible(index);
-        if (next == ""){
-            std::cout<<"\non line 421"; //reached
-            info(next);
-            info(current);
-        }
                 path += next.substr(2,1);
+
+                if ( flag == 0 && mVertices[next].get_endpoint() > 0){ // we are traveling down the shortest path possible
+                    break;
+                }
                 current = next;
             }
             remove_sequence(organism);                          // Remove old, unmodified sequence from graph
@@ -680,8 +640,7 @@ if (next == ""){
     void reset_loops() {
         for (auto & element : mVertices) {
             element.second.set_loop_flag(0);
-            tuple<int, string> non_inf_max = element.second.get_non_inf_max_len();
-            element.second.set_max_len(get<0>(non_inf_max), get<1>(non_inf_max));
+            element.second.remove_inf_path_len();
         }
     }
 
@@ -741,9 +700,8 @@ if (next == ""){
         std::cout<<"\nkmer occurances = "<<mVertices[current].get_kmer_occurrences();
         std::cout<<"\navail adj list size = "<<mVertices[current].adj_availible_size();
         std::cout<<"\nempty bool = "<<mVertices[current].get_empty_bool();
-        std::cout<<"\nmax len = "<<get<0>(mVertices[current].get_max_len());
-        std::cout<<"\nmin len = "<<get<0>(mVertices[current].get_min_len());
-        std::cout<<"\nmax non inf len = "<<get<0>(mVertices[current].get_non_inf_max_len());
+        std::cout<<"\nmax len = "<<get<0>(mVertices[current].get_max_length());
+        std::cout<<"\nmin len = "<<get<0>(mVertices[current].get_min_length());
         std::cout<<"\nloop = "<<mVertices[current].get_loop_flag();
         std::cout<<"\nbranch = "<<mVertices[current].get_branch();
         std::cout<<"\nvisits = "<<mVertices[current].get_visitor_flag();
@@ -973,19 +931,6 @@ if (next == ""){
      * @return Debruijn vertex value object
      */
     DBGraphValue get_value(string vertex) { return mVertices[vertex]; }
-
-    /**
-     * Set the availible adj list object to have all adjacencies possible
-     * @param kmer we are currently adding
-     */
-    void set_avail_adj_list(string kmer) { mVertices[kmer].set_adj_availible(); }
-
-    /**
-     * Remove an adjacency from availible adj list
-     * @param kmer we are adjusting the value of
-     * @param adj string we are removing
-     */
-    void remove_avail_adj_list(string kmer, int adj) { mVertices[kmer].remove_adj_availible(mVertices[kmer].get_adj_availible(0)); }
 
 };
 

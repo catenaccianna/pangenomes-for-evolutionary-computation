@@ -18,10 +18,12 @@
 #include <map>
 #include <limits>
 #include <tuple>
+#include <utility>
 
 #include <iostream>
 
 using std::string; using std::vector; using std::map; using std::tuple;
+using std::pair;
 
 class DBGraphValue {
 private:
@@ -30,14 +32,12 @@ private:
     vector<string> mAdjList = {};
 
     /// Adjacency list with path lengths attached
-    /// all possible path langths to all the adjs that lead there
-    map<int, vector<string>> mAdjList = {};
+    /// all possible path langths to all the adjs
+    map<int, vector<string>> mPathLenAdjList = {};
+    // vector of a struct (containing kmer and count) or a pair (of the same thing)
 
     /// Adjacencies availible to use in genome modification
     vector<string> mAvailableAdj = {};
-
-    // /// Map of each adj to their min value and max value
-    // map<string, tuple<int, int> > mMinMax;
 
     /// Visitor flag
     // so you'd to to the adj list being pointed to, and then check the index to be accessed, and is the size == 
@@ -62,15 +62,6 @@ private:
     /// This is a boolean value that is true if this vertex leads to a loop in the graph, and false if not
     int mLoop = 0;
 
-    /// Maximum path length possible through adjacencies and adj that allows it 
-    tuple<int, string> mMax = std::make_tuple(0, "");
-
-    /// Maximum path length possible through adjacencies and adj that allows it 
-    tuple<int, string> mMaxNonInfinite = std::make_tuple(0, "");
-
-    /// Minimum path length possible through adjacencies and adj that allows it 
-    tuple<int, string> mMin = std::make_tuple(std::numeric_limits<int>::max(), "");
-
     /// Edges into and out of this node
     DeBruijnEdge mInEdge;
     DeBruijnEdge mOutEdge;
@@ -83,55 +74,7 @@ public:
     /// Destructor                                                        
     ~DBGraphValue()=default;
 
-    /**
-     * Get the adj list object
-     * @return vector of adjacent verticies
-     */
-    vector<string> get_adj_list() const{ return mAdjList; }
-
-    /**
-     * Get the adjacent DeBruijn Vertex
-     * @param index at which to pull the vertex from
-     * @return string reresenting kmer adjacency 
-     */
-    string get_adjacency(int index) { return mAdjList[index]; }
-
-    /**
-     * Return size of adjacency list
-     * @return size
-     */
-    int adj_list_size(){ return mAdjList.size(); }
-
-    /**
-     * Add to adjacency list (creates edge)
-     * @param addition vertex to add to this vertex's adjacency list
-     */
-    void add_to_adj_list(string addition){ 
-        mAdjList.push_back(addition);
-        vector<string>::iterator it;
-        std::sort( mAdjList.begin(), mAdjList.end() );
-        mAdjList.erase( std::unique( mAdjList.begin(), mAdjList.end() ), mAdjList.end() );
-    }
-
-    /**
-     * Remove edge, remove value from adjacency list
-     * @param addition vertex to remove from the adjacency list
-     */
-    void remove_from_adj_list(string removal){
-        mAdjList.erase(std::remove(mAdjList.begin(), mAdjList.end(), removal), mAdjList.end());
-    }
-
-    /**
-     * Check to see whether this vertex-to-adjacency path is valid
-     * @param adj adjacency to check
-     * @return true if the adjacency is in the adj_list for this vertex
-     */
-    bool valid_adj(string adj){
-        if (std::find(mAdjList.begin(), mAdjList.end(), adj) != mAdjList.end()){
-            return true;
-        }
-        return false;
-    }
+    //* Important and informational flags to describe the node *//
 
     /**
      * Get the visitor flag object
@@ -205,51 +148,6 @@ public:
     void decrement_kmer_occurrences() { mKmerOccurrences--; }
 
     /**
-     * Set the available adjacencies to be all adjacencies of vertex
-     * Used in generating new genomes
-     */
-    void set_adj_availible() {
-        std::copy ( mAdjList.begin(), mAdjList.end(), back_inserter(mAvailableAdj) );
-    }
-        
-    /**
-     * Get the value of an available adjacency for a new genome
-     * @param index of adjacency
-     * @return string kmer
-     */
-    string get_adj_availible(int index) { return mAvailableAdj[index]; }
-
-    /**
-     * Get all availible adjacencies
-     * @return vecotr containing strings of all adjacent kmers
-     */
-    vector<string> get_avail_adj() { return mAvailableAdj; }
-
-    /**
-     * Get the number of adjacencies that are still valid&available to append to a new genome
-     * @return int 
-     */
-    int adj_availible_size() { return mAvailableAdj.size(); }
-
-    /**
-     * When we've used a kmer in a new genome as many times it appears in our sequences, we want to make it unavailable for further use
-     * @param val kmer to remove from the list of available adjacencies
-     * @param still_an_end if true, add the kmer to a list of kmers that have used up their availibility except for as an end
-     */
-    void remove_adj_availible(string val, bool still_an_end=0) { 
-        mAvailableAdj.erase(std::remove(mAvailableAdj.begin(), mAvailableAdj.end(), val), mAvailableAdj.end());
-    }
-
-    void append_adj_availible(string val) { 
-        mAvailableAdj.push_back(val);
-    }
-
-    /**
-     * clear availible adjacencies
-     */
-    void clear_adj_availible() { mAvailableAdj.clear(); }
-
-    /**
      * Get the endpoint truth value
      * @return the number of times the vertex has been observed to be an enpoint
      */
@@ -266,35 +164,7 @@ public:
      */
     void decrement_endpoint() { mEndpoint--; }
 
-    /**
-     * Set maximum path length from this vertex
-     */
-    void set_max_len(int l, string s) { mMax = std::make_tuple(l, s); }
-        
-    /**
-     * Get maximum path length from this vertex
-     */
-    tuple<int, string> get_max_len() { return mMax; }
-
-    /**
-     * Set maximum path length that is NOT infinity from this vertex
-     */
-    void set_non_inf_max_len(int l, string s) { mMaxNonInfinite = std::make_tuple(l, s); }
-        
-    /**
-     * Get maximum path length that is NOT infinity from this vertex
-     */
-    tuple<int, string> get_non_inf_max_len() { return mMaxNonInfinite; }
-
-    /**
-     * Set minimum path length from this vertex
-     */
-    void set_min_len(int l, string s) { mMin = std::make_tuple(l, s); }
-        
-    /**
-     * Get minimum path length from this vertex
-     */
-    tuple<int, string> get_min_len() { return mMin; }
+//* Node edges (using DeBruijnEdge class) *//
 
     /**
      * Set edge into this node
@@ -325,7 +195,164 @@ public:
      * Get edge out of this node
      */
     DeBruijnEdge & get_out_edge() { return mOutEdge; }
+    
+//* All possible adjacencies that this node has *//
 
+    /**
+     * Get the adj list object
+     * @return vector of adjacent verticies
+     */
+    vector<string> get_adj_list() const{ return mAdjList; }
+
+    /**
+     * Get the adjacent DeBruijn Vertex
+     * @param index at which to pull the vertex from
+     * @return string reresenting kmer adjacency 
+     */
+    string get_adjacency(int index) { return mAdjList[index]; }
+
+    /**
+     * Return size of adjacency list
+     * @return size
+     */
+    int adj_list_size(){ return mAdjList.size(); }
+
+    /**
+     * Add to adjacency list (creates edge)
+     * @param addition vertex to add to this vertex's adjacency list
+     */
+    void add_to_adj_list(string addition){ 
+        mAdjList.push_back(addition);
+        vector<string>::iterator it;
+        std::sort( mAdjList.begin(), mAdjList.end() );
+        mAdjList.erase( std::unique( mAdjList.begin(), mAdjList.end() ), mAdjList.end() );
+    }
+
+    /**
+     * Remove edge, remove value from adjacency list
+     * @param addition vertex to remove from the adjacency list
+     */
+    void remove_from_adj_list(string removal){
+        mAdjList.erase(std::remove(mAdjList.begin(), mAdjList.end(), removal), mAdjList.end());
+    }
+
+    /**
+     * clear availible adjacencies
+     */
+    void clear_adj_availible() { mAvailableAdj.clear(); }
+
+    /**
+     * Check to see whether this vertex-to-adjacency path is valid
+     * @param adj adjacency to check
+     * @return true if the adjacency is in the adj_list for this vertex
+     */
+    bool valid_adj(string adj){
+        if (std::find(mAdjList.begin(), mAdjList.end(), adj) != mAdjList.end()){
+            return true;
+        }
+        return false;
+    }
+   
+//* Only the adjacencies that we want to make availible for possible new genomes *//
+
+    /**
+     * Get the value of an available adjacency for a new genome
+     * @param index of adjacency
+     * @return string kmer
+     */
+    string get_adj_availible(int index) { return mAvailableAdj[index]; }
+
+    /**
+     * Get all availible adjacencies
+     * @return vecotr containing strings of all adjacent kmers
+     */
+    vector<string> get_all_adj_availible() { return mAvailableAdj; }
+
+    /**
+     * Get the number of adjacencies that are still valid&available to append to a new genome
+     * @return int 
+     */
+    int adj_availible_size() { return mAvailableAdj.size(); }
+
+    void append_adj_availible(string val) { 
+        mAvailableAdj.push_back(val);
+    }
+
+    void append_adj_availible(vector<string> val) { 
+        for(auto i : val) {
+            mAvailableAdj.push_back(i);
+        }
+    }
+
+    /**
+     * Set the available adjacencies to be all adjacencies of vertex
+     * Used in generating new genomes
+     */
+    void make_all_adj_availible() {
+        std::copy ( mAdjList.begin(), mAdjList.end(), back_inserter(mAvailableAdj) );
+    }
+        
+    void not_too_short(int current_len, int parent_len, int threshold=0) {
+        for (auto i : mPathLenAdjList) {
+            if (current_len + i.first >= (parent_len-threshold)) {
+                append_adj_availible(i.second);
+            }
+        }        
+    }
+    
+    /**
+     * When we've used a kmer in a new genome as many times it appears in our sequences, we want to make it unavailable for further use
+     * @param val kmer to remove from the list of available adjacencies
+     * @param still_an_end if true, add the kmer to a list of kmers that have used up their availibility except for as an end
+     */
+    void remove_adj_availible(string val, bool still_an_end=0) { 
+        mAvailableAdj.erase(std::remove(mAvailableAdj.begin(), mAvailableAdj.end(), val), mAvailableAdj.end());
+    }
+
+
+//* Keep track of all possible new genome path lengths and which adjs lead where *//
+
+    void append_path_len_adj_list(int len, string adj) {
+        mPathLenAdjList[len].push_back(adj);
+    }
+
+    // recursive function to update path length container for every predecessor node -- call on predeccessor that we get through an edge or some way similar
+    // remove one copy of whatever node we're on in the list that is (path_len + 1)
+
+    void remove_path_len_adj_list(string adj) {
+        vector<string> lists;
+        for (auto iter = mPathLenAdjList.begin(); iter != mPathLenAdjList.end(); iter++) {
+            lists = iter->second;
+            lists.erase(std::remove(lists.begin(), lists.end(), adj), lists.end());
+        }
+    }
+
+    void remove_inf_path_len() {
+        auto iter = mPathLenAdjList.find(std::numeric_limits<int>::max());
+        if(iter != mPathLenAdjList.end()) {
+            mPathLenAdjList.erase(iter);
+        }
+    }
+    
+    tuple<int, vector<string>> get_min_length() {
+        int minimum = std::numeric_limits<int>::max();
+        for (auto iter = mPathLenAdjList.begin(); iter != mPathLenAdjList.end(); iter++) {
+            if(iter->first < minimum) {
+                minimum = iter->first;
+            }
+        }
+        return make_tuple(minimum, mPathLenAdjList[minimum]);
+    }
+
+    tuple<int, vector<string>> get_max_length() {
+        int maximum = 0;
+        for (auto iter = mPathLenAdjList.begin(); iter != mPathLenAdjList.end(); iter++) {
+            if(iter->first > maximum) {
+                maximum = iter->first;
+            }
+        }
+        return make_tuple(maximum, mPathLenAdjList[maximum]);
+    }
 
 };
 
