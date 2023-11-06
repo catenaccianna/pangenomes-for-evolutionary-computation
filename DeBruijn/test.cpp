@@ -706,6 +706,30 @@ void TestMABE(){
 
 void TestMABEAvida(){
     DeBruijnGraph pangenome_graph;
+    emp::Random random;
+
+    pangenome_graph.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+    pangenome_graph.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+    pangenome_graph.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+    pangenome_graph.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+    pangenome_graph.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+    pangenome_graph.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+    pangenome_graph.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+    pangenome_graph.display();
+    pangenome_graph.info("ccc");
+
+    cout<<"generated genomes round 1:\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc")<<"\n"<<
+    pangenome_graph.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc")<<"\n";
+
+    pangenome_graph.remove_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+    pangenome_graph.remove_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+    pangenome_graph.remove_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+    pangenome_graph.remove_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
 
     pangenome_graph.add_sequence("cccdaccnnccclccnncccocccbtcccqfccgookccccbhccptccqfccclccnccc");
     pangenome_graph.add_sequence("nnccctjctbccocccdccc");
@@ -740,9 +764,8 @@ void TestMABEAvida(){
     pangenome_graph.remove_sequence("cccncccfqccncccoocccfqccncccfccptccclccnccctjctbccoccc");
     pangenome_graph.remove_sequence("cccocccncccdccctjctbccoocccscccqfccgoocccqfccptccr");
 
-    emp::Random random;
 
-    cout<<"generated genomes:\n"<<
+    cout<<"generated genomes round 2:\n"<<
     pangenome_graph.modify_org_variable_len(random,"cccfccptcctqccncccdcccbtcccclccnccccscccttcctqccdcccbtccr")<<"\n"<<
     pangenome_graph.modify_org_variable_len(random,"cccbhccptcccqfccptccbhccptccttcccdcccctgcctgcctcctccr")<<"\n"<<
     pangenome_graph.modify_org_variable_len(random,"cccoccctbccocccttccbhccptcctbccoocccttccr")<<"\n"<<
@@ -753,6 +776,7 @@ void TestMABEAvida(){
     pangenome_graph.modify_org_variable_len(random,"cccocccncccdccctjctbccoocccscccqfccgoocccqfccptccr")<<"\n"<<
     pangenome_graph.modify_org_variable_len(random,"cccslccncccscccdcccttccbtccr")<<"\n"<<
     pangenome_graph.modify_org_variable_len(random,"cccdaccnnccclccnncccocccbtcccqfccgookccccbhccptccqfccclccnccc")<<"\n";
+
 }
 
 void TestLoops() {
@@ -896,21 +920,6 @@ void TestEdges() { // loop length gets stuck like a seg fault and maybe it's got
         });
 }
 
-void TestReasonableLengthGeneration() {
-    cout<<"\nREASONABLE PATH LENGTH GENERATION TEST\n";
-    cout<<"Can we get a path length that isn't too long or short?\n";
-
-    string vec = "1234123"; //123>234>341>412>123 loop
-    string vec2 = "1234188"; //123>234>341>418>188 no loop
-    emp::Random random;
-
-    DeBruijnGraph g(vec2, 3);
-    g.add_sequence(vec);
-
-    string new_path0 = g.modify_org_variable_len(random, vec2);
-    std::cout<<vec<<"\n"; // only 1234123 is being made
-}
-
 int main() {
     // TestConstructGraph();
     // TestBranchingGraph();
@@ -925,10 +934,9 @@ int main() {
     // TestCsv();
     // TestCSVHelperFunctions();
     // TestMABE();
-    // TestMABEAvida();
+     TestMABEAvida();
     // TestLoops();
-    TestPathLength();
+    // TestPathLength();
     // TestEdges();
-    // TestReasonableLengthGeneration();
 
 }
