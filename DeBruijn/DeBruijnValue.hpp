@@ -291,14 +291,6 @@ public:
     void make_all_adj_availible() {
         std::copy ( mAdjList.begin(), mAdjList.end(), back_inserter(mAvailableAdj) );
     }
-        
-    void not_too_short(int current_len, int parent_len, int threshold=0) {
-        for (auto i : mPathLenAdjList) {
-            if (current_len + i.first >= (parent_len-threshold)) {
-                append_adj_availible(i.second);
-            }
-        }        
-    }
     
     /**
      * When we've used a kmer in a new genome as many times it appears in our sequences, we want to make it unavailable for further use
@@ -309,16 +301,12 @@ public:
         mAvailableAdj.erase(std::remove(mAvailableAdj.begin(), mAvailableAdj.end(), val), mAvailableAdj.end());
     }
 
-
-//* Keep track of all possible new genome path lengths and which adjs lead where *//
-
     void append_path_len_adj_list(int len, string adj) {
         mPathLenAdjList[len].push_back(adj);
     }
 
     // recursive function to update path length container for every predecessor node -- call on predeccessor that we get through an edge or some way similar
     // remove one copy of whatever node we're on in the list that is (path_len + 1)
-
     void remove_path_len_adj_list(string adj) {
         vector<string> lists;
         for (auto iter = mPathLenAdjList.begin(); iter != mPathLenAdjList.end(); iter++) {
@@ -352,6 +340,23 @@ public:
             }
         }
         return make_tuple(maximum, mPathLenAdjList[maximum]);
+    }
+
+    
+    void not_too_short(int current_len, int parent_len, int threshold=0) {
+        for (auto i : mPathLenAdjList) {
+            if (current_len + i.first >= (parent_len-threshold)) {
+                append_adj_availible(i.second);
+            }
+        }
+    }
+
+    tuple<int, vector<string>> get_non_inf_length() {
+        for (auto i : mPathLenAdjList) {
+            if (i.first < std::numeric_limits<int>::max()) {
+                append_adj_availible(i.second);
+            }
+        }
     }
 
 };

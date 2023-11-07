@@ -568,7 +568,7 @@ void TestCSVHelperFunctions(){
     g1.reset_vertex_flags();
 }
 
-void TestMABE(){
+void TestMABEBitsOrg(){
     DeBruijnGraph pangenome_graph;
 
     pangenome_graph.add_sequence("1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110");
@@ -704,7 +704,7 @@ void TestMABE(){
       }*/
 }
 
-void TestMABEAvida(){
+void TestMABEVirtualCPU(){
     DeBruijnGraph pangenome_graph;
     emp::Random random;
 
@@ -933,8 +933,8 @@ int main() {
     // TestBitOrgs();
     // TestCsv();
     // TestCSVHelperFunctions();
-    // TestMABE();
-     TestMABEAvida();
+    // TestMABEBitsOrg();
+    TestMABEVirtualCPU();
     // TestLoops();
     // TestPathLength();
     // TestEdges();
