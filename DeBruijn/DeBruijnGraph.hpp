@@ -26,6 +26,7 @@
 using std::string; using std::vector; using std::map;
 using std::cout; using std::endl; using std::tuple;
 using std::get; using std::make_tuple; using std::count;
+using std::queue;
 
 class DeBruijnGraph {
 public:
@@ -259,17 +260,23 @@ public:
      * @param node kmer that we KNOW is part of a loop
      */
     void infinity_length(string node) {
-        std::queue<std::string> Q;
-        Q.push(node);
-        string current;
-        while(!Q.empty()) {
-            current = Q.front();
-            Q.pop();
+        queue<pair<string, string>> Q_parent;
+        DeBruijnEdge & edge = mVertices[node].get_in_edge();
+        edge.increment_visitor_flag();
+        for (auto i : edge.get_head() ){
+            Q_parent.push(make_pair(i, node));
+        }
+
+        string current, parent;
+        while(!Q_parent.empty()) {
+            parent = Q_parent.front().second;
+            current = Q_parent.front().first;
+            Q_parent.pop();
             DeBruijnEdge & edge = mVertices[current].get_in_edge();
             if(edge.get_visits() == 0) {
-                mVertices[current].append_path_len_adj_list(std::numeric_limits<int>::max(), "");
+                mVertices[current].append_path_len_adj_list(std::numeric_limits<int>::max(), parent);
                 for (auto i : edge.get_head() ){
-                    Q.push(i);
+                    Q_parent.push(make_pair(i, current));
                 }
             }
             edge.increment_visitor_flag();
@@ -521,10 +528,20 @@ public:
         node.clear_adj_availible();
         if ( current_len < parent_len ) { // if we're underneath the target length, and the path is not too short, add it
             node.not_too_short(current_len, parent_len); // only the not too short ones
+            std::cout<<"OPTION 1 \n";
+            if(node.adj_availible_size() == 0) {
+                std::cout<<"OPTION 3 \n";
+                node.make_all_adj_availible();
+                return 0;
+            }
             return 1;
         }
         else { //if we are already at the target length, choose endpoint or lowest min path and break out of while loop
             node.append_adj_availible(get<1>(node.get_min_length())); // put minimum path length adjs into the list of availible adjs
+            std::cout<<"OPTION 2 "<<get<0>(node.get_min_length())<<" from ";
+            for(auto i : node.get_all_adj_availible()){
+                std::cout<<i<<", ";
+            }std::cout<<"\n";
             return 0;
         }
     }
@@ -551,13 +568,16 @@ public:
                     break;
                 }
                 int flag = make_adj_availible(mVertices[current], path.length(), organism.length());
-                index = random.GetUInt ( mVertices[current].adj_availible_size() );  // Choose random path down graph
-                next = mVertices[current].get_adj_availible(index);
-                path += next.substr(2,1);
-
-                if ( flag == 0 && mVertices[next].get_endpoint() > 0){ // we are traveling down the shortest path possible
+                if ( flag == 0 && mVertices[current].get_endpoint() > 0){ // we are traveling down the shortest path possible
+                    std::cout<<"GOING TO BREAK "<<current<<"\n";
                     break;
                 }
+                std::cout<<"CURRENT:";  info(current);
+                index = random.GetUInt ( mVertices[current].adj_availible_size() );  // Choose random path down graph
+                next = mVertices[current].get_adj_availible(index);
+                std::cout<<"\nINDEX "<<index<<"\n";
+                std::cout<<"NEXT "<<next<<"\n";
+                path += next.substr(2,1);
                 current = next;
             }
             remove_sequence(organism);                          // Remove old, unmodified sequence from graph
@@ -696,6 +716,27 @@ public:
         for (auto i : mVertices[current].get_out_edge().get_tail()){
             std::cout<<i<<", ";
         }
+        std::cout<<"\nAVAIL ADJ SZ "<<mVertices[current].adj_availible_size()<<": ";
+        vector<string> all_results = mVertices[current].get_all_adj_availible();
+        std::sort(all_results.begin(), all_results.end());
+        auto iter = std::unique(all_results.begin(), all_results.end());
+        all_results.erase(iter, all_results.end()); 
+        for (auto i : all_results){
+            std::cout<<i<<", ";
+        }
+        std::cout<<"\nALL ADJ SZ "<<mVertices[current].adj_list_size()<<": ";
+        all_results.clear();
+        all_results = mVertices[current].get_adj_list();
+        std::sort(all_results.begin(), all_results.end());
+        iter = std::unique(all_results.begin(), all_results.end());
+        all_results.erase(iter, all_results.end()); 
+        for (auto i : all_results){
+            std::cout<<i<<", ";
+        }
+        /**std::cout<<"PATH LEN ADJ SZ "<<mVertices[current].get_all_path_len_adj().size()<<": ";
+        for (auto i : mVertices[current].get_all_path_len_adj()){
+            std::cout<<i<<", ";
+        }*/
         std::cout<<"\nendpoint flag = "<<mVertices[current].get_endpoint();
         std::cout<<"\nkmer occurances = "<<mVertices[current].get_kmer_occurrences();
         std::cout<<"\navail adj list size = "<<mVertices[current].adj_availible_size();

@@ -280,6 +280,7 @@ public:
 
     void append_adj_availible(vector<string> val) { 
         for(auto i : val) {
+            ///////// there are some blank i's at this point
             mAvailableAdj.push_back(i);
         }
     }
@@ -319,6 +320,15 @@ public:
         auto iter = mPathLenAdjList.find(std::numeric_limits<int>::max());
         if(iter != mPathLenAdjList.end()) {
             mPathLenAdjList.erase(iter);
+        }
+    }
+
+        vector<string> get_all_path_len_adj() {
+        vector<string> results;
+        for (auto i : mPathLenAdjList) {
+            for (auto element : i.second) {
+                results.push_back(element);
+            }
         }
     }
     

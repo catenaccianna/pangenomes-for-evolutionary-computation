@@ -936,7 +936,7 @@ int main() {
     // TestMABEBitsOrg();
     TestMABEVirtualCPU();
     // TestLoops();
-    // TestPathLength();
-    // TestEdges();
+    TestPathLength();
+    TestEdges();
 
 }
