@@ -522,10 +522,10 @@ public:
      * @return 1 if there is for sure no endpoint yet
      *         0 if there is a possible endpoint
     */
-    int make_adj_availible(DBGraphValue & node, int current_len, int parent_len){
+    int make_adj_availible(DBGraphValue & node, int current_len, int parent_len, int threshold = 0){
         node.clear_adj_availible();
         if ( current_len < parent_len ) { // if we're underneath the target length, and the path is not too short, add it
-            node.not_too_short(current_len, parent_len); // only the not too short ones
+            node.not_too_short(current_len, parent_len, threshold); // only the not too short ones
             std::cout<<"OPTION 1 \n";
             if(node.adj_availible_size() == 0) {
                 std::cout<<"OPTION 3 \n";
