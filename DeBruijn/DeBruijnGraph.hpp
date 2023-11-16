@@ -161,7 +161,6 @@ private:
         mVertices[input].set_out_head(input);
         mVertices[input].set_in_head(past);
         mVertices[input].set_in_tail(input);
-        set_path_length(input, 0, "");
         update_loops(); 
     }
 
@@ -359,7 +358,6 @@ public:
         mVertices[sequence].set_out_head(sequence);
         mVertices[sequence].set_in_head(past);
         mVertices[sequence].set_in_tail(sequence);
-        set_path_length(sequence, 0, "");
         update_loops();
     }
 
@@ -575,7 +573,7 @@ public:
                 std::cout<<"CURRENT:";  info(current);
                 index = random.GetUInt ( mVertices[current].adj_availible_size() );  // Choose random path down graph
                 next = mVertices[current].get_adj_availible(index);
-                std::cout<<"\nINDEX "<<index<<"\n";
+                ////std::cout<<"\nINDEX "<<index<<"\n";
                 std::cout<<"NEXT "<<next<<"\n";
                 path += next.substr(2,1);
                 current = next;
