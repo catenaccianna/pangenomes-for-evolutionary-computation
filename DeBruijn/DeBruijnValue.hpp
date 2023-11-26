@@ -240,7 +240,8 @@ public:
     string get_adj_availible(int index) { 
         std::set<string>::iterator it = mAvailableAdj.begin();
         advance(it, index);
-        return *it; }
+        return *it; 
+    }
 
     /**
      * Get all availible adjacencies

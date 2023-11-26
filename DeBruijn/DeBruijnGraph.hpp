@@ -22,11 +22,12 @@
 #include <tuple>
 #include <queue>
 #include <limits>
+#include <set>
 
 using std::string; using std::vector; using std::map;
 using std::cout; using std::endl; using std::tuple;
 using std::get; using std::make_tuple; using std::count;
-using std::queue;
+using std::queue; using std::set;
 
 class DeBruijnGraph {
 public:
@@ -48,6 +49,9 @@ private:
 
     /// Map of Debruijn vertex objects to their values/data
     map<string, DeBruijnValue> mVertices;
+
+    /// Vector of all beginning verticies
+    set<string> mStarts;
 
     std::ofstream file;
 
@@ -107,6 +111,7 @@ private:
         mSeqSize ++;
         mSequenceLength = input.size();
         mKmerLength = kmer_length;
+        mStarts.insert(input.substr(0, kmer_length));
         string past = "";
         //if the graph is one vertex long:
         if(int(input.length()) == kmer_length){
@@ -212,7 +217,7 @@ public:
         reset_edge_flags();
         reset_vertex_flags();
         reset_loops();          // completely reset loop flags in case anything has changed
-        loop_detection(mVertices.begin()->first);
+        loop_detection(*mStarts.begin());
         reset_vertex_flags();
         reset_edge_flags();
     }
@@ -305,6 +310,7 @@ public:
         string past = "";
         // if the beginning string is not in the graph, add a new beginning vertex
         if(mVertices.count(sequence.substr(0, mKmerLength)) <= 0){
+            mStarts.insert(sequence.substr(0, mKmerLength));
             set_empty_vertex(sequence.substr(0, mKmerLength));
             mSize++;
         }
@@ -341,6 +347,10 @@ private:
     void remove(string kmer){
         mSize--;
         mVertices.erase(kmer);
+        auto iter = mStarts.find(kmer);
+        if(iter != mStarts.end()) {
+            mStarts.erase(iter);
+        }
         for(auto i : mVertices) {
             i.second.remove_path_len(kmer);
         }
@@ -404,7 +414,7 @@ public:
                 remove(sequence);
             }
         }
-        update_path_lens(mVertices.begin()->first);
+        update_path_lens(*mStarts.begin());
         update_loops();
         //else{ throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" ); }
     }
@@ -589,7 +599,7 @@ public:
         else{
             // because this is a directed graph, I want to make sure each path start is covered
             // therefore, I will put all the beginnings into my queue to start traversal
-            vector<string> path = mStarts;
+            set<string> path = mStarts;
             string current = "";
             while(path.size() > 0){
                 current = path.back();
@@ -698,18 +708,12 @@ public:
         }
         std::cout<<"\nAVAIL ADJ SZ "<<mVertices[current].adj_availible_size()<<": ";
         set<string> all_results = mVertices[current].get_all_adj_availible();
-        std::sort(all_results.begin(), all_results.end());
-        auto iter = std::unique(all_results.begin(), all_results.end());
-        all_results.erase(iter, all_results.end()); 
         for (auto i : all_results){
             std::cout<<i<<", ";
         }
         std::cout<<"\nALL ADJ SZ "<<mVertices[current].adj_list_size()<<": ";
         all_results.clear();
         all_results = mVertices[current].get_adj_list();
-        std::sort(all_results.begin(), all_results.end());
-        iter = std::unique(all_results.begin(), all_results.end());
-        all_results.erase(iter, all_results.end()); 
         for (auto i : all_results){
             std::cout<<i<<", ";
         }
