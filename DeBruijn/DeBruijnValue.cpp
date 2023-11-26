@@ -1,87 +1,184 @@
 /**
  * @file DeBruijnValue.cpp
  * @author Anna Catenacci
+ * 
+ * Unit tests to make the DeBruijn Values (vertex / nodes) and DeBruijn Edges work corrently.
+ * 
+ * To run this file, type "make assert_value" into your command line terminal.
+ * 
  */
 
 #include "DeBruijnValue.hpp"
-#include "DeBruijnGraph.hpp"
+#include "DeBruijnEdge.hpp"
 #define CATCH_CONFIG_MAIN
 #include "../../../mabe/MABE2/source/third-party/empirical/third-party/Catch/single_include/catch2/catch.hpp"
 
-TEST_CASE("DeBruijnValue__variable-values", "[DeBruijnValue.hpp]")
+TEST_CASE("DeBruijnValue__empty", "[DeBruijnValue.hpp]")
 {
     {
         CHECK( 1 == 1 );
     }
 }
 
+TEST_CASE("DeBruijnValue__flags", "[DeBruijnValue.hpp]")
+{
+    {
+        // initialize a single node
+        DeBruijnValue a;
+        CHECK(a.get_endpoint() == 0);
+        CHECK(a.get_kmer_occurrences() == 0);
+        CHECK(a.get_loop_flag() == 0);
+        CHECK(a.get_visitor_flag() == 0);
+
+        // increment values
+        a.increment_endpoint();
+        a.increment_kmer_occurrences();
+        a.set_loop_flag(1);
+        a.increment_visitor_flag();
+
+        CHECK(a.get_endpoint() == 1);
+        CHECK(a.get_kmer_occurrences() == 1);
+        CHECK(a.get_loop_flag() == 1);
+        CHECK(a.get_visitor_flag() == 1);
+
+        // decrement values
+        a.decrement_endpoint();
+        a.decrement_kmer_occurrences();
+        a.set_loop_flag(0);
+        a.change_visitor_flag(0);
+
+        CHECK(a.get_endpoint() == 0);
+        CHECK(a.get_kmer_occurrences() == 0);
+        CHECK(a.get_loop_flag() == 0);
+        CHECK(a.get_visitor_flag() == 0);
+
+    }
+}
+
 TEST_CASE("DeBruijnValue__adj-lists", "[DeBruijnValue.hpp]")
 {
     {
-        DeBruijnGraph pangenome_graph;
+        DeBruijnValue a;
 
-        pangenome_graph.add_sequence("1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110");
-        pangenome_graph.add_sequence("1111111110111100011110100010101010101110010011100111010000101110001101010010110010010111110111100011");
-        pangenome_graph.add_sequence("1101100110101001001111110000100010110001101010100100101100010000111001101001011000011010111001000001");
-        pangenome_graph.add_sequence("1001010100101010100101111100111001101100000101110110001010010011110110110010111111111111101101101111");
-        pangenome_graph.add_sequence("1110001001111100101011001011011100101000101000000000011110100101001100010101000000001010111011101010");
-        pangenome_graph.add_sequence("0101000101001000001011010110101010011101000100101100000111000100000010010010011111101011101001010011");
-        pangenome_graph.add_sequence("0100011001111111010100010011000100001101101001100011011001101101111001000110001110110000110101111011");
-        pangenome_graph.add_sequence("1100000000000101101010001010000101001000011011001111110100110101101011101010101101100101010110100111");
-        pangenome_graph.add_sequence("1101011111110101101010010011110101001011010101100011000000001011111110110101100110110111010101010111");
-        pangenome_graph.add_sequence("1010110110001010000011000111000101101101100101010001101111000111001000011010101111010110110000001010");
-        pangenome_graph.add_sequence("1100010101110001101101101000010000001000101100011011001110101001111001101011101101011000111110110011");
-        pangenome_graph.add_sequence("0100100111000010110000001000001101101111001100011100110100001000010001000111010100001111000010010010");
-        pangenome_graph.add_sequence("1110010111001111101100101100001100001111110110000110101111011010100001010110111001111111101000100101");
-        pangenome_graph.add_sequence("0010010100110000100111011110111101011101011110110100001101100111001001101000101110110001100001100111");
-        pangenome_graph.add_sequence("0100010111101101011011101011101101110111001110010010000100111101001011010110000110101111111110111000");
-        pangenome_graph.add_sequence("1100000011110100111100001010101100010100111010010001100111010110110011011101111011110101110010001001");
-        pangenome_graph.add_sequence("0000100011100111011001101111011001111110001101000011000010001110101101100001110010101110010011100110");
-        pangenome_graph.add_sequence("0001100101100011000001111000011100010000010110111000100010101101001010101111110000001101010001000101");
-        pangenome_graph.add_sequence("0011101001110000110001111111110101011100011011101101010100101010000111111010111001001010010011110011");
-        pangenome_graph.add_sequence("0001011111111000000001000100110000110010010101111101111011011011000110110101011010000001100111011001");
+        CHECK(a.adj_list_size() == 0);
+        CHECK(a.adj_availible_size() == 0);
 
-        // CHECK SETTING OF AVAILIBLE ADJ LIST LOGIC
-        pangenome_graph.set_avail_adj_list("000");
-        pangenome_graph.set_avail_adj_list("001");
-        pangenome_graph.set_avail_adj_list("010");
-        pangenome_graph.set_avail_adj_list("011");
-        pangenome_graph.set_avail_adj_list("100");
-        pangenome_graph.set_avail_adj_list("101");
-        pangenome_graph.set_avail_adj_list("110");
-        pangenome_graph.set_avail_adj_list("111");
+        // add adjacencies into a single node
+        a.add_to_adj_list("000");
+        a.add_to_adj_list("001");
+        a.add_to_adj_list("010");
+        a.add_to_adj_list("011");
+        a.add_to_adj_list("100");
+        a.add_to_adj_list("101");
+        a.add_to_adj_list("110");
+        a.add_to_adj_list("111");
+        CHECK(a.adj_availible_size() == 0);
+        CHECK(a.adj_list_size() == 8);
 
-        CHECK(pangenome_graph.get_value("000").adj_availible_size()==pangenome_graph.get_value("000").adj_list_size());
-        CHECK(pangenome_graph.get_value("001").adj_availible_size()==pangenome_graph.get_value("001").adj_list_size());
-        CHECK(pangenome_graph.get_value("010").adj_availible_size()==pangenome_graph.get_value("010").adj_list_size());
-        CHECK(pangenome_graph.get_value("011").adj_availible_size()==pangenome_graph.get_value("011").adj_list_size());
-        CHECK(pangenome_graph.get_value("100").adj_availible_size()==pangenome_graph.get_value("100").adj_list_size());
-        CHECK(pangenome_graph.get_value("101").adj_availible_size()==pangenome_graph.get_value("101").adj_list_size());
-        CHECK(pangenome_graph.get_value("110").adj_availible_size()==pangenome_graph.get_value("110").adj_list_size());
-        CHECK(pangenome_graph.get_value("111").adj_availible_size()==pangenome_graph.get_value("111").adj_list_size());
+        // assign path lengths
+        a.append_path_len(1, "000");
+        a.append_path_len(2, "001");
+        a.append_path_len(3, "010"); 
+        a.append_path_len(4, "011");
+        a.append_path_len(5, "100");
+        a.append_path_len(6, "101");
+        a.append_path_len(7, "110");
+        a.append_path_len(std::numeric_limits<int>::max(), "111");
+        CHECK(a.get_all_paths().size() == 8);
 
-        // CHECK GETTING OF AVAILIBLE ADJ LIST LOGIC
-        for (auto vertex : pangenome_graph.get_all_vertices()){
-            for (int i = 0; i < pangenome_graph.get_value(vertex).adj_availible_size(); i++){
-                CHECK(pangenome_graph.get_value(vertex).get_adj_availible(i)==pangenome_graph.get_value(vertex).get_adj_availible(i));
-            }
-        }
+        // remove some adj.s from the list
+        a.remove_from_adj_list("110");
+        a.remove_from_adj_list("101");
+        a.remove_path_len("110");
+        a.remove_path_len("101");
+        CHECK(a.adj_list_size() == 6);
+        CHECK(a.get_all_paths().size() == 6);
 
-        // CHECK REMOVING OF AVAILIBLE ADJ LIST LOGIC
+        // make some adjacencies availible
+        a.clear_adj_availible();
+        a.append_adj_availible("000");
+        CHECK(a.adj_availible_size() == 1);
 
-        //void remove_avail_adj_list(string kmer, string adj) { mVertices[kmer].remove_adj_availible(adj); }
-        //mVertices[current].remove_adj_availible(next);
+        vector<string> vec({"000", "001"});
+        a.append_adj_availible(vec);
+        CHECK(a.adj_availible_size() == 2);
 
-        pangenome_graph.remove_avail_adj_list("000", 0);
-        pangenome_graph.remove_avail_adj_list("001", 0);
-        pangenome_graph.remove_avail_adj_list("010", 0);
-        pangenome_graph.remove_avail_adj_list("011", 0);
+        a.clear_adj_availible();
+        CHECK(a.adj_availible_size() == 0);
 
-        CHECK(pangenome_graph.get_value("000").adj_availible_size()==pangenome_graph.get_value("000").adj_list_size()-1);
-        CHECK(pangenome_graph.get_value("001").adj_availible_size()==pangenome_graph.get_value("001").adj_list_size()-1);
-        CHECK(pangenome_graph.get_value("010").adj_availible_size()==pangenome_graph.get_value("010").adj_list_size()-1);
-        CHECK(pangenome_graph.get_value("011").adj_availible_size()==pangenome_graph.get_value("011").adj_list_size()-1);
+        // make all adjacencies availible
+        a.make_all_adj_availible();
+        CHECK(a.get_all_adj_availible() == a.get_adj_list());
+        CHECK(a.adj_availible_size() == 6);
 
-        CHECK( 1 == 1 );
+        // get desired output from availible adj.s list
+        tuple<int, vector<string>> min_adj = a.get_min_length();
+        CHECK(std::get<0>(min_adj) == 1);
+        CHECK(std::get<1>(min_adj).size() == 1);
+        CHECK(std::get<1>(min_adj)[0] == "000");
+
+        tuple<int, vector<string>> max_adj = a.get_max_length();
+        CHECK(std::get<0>(max_adj) == std::numeric_limits<int>::max());
+        CHECK(std::get<1>(max_adj).size() == 1);
+        CHECK(std::get<1>(max_adj)[0] == "111");
+        CHECK(a.adj_availible_size() == 6);
+
+        a.clear_adj_availible();
+        a.not_too_short(6, 8);
+        CHECK(a.adj_availible_size() == 5);
+        std::set<string> s{"001", "010", "011", "100", "111"};
+        CHECK(a.get_all_adj_availible() == s);
+
+        a.clear_adj_availible();
+        a.not_too_short(9, 8);
+        CHECK(a.adj_availible_size() == 6);
+        s = {"000", "001", "010", "011", "100", "111"};
+        CHECK(a.get_all_adj_availible() == s);
+
+        a.clear_adj_availible();
+        a.not_too_short(6, 8, 1);
+        CHECK(a.adj_availible_size() == 6);
+        s = {"000", "001", "010", "011", "100", "111"};
+        CHECK(a.get_all_adj_availible() == s);
+
+        a.clear_adj_availible();
+        a.non_inf_paths();
+        CHECK(a.adj_availible_size() == 5);
+        s = {"000", "001", "010", "011", "100"};
+        CHECK(a.get_all_adj_availible() == s);
+        CHECK(a.adj_list_size() == 6);
+        CHECK(a.get_all_paths().size() == 6);
+
+        a.remove_inf_path();
+        max_adj = a.get_max_length();
+        CHECK(std::get<0>(max_adj) == 5);
+        CHECK(std::get<1>(max_adj).size() == 1);
+        CHECK(std::get<1>(max_adj)[0] == "100");
+        CHECK(a.get_all_paths().size() == 5);
+
+        // remove adjacencies from the list
+        a.remove_from_adj_list("111");
+        CHECK(a.adj_list_size() == 5);
+        s = {"000", "001", "010", "011", "100"};
+        CHECK(a.get_adj_list() == s);
+        a.remove_adj_availible("000", 0); // why does this have a bool???
+        CHECK(a.adj_availible_size() == 4);
+        s = {"001", "010", "011", "100"};
+        CHECK(a.get_all_adj_availible() == s);
+        
+    }
+}
+// organize vertex file in the way this test is organized, not by getters and setters but by topic
+// in the getters for adj avail based on path len, some return stuff and some just set adj_avail_list -- are these the way we want?
+// write out all function names by group and think of better ones
+// make sure we clear_adj_availible(); before we assign adj list in main
+// i don't think you can do math with inf based on these test cases with not_too_short, you just have to compare it to inf
+
+TEST_CASE("DeBruijnValue__edges", "[DeBruijnValue.hpp]")
+{
+    {
+        // initialize an empty node
+        DeBruijnValue a;
+        DeBruijnEdge in0;
     }
 }

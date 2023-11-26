@@ -96,19 +96,18 @@ public:
      * Get the visitor flag object
      * @return true if this vertex has already been visited in a traversal
      */
-    int get_visits(){ return this->mVisits; }
+    int get_visits(){ return mVisits; }
 
     /**
      * Set visitor flag
      * @param value true if visited, false if not
      */
-    void change_visitor_flag(int value) { this->mVisits = value; }
+    void increment_edge_visitor_flag() { mVisits+=1; }
 
     /**
-     * Set visitor flag
-     * @param value true if visited, false if not
+     * Set visitor flag to 0
      */
-    void increment_visitor_flag() { this->mVisits+=1; }
+    void clear_edge_visitor_flag() { mVisits = 0; }
 
     void show_edge() { std::cout<<this<<"\n";}
 

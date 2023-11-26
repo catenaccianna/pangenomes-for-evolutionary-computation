@@ -47,16 +47,7 @@ private:
     int mSequenceLength = 0;
 
     /// Map of Debruijn vertex objects to their values/data
-    map<string, DBGraphValue> mVertices;
-
-    /// Vector of all Vertices the map contains
-    // (will this variable be necessary to keep around if I already have a flag attribute in DBValue?)
-    vector<string> mBranchedVertices;
-
-    /// Vector of all beginning verticies
-    vector<string> mStarts;
-
-    //vector<tuple<string, string>> mEdges;
+    map<string, DeBruijnValue> mVertices;
 
     std::ofstream file;
 
@@ -77,7 +68,7 @@ private:
      * @param new_node true if there's nothing in the adj list, and min and max length should both be set to this length
      */
     void set_path_length(string v, int path_length, string adj) {
-        mVertices[v].append_path_len_adj_list(path_length, adj);
+        mVertices[v].append_path_len(path_length, adj);
     }
 
     /**
@@ -92,14 +83,6 @@ private:
         mVertices[start_v].set_in_tail(start_v);
         mVertices[start_v].set_out_head(start_v);
         mVertices[start_v].set_out_tail(end_v);
-        if(initial_adj_size > 0){ //if the adj_list was not empty, AND new adj_list size > old_adj_list.size, then
-            if(initial_adj_size < mVertices[start_v].adj_list_size()){ //this implies the vertex is a branch point
-                mVertices[start_v].set_branch(true);
-                mBranchedVertices.push_back(start_v);
-                vector<string>::iterator it;
-                mBranchedVertices.erase( std::unique( mBranchedVertices.begin(), mBranchedVertices.end() ), mBranchedVertices.end() );
-            }
-        }        
     }
 
     /**
@@ -124,7 +107,6 @@ private:
         mSeqSize ++;
         mSequenceLength = input.size();
         mKmerLength = kmer_length;
-        mStarts.push_back(input.substr(0, kmer_length));
         string past = "";
         //if the graph is one vertex long:
         if(int(input.length()) == kmer_length){
@@ -145,8 +127,6 @@ private:
             }
             add_edge(past, input.substr(0, kmer_length), input.substr(1, kmer_length));
             mVertices[input.substr(0, kmer_length)].increment_kmer_occurrences();
-            // change the set_empty_bool here so we don't run into endpoint troubles later.
-            mVertices[input.substr(0, kmer_length)].set_empty_bool(0);
             set_empty_vertex(input.substr(1, kmer_length));
             // min/max path length from this node
             int path_len = input.size() - 3;
@@ -155,7 +135,6 @@ private:
             past = input.substr(0, mKmerLength);
             input = input.substr(1, input.length()-1);
         }
-        mVertices[input].set_empty_bool(1);
         mVertices[input].increment_endpoint();
         mVertices[input].increment_kmer_occurrences();
         mVertices[input].set_out_head(input);
@@ -233,7 +212,7 @@ public:
         reset_edge_flags();
         reset_vertex_flags();
         reset_loops();          // completely reset loop flags in case anything has changed
-        loop_detection(mStarts[0]);
+        loop_detection(mVertices.begin()->first);
         reset_vertex_flags();
         reset_edge_flags();
     }
@@ -261,7 +240,7 @@ public:
     void infinity_length(string node) {
         queue<pair<string, string>> Q_parent;
         DeBruijnEdge & edge = mVertices[node].get_in_edge();
-        edge.increment_visitor_flag();
+        edge.increment_edge_visitor_flag();
         for (auto i : edge.get_head() ){
             Q_parent.push(make_pair(i, node));
         }
@@ -273,12 +252,12 @@ public:
             Q_parent.pop();
             DeBruijnEdge & edge = mVertices[current].get_in_edge();
             if(edge.get_visits() == 0) {
-                mVertices[current].append_path_len_adj_list(std::numeric_limits<int>::max(), parent);
+                mVertices[current].append_path_len(std::numeric_limits<int>::max(), parent);
                 for (auto i : edge.get_head() ){
                     Q_parent.push(make_pair(i, current));
                 }
             }
-            edge.increment_visitor_flag();
+            edge.increment_edge_visitor_flag();
         }
     }
 
@@ -326,7 +305,6 @@ public:
         string past = "";
         // if the beginning string is not in the graph, add a new beginning vertex
         if(mVertices.count(sequence.substr(0, mKmerLength)) <= 0){
-            mStarts.push_back(sequence.substr(0, mKmerLength));
             set_empty_vertex(sequence.substr(0, mKmerLength));
             mSize++;
         }
@@ -339,7 +317,6 @@ public:
             int path_len = sequence.size() - 3;
             set_path_length(sequence.substr(0, mKmerLength), path_len, sequence.substr(1, mKmerLength));
             add_edge(past, sequence.substr(0, mKmerLength), sequence.substr(1, mKmerLength));
-            mVertices[sequence.substr(0, mKmerLength)].set_empty_bool(0); //set that we know this adj_list has something in it
             mVertices[sequence.substr(0, mKmerLength)].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
             //if future vertex is not already in map, set it as an empty vertex
             if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0 && sequence.length() != (mKmerLength)){
@@ -348,11 +325,6 @@ public:
             past = sequence.substr(0, mKmerLength);
             sequence = sequence.substr(1, sequence.length()-1); //update our kmer and repeat!
         }
-        //flag that this node's adj_list as empty only if we haven't seen it before (value of 2)
-        //if it has previously been flagged with a value of 0, we know it has something in the adj_list
-        if(mVertices[sequence].get_empty_bool() == 2){
-            mVertices[sequence].set_empty_bool(1);
-        }        
         mVertices[sequence].increment_endpoint(); //increment number of times this kmer is an endpoint of a seq in the pangenome
         mVertices[sequence].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
         mVertices[sequence].set_out_head(sequence);
@@ -369,10 +341,8 @@ private:
     void remove(string kmer){
         mSize--;
         mVertices.erase(kmer);
-        mStarts.erase(std::remove(mStarts.begin(), mStarts.end(), kmer), mStarts.end());
-        mBranchedVertices.erase(std::remove(mBranchedVertices.begin(), mBranchedVertices.end(), kmer), mBranchedVertices.end());
         for(auto i : mVertices) {
-            i.second.remove_path_len_adj_list(kmer);
+            i.second.remove_path_len(kmer);
         }
     }
 
@@ -414,13 +384,14 @@ public:
             while(int(sequence.size()) > mKmerLength){
                 current = sequence.substr(0,mKmerLength);
                 next = sequence.substr(1,mKmerLength);
-                current_appears_once = mVertices[current].get_kmer_occurrences() <= 1;
-                next_appears_once = mVertices[next].get_kmer_occurrences() <= 1;
                 mVertices[current].decrement_kmer_occurrences();
+                current_appears_once = mVertices[current].get_kmer_occurrences() <= 0;
+                next_appears_once = mVertices[next].get_kmer_occurrences() <= 0;
                 // if next is being completely removed, remove it from all adj lists, or when current is being removed 
                 //if current kmer was only in 1 seq in the pangenome, delete it from mVerticies
                 if (current_appears_once){
-                    mVertices[current].remove_from_adj_list(next);
+                    mVertices[current].remove_from_adj_list(next); //we should be removing all copies of this kmer if it's the only occurance in the graph, but we may be removing only one string in the vector
+                    // switch all adj lists to a set
                     mVertices[current].get_out_edge().remove_tail(next);
                     mVertices[next].get_in_edge().remove_head(current);
                     remove(current);
@@ -433,7 +404,7 @@ public:
                 remove(sequence);
             }
         }
-        update_path_lens(mStarts[0]);
+        update_path_lens(mVertices.begin()->first);
         update_loops();
         //else{ throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" ); }
     }
@@ -450,7 +421,9 @@ public:
         // this will work while all sequences are the same length (looks like this is the case in MABE)
         while (int(path.size()) < mSequenceLength){
             // generate index using the empirical random library when we have empirical hooked up
-            current = mVertices[current].get_adj_list()[random.GetUInt(mVertices[current].adj_list_size()-1)]; ///random seed here?!
+            std::set<string>::iterator it = mVertices[current].get_adj_list().begin();
+            advance(it, random.GetUInt(mVertices[current].adj_list_size()-1));
+            current = *it; ///random seed here?!
             path+= current.substr(2,1);
         }
         return path;
@@ -522,10 +495,10 @@ public:
      * @return 1 if there is for sure no endpoint yet
      *         0 if there is a possible endpoint
     */
-    int make_adj_availible(DBGraphValue & node, int current_len, int parent_len, int threshold = 0){
+    int make_adj_availible(DeBruijnValue & node, int current_len, int parent_len, int threshold = 0){
         node.clear_adj_availible();
         if ( current_len < parent_len ) { // if we're underneath the target length, and the path is not too short, add it
-            node.not_too_short(current_len, parent_len, threshold); // only the not too short ones
+            node.not_too_short(current_len, parent_len, 0); // only the not too short ones
             std::cout<<"OPTION 1 \n";
             if(node.adj_availible_size() == 0) {
                 std::cout<<"OPTION 3 \n";
@@ -563,11 +536,20 @@ public:
         if ( random.P ( probability ) ) { // If P() then we will modify this genome, else do nothing
             while ( true ) {
                 if ( mVertices[current].adj_list_size() < 1 ){ // if we have no possible adjacencies, we are at an endpoint with no options (besides turning around)
+                    // if path length is 0, return original genome. maybe take this out later when there are no more errors?
+                    std::cout<<"Path length is "<<path.length()<<" but adj list "<<mVertices[current].adj_list_size()<<"\n";
+                    if (path.length() == 0) {  
+                        std::cout<<"Path Length = 0, so returning original organism. No crossover today.\n";
+                        path = organism;
+                    }
                     break;
                 }
                 int flag = make_adj_availible(mVertices[current], path.length(), organism.length());
-                if ( flag == 0 && mVertices[current].get_endpoint() > 0){ // we are traveling down the shortest path possible
-                    std::cout<<"GOING TO BREAK "<<current<<"\n";
+                if ( flag == 0 && mVertices[current].get_endpoint() > 0 && path.length() > 0){ // we are traveling down the shortest path possible
+                    if (path.length() == 0) {  
+                        std::cout<<"Path Length = 0, so returning original organism. No crossover today.\n";
+                        path = organism;
+                    }
                     break;
                 }
                 std::cout<<"CURRENT:";  info(current);
@@ -647,8 +629,8 @@ public:
      */
     void reset_edge_flags() {
         for (auto & element : mVertices) {
-            element.second.get_in_edge().change_visitor_flag(0);
-            element.second.get_out_edge().change_visitor_flag(0);
+            element.second.get_in_edge().clear_edge_visitor_flag();
+            element.second.get_out_edge().clear_edge_visitor_flag();
         }
     }
 
@@ -658,7 +640,7 @@ public:
     void reset_loops() {
         for (auto & element : mVertices) {
             element.second.set_loop_flag(0);
-            element.second.remove_inf_path_len();
+            element.second.remove_inf_path();
         }
     }
 
@@ -670,8 +652,8 @@ public:
         depth_first_traversal( [&] (string vertex) { 
             cout<<vertex<<" ";
             // if there is one, non-empty vertex in the list, print it
-            if (mVertices[vertex].get_empty_bool()==0 && mVertices[vertex].adj_list_size() == 1){
-                cout<<" -> "<<mVertices[vertex].get_adj_list()[0];
+            if (mVertices[vertex].adj_list_size() == 1){
+                cout<<" -> "<< *mVertices[vertex].get_adj_list().begin();
             }
             // if the adj_list has more than one node in it, print them
             else if (mVertices[vertex].adj_list_size() >= 1){
@@ -715,7 +697,7 @@ public:
             std::cout<<i<<", ";
         }
         std::cout<<"\nAVAIL ADJ SZ "<<mVertices[current].adj_availible_size()<<": ";
-        vector<string> all_results = mVertices[current].get_all_adj_availible();
+        set<string> all_results = mVertices[current].get_all_adj_availible();
         std::sort(all_results.begin(), all_results.end());
         auto iter = std::unique(all_results.begin(), all_results.end());
         all_results.erase(iter, all_results.end()); 
@@ -731,19 +713,13 @@ public:
         for (auto i : all_results){
             std::cout<<i<<", ";
         }
-        /**std::cout<<"PATH LEN ADJ SZ "<<mVertices[current].get_all_path_len_adj().size()<<": ";
-        for (auto i : mVertices[current].get_all_path_len_adj()){
-            std::cout<<i<<", ";
-        }*/
         std::cout<<"\nendpoint flag = "<<mVertices[current].get_endpoint();
         std::cout<<"\nkmer occurances = "<<mVertices[current].get_kmer_occurrences();
         std::cout<<"\navail adj list size = "<<mVertices[current].adj_availible_size();
-        std::cout<<"\nempty bool = "<<mVertices[current].get_empty_bool();
         std::cout<<"\nmax len = "<<get<0>(mVertices[current].get_max_length());
-        std::cout<<"\nmin len = "<<get<0>(mVertices[current].get_min_length());
+        std::cout<<" min len = "<<get<0>(mVertices[current].get_min_length());
         std::cout<<"\nloop = "<<mVertices[current].get_loop_flag();
-        std::cout<<"\nbranch = "<<mVertices[current].get_branch();
-        std::cout<<"\nvisits = "<<mVertices[current].get_visitor_flag();
+        std::cout<<" visits = "<<mVertices[current].get_visitor_flag();
         std::cout<<std::endl;
         std::cout<<std::endl;
         //display();
@@ -809,7 +785,7 @@ public:
      * @param to current adjacency of current vertex
      * @return tuple<int, int> current and next sequence count
      */
-    tuple<int, int> kmer_count(int count, string from, string to){
+    /*tuple<int, int> kmer_count(int count, string from, string to){
         int current = 0, next = 0;
         for(auto vertex : mVertices){
             for(auto adj : mVertices[vertex.first].get_adj_list()){
@@ -827,39 +803,11 @@ public:
             return std::make_tuple(current, -1);
         }
         return std::make_tuple(-1, -1); // return invalid tuple if no other case is matched
+    }*/
+    tuple<int, int> kmer_count(int count, string from, string to){
+        return std::make_tuple(mVertices[from].get_kmer_occurrences(), mVertices[to].get_kmer_occurrences());
     }
 
-    /**
-     * Helper function for MABE2 PangenomeAnalysis module. 
-     * Added as a lambda to create a column in a Datafile that the module will produce.
-     * @param count sequence count of current vertex
-     * @param from kmer ID of current vertex
-     * @param to current adjacency of current vertex
-     * @return tuple<int, int> current and next sequence count
-     * 
-     * @note Do we need a count of edges as well as how frequently a kmer appears in the graph?
-     *       Currently do not have a count for specific edges of From to To, only count of From
-     *       How would we even represent this though? if From has multiple edges
-     */
-    tuple<int, int> edge_count(int count, string from, string to){
-        int current = 0, next = 0;
-        for(auto vertex : mVertices){
-            for(auto adj : mVertices[vertex.first].get_adj_list()){
-                if(current > 0){ // record the next count
-                    //next = mVertices[vertex.first].get_kmer_occurrences();
-                    return std::make_tuple(current, next);
-                }
-                if(mVertices[vertex.first].get_kmer_occurrences()==count && mVertices[vertex.first].get_visitor_flag()<mVertices[vertex.first].adj_list_size() && vertex.first==from && adj==to){ // match current count
-                    //current = count;
-                    //mVertices[vertex.first].increment_visitor_flag();
-                }
-            }
-        }
-        if(current > 0){ // if we're on the last vertex of the graph, there will not be a next count
-            return std::make_tuple(current, -1);
-        }
-        return std::make_tuple(-1, -1); // return invalid tuple if no other case is matched
-    }
 
     /**
      * Helper function for MABE2 PangenomeAnalysis module. 
@@ -884,7 +832,7 @@ public:
         } 
         if(!current.empty()){ //same pattern as above
             return std::make_tuple(current, "");
-        }
+        } 
         return std::make_tuple("", "");
     }
 
@@ -900,7 +848,9 @@ public:
         if(count == -1 && from.empty()){ //if this is the last edge in the whole graph iteration
             return std::make_tuple(to, "");
         }
-        return std::make_tuple(to, mVertices[from].get_adj_list()[mVertices[from].get_visitor_flag()]);
+        std::set<string>::iterator it = mVertices[from].get_adj_list().begin();
+        advance(it, mVertices[from].get_visitor_flag());
+        return std::make_tuple(to, *it);
     }
 
 ///@remark GETTERS AND SETTERS /////////////////////////////////////////////////////////////
@@ -947,29 +897,10 @@ public:
     }
 
     /**
-     * Return vector containing vertices with more than one adjacency in graph
-     * @return vector containing branched DeBruijn vertex objects
-     */
-    vector<string> get_branch_vertices() { return mBranchedVertices; }
-
-    /**
-     * Return vector containing vertices that represent the beginning(s) of the graph
-     * @return vector containing beginning DeBruijn vertex objects
-     */
-    vector<string> get_start_vertices() { return mStarts; }
-
-    /**
-     * Given a vertex, retrun true if the vertex branches
-     * @param vertex to check
-     * @return true if the vertex has more than 2 verticies in it's adjacency list
-     */
-    bool vertex_branch_check(string vertex) { return mVertices[vertex].get_branch(); }
-
-    /**
      * Get the value associated with a vertex
      * @return Debruijn vertex value object
      */
-    DBGraphValue get_value(string vertex) { return mVertices[vertex]; }
+    DeBruijnValue get_value(string vertex) { return mVertices[vertex]; }
 
 };
 

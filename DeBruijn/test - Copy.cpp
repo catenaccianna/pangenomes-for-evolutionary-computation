@@ -4,11 +4,8 @@
  *
  * A file to visualize how the graph is supposed to work, and to try new things.
  * This is not a file for unit tests, and if you were to use this one to verify that 
- * the graph is working properly, you would have to manually look through the output.
- * See cpp files for a quick automated test to make sure the graph works properly.
- * 
- * To run this file, type "make test" into the command line terminal.
- * 
+ * the graph is working properly, you would manualy have to go through it yourself.
+ * See unit_test.cpp for a quick automated test to make sure the graph works properly.
  */
 
 
