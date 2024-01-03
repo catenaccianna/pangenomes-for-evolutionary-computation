@@ -35,7 +35,7 @@ private:
 
     /// Adjacency list with path lengths attached
     /// all possible path langths to all the adjs
-    map<int, vector<string>> mPathLenAdjList = {};
+    map<int, set<string>> mPathLenAdjList = {};
     // vector of a struct (containing kmer and count) or a pair (of the same thing)
 
     /// Adjacencies availible to use in genome modification
@@ -257,7 +257,7 @@ public:
 
     void append_adj_availible(string val) { mAvailableAdj.insert(val); }
 
-    void append_adj_availible(vector<string> val) { 
+    void append_adj_availible(set<string> val) { 
         for(auto i : val) {
             ///////// there are some blank i's at this point
             mAvailableAdj.insert(i);
@@ -280,15 +280,15 @@ public:
     void remove_adj_availible(string val, bool still_an_end=0) { mAvailableAdj.erase(val); }
 
     void append_path_len(int len, string adj) {
-        mPathLenAdjList[len].push_back(adj);
+        mPathLenAdjList[len].insert(adj);
     }
 
     // recursive function to update path length container for every predecessor node -- call on predeccessor that we get through an edge or some way similar
     void remove_path_len(string adj) {
-        vector<string> lists;
+        set<string> lists;
         for (auto it = mPathLenAdjList.begin(); it != mPathLenAdjList.end();) {
             lists = it->second;
-            lists.erase(std::remove(lists.begin(), lists.end(), adj), lists.end());
+            lists.erase(adj);
             if (lists.size() < 1) {
                 it = mPathLenAdjList.erase(it);
             }
@@ -304,17 +304,25 @@ public:
         }
     }
 
-    vector<string> get_all_paths() {
-        vector<string> results;
+    set<string> get_all_paths() {
+        set<string> results;
         for (auto i : mPathLenAdjList) {
             for (auto element : i.second) {
-                results.push_back(element);
+                results.insert(element);
             }
         }
         return results;
     }
+
+    set<int> get_all_path_lens() {
+        set<int> results;
+        for (auto i : mPathLenAdjList) {
+            results.insert(i.first);
+        }
+        return results;
+    }
     
-    tuple<int, vector<string>> get_min_length() {
+    tuple<int, set<string>> get_min_length() {
         int minimum = std::numeric_limits<int>::max();
         for (auto iter = mPathLenAdjList.begin(); iter != mPathLenAdjList.end(); iter++) {
             if(iter->first < minimum) {
@@ -324,11 +332,16 @@ public:
         return make_tuple(minimum, mPathLenAdjList[minimum]);
     }
 
-    tuple<int, vector<string>> get_max_length() {
+    tuple<int, set<string>> get_max_length() {
         int maximum = 0;
-        for (auto iter = mPathLenAdjList.begin(); iter != mPathLenAdjList.end(); iter++) {
-            if(iter->first > maximum) {
-                maximum = iter->first;
+        if (mPathLenAdjList.find(std::numeric_limits<int>::max()) != mPathLenAdjList.end()) {
+            maximum = std::numeric_limits<int>::max();
+        }
+        else {
+            for (auto iter = mPathLenAdjList.begin(); iter != mPathLenAdjList.end(); iter++) {
+                if(iter->first > maximum) {
+                    maximum = iter->first;
+                }
             }
         }
         return make_tuple(maximum, mPathLenAdjList[maximum]);

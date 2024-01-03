@@ -83,7 +83,7 @@ void TestBranchingGraph() {
         cout <<g.get_branch_vertices()[i]<<", ";
     }
     cout<<"\n";
-    g.depth_first_traversal([&g] (string vertex) { 
+    g.traversal([&g] (string vertex) { 
         cout << vertex<< " empty bool-"<<g.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g.get_value(vertex).get_branch() << "\n"; });
 
@@ -98,7 +98,7 @@ void TestBranchingGraph() {
     }
     cout<<"\n";
 
-    g0.depth_first_traversal([&g0] (string vertex) { 
+    g0.traversal([&g0] (string vertex) { 
         cout << vertex<< " empty bool-"<<g0.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g0.get_value(vertex).get_branch() << "\n"; });
 
@@ -112,7 +112,7 @@ void TestBranchingGraph() {
         cout << g1.get_branch_vertices()[i] <<", ";
     }
     cout<<"\n";
-    g1.depth_first_traversal([&g1] (string vertex) { 
+    g1.traversal([&g1] (string vertex) { 
         cout << vertex<< " empty bool-"<<g1.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g1.get_value(vertex).get_branch() << "\n"; });
 
@@ -129,7 +129,7 @@ void TestBranchingGraph() {
         cout << g2.get_branch_vertices()[i]<<", ";
     }
     cout<<"\n";
-    g2.depth_first_traversal([&g2] (string vertex) { 
+    g2.traversal([&g2] (string vertex) { 
         cout << vertex<< " empty bool-"<<g2.get_value(vertex).get_empty_bool()<<
         " contains branch-"<<g2.get_value(vertex).get_branch() << "\n"; });
 
@@ -382,24 +382,24 @@ void TestRemoveSequence() {
     DeBruijnGraph g("0128644", 3);
     cout<<"initial size: "<< g.get_size()<<"\n";
     cout<<"initial num sequences: "<< g.get_sequence_size()<<"\n";
-    g.depth_first_traversal([&g] (string vertex) { 
+    g.traversal([&g] (string vertex) { 
        cout << vertex<< " count-"<<g.get_value(vertex).get_kmer_occurrences()<< ", "; });
     g.remove_sequence("0128644");
     cout<<"\nsize after removal: "<<g.get_size()<<"\n";
     cout<<"num sequences after removal: "<< g.get_sequence_size()<<"\n";
-    g.depth_first_traversal([&g] (string vertex) { 
+    g.traversal([&g] (string vertex) { 
         cout << vertex<< " count-"<<g.get_value(vertex).get_kmer_occurrences()<< ", "; });
 
     cout<<"\nTest a graph containing a single repetitive sequence:\n";
     DeBruijnGraph g0("01280127", 3);
     cout<<"initial size: "<< g0.get_size()<<"\n";
     cout<<"initial num sequences: "<< g.get_sequence_size()<<"\n";
-    g0.depth_first_traversal([&g0] (string vertex) { 
+    g0.traversal([&g0] (string vertex) { 
         cout << vertex<< " count-"<<g0.get_value(vertex).get_kmer_occurrences()<< ", "; });
     g0.remove_sequence("01280127");
     cout<<"\nsize after removal: "<<g0.get_size()<<"\n";
     cout<<"num sequences after removal: "<< g.get_sequence_size()<<"\n";
-    g0.depth_first_traversal([&g0] (string vertex) { 
+    g0.traversal([&g0] (string vertex) { 
         cout << vertex<< " count-"<<g0.get_value(vertex).get_kmer_occurrences()<< ", "; });
 
     cout<<"\nTest a graph containing a few sequences:\n";
@@ -407,12 +407,12 @@ void TestRemoveSequence() {
     g1.add_sequence("6543210");
     cout<<"initial size: "<< g1.get_size()<<"\n";
     cout<<"initial num sequences: "<< g.get_sequence_size()<<"\n";
-    g1.depth_first_traversal([&g1] (string vertex) { 
+    g1.traversal([&g1] (string vertex) { 
         cout << vertex<< " count-"<<g1.get_value(vertex).get_kmer_occurrences()<< ", "; });
     g1.remove_sequence("0128012");
     cout<<"\nsize after removal: "<<g1.get_size()<<"\n";
     cout<<"num sequences after removal: "<< g.get_sequence_size()<<"\n";
-    g1.depth_first_traversal([&g1] (string vertex) { 
+    g1.traversal([&g1] (string vertex) { 
         cout << vertex<< " count-"<<g1.get_value(vertex).get_kmer_occurrences()<< ", "; });
 
 ///@todo the 555555 doesn't work in display or in the removal from mVerts
@@ -422,17 +422,17 @@ void TestRemoveSequence() {
     g2.add_sequence("5555555");
     cout<<"initial size: "<< g2.get_size()<<"\n";
     cout<<"initial num sequences: "<< g.get_sequence_size()<<"\n";
-    g2.depth_first_traversal([&g2] (string vertex) { 
+    g2.traversal([&g2] (string vertex) { 
         cout << vertex<< " count-"<<g2.get_value(vertex).get_kmer_occurrences()<< ", "; });
     g2.remove_sequence("0128012");
     cout<<"\nsize after removal: "<<g2.get_size()<<"\n";
     cout<<"num sequences after removal: "<< g.get_sequence_size()<<"\n";
-    g2.depth_first_traversal([&g2] (string vertex) { 
+    g2.traversal([&g2] (string vertex) { 
         cout << vertex<< " count-"<<g2.get_value(vertex).get_kmer_occurrences()<< ", "; });
     g2.remove_sequence("5555555");
     cout<<"\nsize after 2nd removal: "<<g2.get_size()<<"\n";
     cout<<"num sequences after 2nd removal: "<< g.get_sequence_size()<<"\n";
-    g2.depth_first_traversal([&g2] (string vertex) { 
+    g2.traversal([&g2] (string vertex) { 
         cout << vertex<< " count-"<<g2.get_value(vertex).get_kmer_occurrences()<< ", "; });
     cout<<"\n";
 }
@@ -797,7 +797,7 @@ void TestLoops() {
         cout <<g.get_branch_vertices()[i]<<", ";
     }
     cout<<"\n";*/
-    //g.depth_first_traversal([&g] (string vertex) {
+    //g.traversal([&g] (string vertex) {
     //    cout << vertex<< " empty bool-"<<g.get_value(vertex).get_empty_bool()<<
     //    " contains branch-"<<g.get_value(vertex).get_branch() <<
     //    " contains loops-"<<g.get_value(vertex).get_loop_flag() << "\n"; });
@@ -808,7 +808,7 @@ void TestLoops() {
         cout <<g.get_branch_vertices()[i]<<", ";
     }
     cout<<"\n";*/
-    //g.depth_first_traversal([&g] (string vertex) { 
+    //g.traversal([&g] (string vertex) { 
     //    cout << vertex<< " empty bool-"<<g.get_value(vertex).get_empty_bool()<<
     //    " contains branch-"<<g.get_value(vertex).get_branch() <<
     //    " contains loops-"<<g.get_value(vertex).get_loop_flag() << "\n"; });
@@ -848,24 +848,24 @@ void TestPathLength() {
 
     // print min and max path length at every node with no loop
     DeBruijnGraph g(vec2, 3);
-    g.depth_first_traversal( [&g] (string vertex) { PathLenHelper(vertex, g); } );
+    g.traversal( [&g] (string vertex) { PathLenHelper(vertex, g); } );
 
     // add sequence with loop and repeat
     cout<<"\n* added loop sequence *\n";
     g.add_sequence(vec);
 
-    g.depth_first_traversal( [&] (string vertex) { PathLenHelper(vertex, g); });
+    g.traversal( [&] (string vertex) { PathLenHelper(vertex, g); });
 
     // remove sequence without loop
     cout<<"\n* remove sequence without the loop *\n";
     g.remove_sequence(vec2);
-    g.depth_first_traversal( [&g] (string vertex) { PathLenHelper(vertex, g); } );
+    g.traversal( [&g] (string vertex) { PathLenHelper(vertex, g); } );
 
     // remove squence with loop
     cout<<"\n* add seq back in and remove sequnce with loop *\n";
     g.add_sequence(vec2);
     g.remove_sequence(vec);
-    g.depth_first_traversal( [&g] (string vertex) { PathLenHelper(vertex, g); } );
+    g.traversal( [&g] (string vertex) { PathLenHelper(vertex, g); } );
 
 
     g.add_sequence(vec);
@@ -904,7 +904,7 @@ void TestEdges() { // loop length gets stuck like a seg fault and maybe it's got
     DeBruijnGraph g(vec2, 3);
     g.add_sequence(vec);
     
-    g.depth_first_traversal( [&] (string vertex) {
+    g.traversal( [&] (string vertex) {
         cout<<"\nvertex = "<<vertex<<" HEAD IN: ";
             for(auto i : g.get_value(vertex).get_in_edge().get_head()){
                 cout<<i<<" ";

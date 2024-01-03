@@ -19,19 +19,18 @@
 #include <limits>
 #include <iostream>
 #include <memory>
+#include <set>
 
-using std::string; using std::vector;
+using std::string; using std::vector; using std::set;
 
 class DeBruijnEdge {
 private:
 
     /// Head node (pointing to, which nodes go out from this one, looking forward)
-    //std::vector<std::shared_ptr<DBGraphValue>> mHead;
-    std::vector<string> mHead;
+    set<string> mHead;
 
     /// Tail node (pointing from, which nodes lead TO this one, looking backwards)
-    //std::vector<std::shared_ptr<DBGraphValue>> mTail;
-    std::vector<string> mTail;
+    set<string> mTail;
 
     /// Visitor flag
     int mVisits = 0;
@@ -39,7 +38,7 @@ private:
 public:
     /// Constructors
     DeBruijnEdge()=default;
-    DeBruijnEdge(string origin, string destination) { mHead.push_back(origin); mTail.push_back(destination); };
+    DeBruijnEdge(string origin, string destination) { mHead.insert(origin); mTail.insert(destination); };
 
     /// Destructor                                                        
     ~DeBruijnEdge()=default;
@@ -47,50 +46,33 @@ public:
     /**
      * Set head node
      */
-    //void set_head(std::shared_ptr<DBGraphValue> h) { mHead.push_back(h); }
-    void set_head(string h) { 
-        mHead.push_back(h);
-        std::sort(mHead.begin(), mHead.end());
-        auto iter = std::unique(mHead.begin(), mHead.end());
-        mHead.erase(iter, mHead.end()); 
-    }
+    void set_head(string h) { mHead.insert(h); }
         
     /**
      * Get head node
      */
-    //std::vector<std::shared_ptr<DBGraphValue>> get_head() { return mHead; }
-    std::vector<string> get_head() { return mHead; }
+    std::set<string> get_head() { return mHead; }
 
     /**
      * Remove a head node
      */
-    void remove_head(string h) { 
-        mHead.erase(std::remove(mHead.begin(), mHead.end(), h), mHead.end());
-    }
+    void remove_head(string h) { mHead.erase(h); }
 
     /**
      * Set tail node
      */
-    //void set_tail(std::shared_ptr<DBGraphValue> t) { mTail.push_back(t); }
-    void set_tail(string t) { 
-        mTail.push_back(t);
-        std::sort(mTail.begin(), mTail.end());
-        auto iter = std::unique(mTail.begin(), mTail.end());
-        mTail.erase(iter, mTail.end()); 
-    }
+    void set_tail(string t) { mTail.insert(t); }
         
     /**
      * Get tail node
      */
     //std::vector<std::shared_ptr<DBGraphValue>> get_tail() { return mTail; }
-    std::vector<string> get_tail() { return mTail; }
+    std::set<string> get_tail() { return mTail; }
 
     /**
      * Remove a tail node
      */
-    void remove_tail(string t) { 
-        mTail.erase(std::remove(mTail.begin(), mTail.end(), t), mTail.end());
-    }
+    void remove_tail(string t) { mTail.erase(t); }
 
     /**
      * Get the visitor flag object
@@ -109,7 +91,16 @@ public:
      */
     void clear_edge_visitor_flag() { mVisits = 0; }
 
-    void show_edge() { std::cout<<this<<"\n";}
+    void show_edge() {
+        std::cout<<"Edge Info - Head: ";
+        for (auto i : mHead) {
+            std::cout<<i<<", ";
+        }
+        std::cout<<" Tail: ";
+        for (auto i : mTail) {
+            std::cout<<i<<", ";
+        }
+        std::cout<<"\n";}
 
 };
 

@@ -52,6 +52,15 @@ TEST_CASE("DeBruijnValue__flags", "[DeBruijnValue.hpp]")
         CHECK(a.get_loop_flag() == 0);
         CHECK(a.get_visitor_flag() == 0);
 
+        a.append_path_len(std::numeric_limits<int>::max(), "aaa");
+        a.append_path_len(std::numeric_limits<int>::max(), "bbb");
+        a.append_path_len(11, "aaa");
+        CHECK(std::get<0>(a.get_max_length()) == std::numeric_limits<int>::max());
+        CHECK(std::get<0>(a.get_min_length()) == 11);
+        a.remove_inf_path();
+        CHECK(std::get<0>(a.get_max_length()) == 11);
+        CHECK(std::get<0>(a.get_min_length()) == 11);
+
     }
 }
 
@@ -99,8 +108,8 @@ TEST_CASE("DeBruijnValue__adj-lists", "[DeBruijnValue.hpp]")
         a.append_adj_availible("000");
         CHECK(a.adj_availible_size() == 1);
 
-        vector<string> vec({"000", "001"});
-        a.append_adj_availible(vec);
+        set<string> s({"000", "001"});
+        a.append_adj_availible(s);
         CHECK(a.adj_availible_size() == 2);
 
         a.clear_adj_availible();
@@ -112,21 +121,21 @@ TEST_CASE("DeBruijnValue__adj-lists", "[DeBruijnValue.hpp]")
         CHECK(a.adj_availible_size() == 6);
 
         // get desired output from availible adj.s list
-        tuple<int, vector<string>> min_adj = a.get_min_length();
+        tuple<int, set<string>> min_adj = a.get_min_length();
         CHECK(std::get<0>(min_adj) == 1);
         CHECK(std::get<1>(min_adj).size() == 1);
-        CHECK(std::get<1>(min_adj)[0] == "000");
+        CHECK(*(std::get<1>(min_adj).begin()) == "000");
 
-        tuple<int, vector<string>> max_adj = a.get_max_length();
+        tuple<int, set<string>> max_adj = a.get_max_length();
         CHECK(std::get<0>(max_adj) == std::numeric_limits<int>::max());
         CHECK(std::get<1>(max_adj).size() == 1);
-        CHECK(std::get<1>(max_adj)[0] == "111");
+        CHECK(*(std::get<1>(max_adj).begin()) == "111");
         CHECK(a.adj_availible_size() == 6);
 
         a.clear_adj_availible();
         a.not_too_short(6, 8);
         CHECK(a.adj_availible_size() == 5);
-        std::set<string> s{"001", "010", "011", "100", "111"};
+        s = {"001", "010", "011", "100", "111"};
         CHECK(a.get_all_adj_availible() == s);
 
         a.clear_adj_availible();
@@ -153,7 +162,7 @@ TEST_CASE("DeBruijnValue__adj-lists", "[DeBruijnValue.hpp]")
         max_adj = a.get_max_length();
         CHECK(std::get<0>(max_adj) == 5);
         CHECK(std::get<1>(max_adj).size() == 1);
-        CHECK(std::get<1>(max_adj)[0] == "100");
+        CHECK(*(std::get<1>(max_adj).begin()) == "100");
         CHECK(a.get_all_paths().size() == 5);
 
         // remove adjacencies from the list
@@ -179,6 +188,57 @@ TEST_CASE("DeBruijnValue__edges", "[DeBruijnValue.hpp]")
     {
         // initialize an empty node
         DeBruijnValue a;
-        DeBruijnEdge in0;
+        DeBruijnEdge e0;
+
+        e0.increment_edge_visitor_flag();
+        CHECK(e0.get_visits() == 1);
+
+        e0.clear_edge_visitor_flag();
+        CHECK(e0.get_visits() == 0);
+
+        e0.set_head("abc");
+        e0.set_tail("xyz");
+        set<string> head = {"abc"};
+        set<string> tail = {"xyz"};
+        CHECK(e0.get_head() == head);
+        CHECK(e0.get_tail() == tail);
+
+        e0.remove_head("ghi");
+        CHECK(e0.get_head() == head);
+        e0.remove_head("abc");
+        head.clear();
+        CHECK(e0.get_head() == head);
+        e0.remove_head("abc");
+        CHECK(e0.get_head() == head);
+
+        e0.remove_tail("ghi");
+        CHECK(e0.get_tail() == tail);
+        e0.remove_tail("xyz");
+        tail.clear();
+        CHECK(e0.get_tail() == tail);
+        e0.remove_tail("xyz");
+        CHECK(e0.get_tail() == tail);
+
+        head = {"abc", "bbb", "ccc", "aaa"};
+        tail = {"xyz", "xxx", "zzz", "yyy"};
+        e0.set_head("abc");
+        e0.set_head("aaa");
+        e0.set_head("bbb");
+        e0.set_head("ccc");
+        e0.set_tail("xyz");
+        e0.set_tail("zzz");
+        e0.set_tail("xxx");
+        e0.set_tail("yyy");
+        CHECK(e0.get_head() == head);
+        CHECK(e0.get_tail() == tail);
+
+        e0.remove_head("bbb");
+        head.erase("bbb");
+        CHECK(e0.get_head() == head);
+
+        e0.remove_tail("zzz");
+        tail.erase("zzz");
+        CHECK(e0.get_tail() == tail);
+
     }
 }
