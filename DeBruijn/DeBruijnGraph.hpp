@@ -248,19 +248,19 @@ public:
     void infinity_length(string node) {
         //std::cout<<"inf length staring node = "<<node<<"\n";
         queue<pair<string, string>> Q_parent;
-        DeBruijnEdge & edge = mVertices[node].get_in_edge();
-       // std::cout<<"initial heads ";
-        for (auto i : edge.get_head() ){
-          //  std::cout<<i<<", ";
+        DeBruijnEdge & start_edge = mVertices[node].get_in_edge();
+        //std::cout<<"initial heads ";
+        for (auto i : start_edge.get_head() ){
+            //std::cout<<i<<", ";
             Q_parent.push(make_pair(i, node));
         } //std::cout<<"\n";
         string current, parent;
-        while(!Q_parent.empty()) {
+        while(!Q_parent.empty()) { //this loop go forever
             parent = Q_parent.front().second;
             current = Q_parent.front().first;
-          //  std::cout<<"parent "<<parent<<" child "<<current<<"\n";
+            //std::cout<<"parent "<<parent<<" child "<<current<<"\n";
             Q_parent.pop();
-            edge = mVertices[current].get_in_edge(); //next edge
+            DeBruijnEdge & edge = mVertices[current].get_in_edge(); //next edge
             mVertices[current].append_path_len(std::numeric_limits<int>::max(), parent);
             if(edge.get_visits() == 0) {
                 for (auto i : edge.get_head() ){
@@ -310,6 +310,7 @@ public:
      * @param sequence to add to the graph
      */
     void add_sequence(string sequence) {
+        //std::cout<<"hi\n";
         mSequenceLength = sequence.size();
         string past = "";
         // if the beginning string is not in the graph, add a new beginning vertex
@@ -337,7 +338,6 @@ public:
             past = sequence.substr(0, mKmerLength);
             sequence = sequence.substr(1, sequence.length()-1); //update our kmer and repeat!
         }
-        //std::cout<<"REACHED END\n";
         mVertices[sequence].increment_endpoint(); //increment number of times this kmer is an endpoint of a seq in the pangenome
         mVertices[sequence].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
         mVertices[sequence].set_out_head(sequence);
@@ -672,6 +672,7 @@ public:
      * @todo Would like to eventually use Julia to display the graph as a whole
      */
     void display(){
+        //std::cout<<"a     ";
         traversal( [&] (string vertex) { 
             cout<<vertex<<" ";
             // if there is one, non-empty vertex in the list, print it
@@ -685,16 +686,21 @@ public:
                     cout<<i<<", ";
                 }
             }
+            //std::cout<<"c     ";
             // if the adj_list contains an endpoint/empty vertex, show that
             if (mVertices[vertex].get_endpoint()>0){
                 cout << " (an endpoint)";
             }
+            //std::cout<<"d     ";
             // if the vertex is a loop, show that
             if (mVertices[vertex].get_loop_flag()>0){
                 cout << " (a loop at " << vertex << " = " << mVertices[vertex].get_loop_flag() << ")";
             }
-            cout<<"\n";
+            //std::cout<<"e     ";
+            std::cout<<"\n";
+            //std::cout<<"f     ";
             });
+            //std::cout<<"g     ";
     }
 
     /**

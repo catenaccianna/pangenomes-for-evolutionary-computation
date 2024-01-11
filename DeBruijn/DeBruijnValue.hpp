@@ -35,6 +35,7 @@ private:
 
     /// Adjacency list with path lengths attached
     /// all possible path langths to all the adjs
+    //map<int, set<pair<string, int>>> mPathLenAdjList = {};
     map<int, set<string>> mPathLenAdjList = {};
     // vector of a struct (containing kmer and count) or a pair (of the same thing)
 
@@ -283,11 +284,9 @@ public:
         mPathLenAdjList[len].insert(adj);
     }
 
-    // recursive function to update path length container for every predecessor node -- call on predeccessor that we get through an edge or some way similar
     void remove_path_len(string adj) {
-        set<string> lists;
-        for (auto it = mPathLenAdjList.begin(); it != mPathLenAdjList.end();) {
-            lists = it->second;
+        for (std::map<int, std::set<std::string>>::iterator it = mPathLenAdjList.begin(); it != mPathLenAdjList.end();) {
+            set<string> & lists = it->second;
             lists.erase(adj);
             if (lists.size() < 1) {
                 it = mPathLenAdjList.erase(it);

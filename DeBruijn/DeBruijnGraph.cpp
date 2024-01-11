@@ -79,6 +79,21 @@ TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
         if(iter != starts.end()) { starts.erase(iter); }
         CHECK(starts == set<string>{});
 
+        // path length dictionary in DeBruijnBalue class
+        DeBruijnValue c;
+        c.append_path_len(2, "aaa");
+        CHECK(c.get_all_path_lens() == set<int> {2});
+        CHECK(c.get_all_paths() == set<string> {"aaa"});
+        c.append_path_len(std::numeric_limits<int>::max(), "bbb");
+        CHECK(c.get_all_path_lens() == set<int> {2, std::numeric_limits<int>::max()});
+        CHECK(c.get_all_paths() == set<string> {"aaa", "bbb"});
+        c.append_path_len(std::numeric_limits<int>::max(), "ccc");
+        CHECK(c.get_all_path_lens() == set<int> {2, std::numeric_limits<int>::max()});
+        CHECK(c.get_all_paths() == set<string> {"aaa", "bbb", "ccc"});
+        c.remove_path_len("bbb");
+        CHECK(c.get_all_path_lens() == set<int> {2, std::numeric_limits<int>::max()});
+        CHECK(c.get_all_paths() == set<string> {"aaa", "ccc"});
+
         // modify_sequence helper functions
 
         // infinity length function by itself (not working right, a loop flag can get set but no inf path length set)
@@ -108,12 +123,7 @@ TEST_CASE("DeBruijnGraph__BitsOrgs", "[DeBruijnGraph.hpp]")
         CHECK(g.is_valid("11101234567890") == false);
         CHECK(g.get_size() == 0);
 
-        std::cout<<"\nADD\n";
         g.add_sequence("111031117"); // 111-110 -103-031-311-111-117
-        std::cout<<"\nDISPLAY, seq count = "<<g.get_size()<<"\n";
-        g.display();
-        std::cout<<"FULL ENDPOINT ADJ LIST SIZE "<<g.get_value("117").adj_list_size()<<"\n";
-        std::cout<<"\nGET VALS\n";
         CHECK(g.get_value("111").get_loop_flag() == 1);
         CHECK(g.get_value("110").get_loop_flag() == 0);
         CHECK(g.get_value("103").get_loop_flag() == 0);
@@ -130,10 +140,7 @@ TEST_CASE("DeBruijnGraph__BitsOrgs", "[DeBruijnGraph.hpp]")
         g.remove_sequence("111031117");
         CHECK(g.is_valid("111031117") == false);
         
-        std::cout<<"occurences "<<g.get_value("111").get_kmer_occurrences()<<" loop flag "<<g.get_value("111").get_loop_flag()<<" max len "<<get<0>(g.get_value("111").get_max_length());
-        std::cout<<" edge "; for (auto i : g.get_value("111").get_out_edge().get_tail()) std::cout<<i<<", ";
-        std::cout<<"\n"; g.display();
-        CHECK(g.get_value("111").get_loop_flag() == 0); // 1 != 0
+        CHECK(g.get_value("111").get_loop_flag() == 0);
         CHECK(g.get_value("110").get_loop_flag() == 0);
         CHECK(g.get_value("103").get_loop_flag() == 0);
         CHECK(g.get_value("031").get_loop_flag() == 0);
@@ -144,15 +151,13 @@ TEST_CASE("DeBruijnGraph__BitsOrgs", "[DeBruijnGraph.hpp]")
         CHECK(get<0>(g.get_value("031").get_max_length()) != std::numeric_limits<int>::max());
         CHECK(get<0>(g.get_value("317").get_max_length()) != std::numeric_limits<int>::max());
         g.remove_sequence("1110317");
-/*
-        // create a regular BitsOrg graph
-        g.add_sequence("1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110");
 
+        // create a regular BitsOrg graph 
+        g.add_sequence("1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110");
         // remove sequence
         g.remove_sequence("1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110");
         CHECK(!g.is_valid("1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110"));
         CHECK(g.get_size() == 0);
-
         // create a BitsOrg graph
         g.add_sequence("1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110");
         g.add_sequence("1111111110111100011110100010101010101110010011100111010000101110001101010010110010010111110111100011");
@@ -165,7 +170,6 @@ TEST_CASE("DeBruijnGraph__BitsOrgs", "[DeBruijnGraph.hpp]")
         g.add_sequence("1101011111110101101010010011110101001011010101100011000000001011111110110101100110110111010101010111");
         g.add_sequence("1010110110001010000011000111000101101101100101010001101111000111001000011010101111010110110000001010");
         g.add_sequence("1100010101110001101101101000010000001000101100011011001110101001111001101011101101011000111110110011");
-
         CHECK(g.get_size() == 8);
         CHECK(g.is_valid("1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110"));
         CHECK(g.is_valid("1111111110111100011110100010101010101110010011100111010000101110001101010010110010010111110111100011"));
@@ -185,13 +189,12 @@ TEST_CASE("DeBruijnGraph__BitsOrgs", "[DeBruijnGraph.hpp]")
         CHECK(g.is_valid(new_genome));
         new_genome = g.modify_org(random, "1100000000000101101010001010000101001000011011001111110100110101101011101010101101100101010110100111");
         CHECK(g.is_valid(new_genome));
-*/
     }
 }
 
 TEST_CASE("DeBruijnGraph__VirtualCPUOrgs", "[DeBruijnGraph.hpp]")
 {
-    {/*
+    {
         // create graph for Virtual CPU Orgs
         DeBruijnGraph g;
         emp::Random random;
@@ -276,7 +279,7 @@ TEST_CASE("DeBruijnGraph__VirtualCPUOrgs", "[DeBruijnGraph.hpp]")
         g.modify_org_variable_len(random,"cccocccncccdccctjctbccoocccscccqfccgoocccqfccptccr");
         g.modify_org_variable_len(random,"cccslccncccscccdcccttccbtccr");
         g.modify_org_variable_len(random,"cccdaccnnccclccnncccocccbtcccqfccgookccccbhccptccqfccclccnccc");
-*/
+
     }
 }
 
