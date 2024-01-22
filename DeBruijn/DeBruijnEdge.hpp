@@ -29,6 +29,13 @@ private:
     /// Head node (pointing to, which nodes go out from this one, looking forward)
     set<string> mHead;
 
+    /// Map specifying how many of each possible adjacency are in the graph
+    /// Map version of the set mHeads (which contains the adjacencies from mTail)
+    //map<string, int> mCounts;
+
+    /// 
+    //map<int, set<string>> mPathLenAdjList = {};
+
     /// Tail node (pointing from, which nodes lead TO this one, looking backwards)
     set<string> mTail;
 

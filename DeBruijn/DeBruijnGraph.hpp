@@ -255,7 +255,7 @@ public:
             Q_parent.push(make_pair(i, node));
         } //std::cout<<"\n";
         string current, parent;
-        while(!Q_parent.empty()) { //this loop go forever
+        while(!Q_parent.empty()) {
             parent = Q_parent.front().second;
             current = Q_parent.front().first;
             //std::cout<<"parent "<<parent<<" child "<<current<<"\n";

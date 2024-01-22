@@ -35,9 +35,8 @@ private:
 
     /// Adjacency list with path lengths attached
     /// all possible path langths to all the adjs
-    //map<int, set<pair<string, int>>> mPathLenAdjList = {};
+    //map<int, set<DeBruijnEdge*>> mPathLenAdjList = {}; //set of edges/pointer to edges, count in edge class
     map<int, set<string>> mPathLenAdjList = {};
-    // vector of a struct (containing kmer and count) or a pair (of the same thing)
 
     /// Adjacencies availible to use in genome modification
     set<string> mAvailableAdj = {};
@@ -302,6 +301,8 @@ public:
             mPathLenAdjList.erase(iter);
         }
     }
+
+    map<int, set<string>> get_path_len_dict() { return mPathLenAdjList; }
 
     set<string> get_all_paths() {
         set<string> results;
