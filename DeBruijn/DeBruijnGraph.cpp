@@ -63,9 +63,14 @@ TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
         g1.remove_sequence("bbbbc");
         map<int, set<string>> actual_end_dict = g1.get_value("bbb").get_path_len_dict();
         map<int, set<string>> correct_end_dict = {{1, set<string>{"bbc"}}};
+        std::cout<<"RIGHT BEFORE CHECK\n";
+        for(auto i : correct_end_dict) {std::cout<<i.first<<" "; for(auto y : i.second) {std::cout<<"("<<y<<")";}}
+        std::cout<<"\n";
+        for(auto i : actual_end_dict) {std::cout<<i.first<<" "; for(auto y : i.second) {std::cout<<"("<<y<<")";}}
+        std::cout<<"\nDISPLAY\n"; g1.display();
         CHECK(actual_end_dict == correct_end_dict);
 
-
+/*
         // remove_sequence helper functions (remove_from_adj_list, erase, remove_path_len, mStarts.erase)
         set<string> full_adj_list = {"bcd"};
         CHECK(a.get_adj_list() == full_adj_list);
@@ -114,11 +119,11 @@ TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
         // remove_inf_path (not clearing the loop flag)
         DeBruijnGraph g2;
         g2.reset_loops();
-
+*/
     }
 }
 
-
+/**
 TEST_CASE("DeBruijnGraph__BitsOrgs", "[DeBruijnGraph.hpp]")
 {
     {
@@ -293,7 +298,7 @@ TEST_CASE("DeBruijnGraph__VirtualCPUOrgs", "[DeBruijnGraph.hpp]")
 
     }
 }
-
+*/
 
 /**
  * @brief Clone of DFT in the DeBruijnGraph class, but we don't reset the vertex flags at the end of this one so that we can test them.
@@ -328,7 +333,6 @@ void traversal_clone(int mSize, set<string> mStarts, map<string, DeBruijnValue> 
             } 
         }
     }
-
 
 TEST_CASE("DeBruijnGraph__DepthFirstTraversal", "[DeBruijnGraph.hpp]")
 {

@@ -25,7 +25,7 @@
 #include <iostream>
 
 using std::string; using std::vector; using std::map; using std::tuple;
-using std::pair; using std::set;
+using std::pair; using std::set; using std::make_pair;
 
 class DeBruijnValue {
 private:
@@ -37,6 +37,14 @@ private:
     /// all possible path langths to all the adjs
     //map<int, set<DeBruijnEdge*>> mPathLenAdjList = {}; //set of edges/pointer to edges, count in edge class
     map<int, set<string>> mPathLenAdjList = {};
+
+    // adjacency and it's associated length : count of its occurences
+    /* important to include because when we only have the path length list, 
+    couldn't keep track of the count of each kmer with associated path length,
+    and if there was kmer "aaa" that can lead to path length 2 or 10, and the 
+    sequence where it leads to 2 goes extinct, there wasn't a way to remove it until
+    the sequence that leads to 10 also goes extinct */
+    map<pair<string, int>, int> mCounts = {};
 
     /// Adjacencies availible to use in genome modification
     set<string> mAvailableAdj = {};
@@ -279,19 +287,52 @@ public:
      */
     void remove_adj_availible(string val, bool still_an_end=0) { mAvailableAdj.erase(val); }
 
+    /**
+     * Append to the path length map, or append count if already seen
+     * @param len path length possible out of this kmer
+     * @param adj kmer adjacency
+     */
     void append_path_len(int len, string adj) {
-        mPathLenAdjList[len].insert(adj);
+        pair<string, int> element = make_pair(adj, len);
+        if (mCounts.count(make_pair(adj, len))) { // if there's already been an occurence of this kmer-length combo
+            mCounts[element] += 1;
+        }
+        else {
+            mPathLenAdjList[len].insert(adj);
+            mCounts[element] = 1;
+        }
     }
 
+    /// check when this one is being used in graphs
     void remove_path_len(string adj) {
-        for (std::map<int, std::set<std::string>>::iterator it = mPathLenAdjList.begin(); it != mPathLenAdjList.end();) {
-            set<string> & lists = it->second;
-            lists.erase(adj);
-            if (lists.size() < 1) {
-                it = mPathLenAdjList.erase(it);
-            }
-            else
-                ++it;
+        set<int> to_delete_from_mPath; // make list of things to remove from mPath after i am out of this loop
+        for (std::map<int, std::set<std::string>>::iterator it = mPathLenAdjList.begin(); it != mPathLenAdjList.end(); ++it) {
+            set<string> adj_copies  = it->second;// new copy of it->second. delete from the original but look at /compare to the copy
+            for (auto i : adj_copies) { // for every kmer in every set (for auto i in copy) (could make this an if statement, idk if we should use both i and adj)
+                std::cout<<"\n"<<it->first<<" "<<i;
+                if (i == adj) { // if the kmer if the one we're trying to remove
+                    pair<string, int> element = make_pair(i, it->first);
+                    if (mCounts.count(element)) {
+                        if (mCounts[element] > 1) { //we should decrement count
+                            mCounts[element] -=1;
+                        }
+                        else { //we should remove it from both maps
+                            it->second.erase(adj);
+                            if (it->second.size() < 1) {
+                                to_delete_from_mPath.insert(it->first);
+                            }
+                            mCounts.erase(element);
+                        }   }
+                    else {
+                        std::cout<<" reached inside of else statement (should not happen) ";
+                        it->second.erase(adj);
+                            if (it->second.size() < 1) {
+                                to_delete_from_mPath.insert(it->first);
+                            }
+                            mCounts.erase(element);
+                    } } } }
+        for (auto i : to_delete_from_mPath) {
+            mPathLenAdjList.erase(i);
         }
     }
 

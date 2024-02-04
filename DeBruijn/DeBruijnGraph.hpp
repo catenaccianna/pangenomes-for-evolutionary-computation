@@ -380,9 +380,9 @@ public:
         mVertices.erase(current);
         auto iter = mStarts.find(current);
         if(iter != mStarts.end()) { mStarts.erase(iter); }
-        for(auto i : mVertices) {
-            i.second.remove_path_len(current);
-        }
+        //for(auto i : mVertices) {
+        //    i.second.remove_path_len(current); // do we still need this if we have line 414?
+        //}
     }
 
     public:
@@ -403,14 +403,16 @@ public:
                 current = sequence.substr(0,mKmerLength);
                 next = sequence.substr(1,mKmerLength);
                 mVertices[current].decrement_kmer_occurrences();
+                mVertices[current].remove_path_len(next);
                 current_appears_once = mVertices[current].get_kmer_occurrences() <= 0;
                 next_appears_once = mVertices[next].get_kmer_occurrences() <= 1;
-                //std::cout<<current<<" = "<<mVertices[current].get_kmer_occurrences()<<", ";
+                std::cout<<"Current (bool = "<<current_appears_once<<") "<<current<<" = "<<mVertices[current].get_kmer_occurrences()<<" Next (bool = "<<next_appears_once<<") "<<next<<" = "<<mVertices[next].get_kmer_occurrences()<<"\n";
 
                 if (current_appears_once  || next_appears_once) {
                     mVertices[current].remove_from_adj_list(next); //we should be removing all copies of this kmer if it's the only occurance in the graph, but we may be removing only one string in the vector
                     mVertices[current].get_out_edge().remove_tail(next);
                     mVertices[next].get_in_edge().remove_head(current);
+                    //mVertices[current].remove_path_len(next);
                 }
                 if (current_appears_once ){ remove(current, next); } //if kmer only appears once in entire graph, when we delete this instance, we delete it from all objects
                 
