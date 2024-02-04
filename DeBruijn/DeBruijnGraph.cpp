@@ -20,8 +20,8 @@ TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
         // add_sequence helper functions (add_edge, set_path_length, set_empty_vertex--but this one is private)
         DeBruijnGraph g;
         g.add_sequence("abcd");
-        DeBruijnValue a = g.get_value("abc");
-        DeBruijnValue b = g.get_value("bcd");
+        DeBruijnValue & a = g.get_value("abc");
+        DeBruijnValue & b = g.get_value("bcd");
         // path length on both
         tuple<int, set<string>> lengths = {1, set<string>{"bcd"}};
         set<string> paths;
@@ -70,7 +70,6 @@ TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
         std::cout<<"\nDISPLAY\n"; g1.display();
         CHECK(actual_end_dict == correct_end_dict);
 
-/*
         // remove_sequence helper functions (remove_from_adj_list, erase, remove_path_len, mStarts.erase)
         set<string> full_adj_list = {"bcd"};
         CHECK(a.get_adj_list() == full_adj_list);
@@ -119,11 +118,11 @@ TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
         // remove_inf_path (not clearing the loop flag)
         DeBruijnGraph g2;
         g2.reset_loops();
-*/
+
     }
 }
 
-/**
+
 TEST_CASE("DeBruijnGraph__BitsOrgs", "[DeBruijnGraph.hpp]")
 {
     {
@@ -298,7 +297,7 @@ TEST_CASE("DeBruijnGraph__VirtualCPUOrgs", "[DeBruijnGraph.hpp]")
 
     }
 }
-*/
+
 
 /**
  * @brief Clone of DFT in the DeBruijnGraph class, but we don't reset the vertex flags at the end of this one so that we can test them.
@@ -324,8 +323,8 @@ void traversal_clone(int mSize, set<string> mStarts, map<string, DeBruijnValue> 
                 if(mVertices[current].get_visitor_flag() < 1){
                     // if this is the first time the vertex is being visited, we need to add it's adj_list into the queue
                     // otherwise, the adjacencies are already in there somewhere, so not needed
-                    for (auto it = mVertices[current].get_adj_list().begin(); it != mVertices[current].get_adj_list().end();) {
-                        path.insert(*it);
+                    for (std::string it : mVertices[current].get_adj_list()) {
+                        path.insert(it);
                     }
                     mVertices[current].increment_visitor_flag();
 
@@ -337,12 +336,12 @@ void traversal_clone(int mSize, set<string> mStarts, map<string, DeBruijnValue> 
 TEST_CASE("DeBruijnGraph__DepthFirstTraversal", "[DeBruijnGraph.hpp]")
 {
     {
+        /**
         // create a small graph
-        /**DeBruijnGraph g;
+        DeBruijnGraph g;
         emp::Random random;
         g.add_sequence("ccc");
         CHECK(g.get_size() == 1);
-        CHECK(g.get_sequence_size() == 1);
         CHECK(g.get_value("ccc").adj_list_size() == 0);
         CHECK(g.get_value("ccc").get_endpoint() == 1);
         CHECK(g.get_value("ccc").get_loop_flag() == 0);
@@ -353,7 +352,6 @@ TEST_CASE("DeBruijnGraph__DepthFirstTraversal", "[DeBruijnGraph.hpp]")
         // use the clone of DFT because the one in the class resets all vertex flags afterwards.
         traversal_clone(g.get_size(), g.get_starts(), g.get_graph());
         CHECK(g.get_size() == 1);
-        CHECK(g.get_sequence_size() == 1);
         CHECK(g.get_value("ccc").adj_list_size() == 0);
         CHECK(g.get_value("ccc").get_endpoint() == 1);
         CHECK(g.get_value("ccc").get_loop_flag() == 0);
@@ -390,16 +388,15 @@ TEST_CASE("DeBruijnGraph__DepthFirstTraversal", "[DeBruijnGraph.hpp]")
         for ( string i : g.get_all_vertices() ) {
             CHECK(g.get_value(i).get_visitor_flag() == 1);
         }
-        g.reset_vertex_flags();*/
-        
+        g.reset_vertex_flags();
+        */
     }
 }
 
 
 TEST_CASE("DeBruijnGraph__value-attributes", "[DeBruijnGraph.hpp]")
 {
-    {
-        /**
+    {/**
         DeBruijnGraph g;
         g.add_sequence("ABCDBCDE");
         g.update_loops();
@@ -435,8 +432,7 @@ TEST_CASE("DeBruijnGraph__value-attributes", "[DeBruijnGraph.hpp]")
         virtualCPU.add_sequence("ccccdqcclcckccepcccbeccfccccdtceskccepccciccctccct");
         virtualCPU.add_sequence("ccdctcesccoesccrcecrcecrecrecrecrcccdtceskcceskcce");
 
-        CHECK(virtualCPU.get_sequence_size() == 19);
-        **/
+        CHECK(virtualCPU.get_size() == 19); */
     }   
 
 }

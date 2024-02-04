@@ -380,9 +380,6 @@ public:
         mVertices.erase(current);
         auto iter = mStarts.find(current);
         if(iter != mStarts.end()) { mStarts.erase(iter); }
-        //for(auto i : mVertices) {
-        //    i.second.remove_path_len(current); // do we still need this if we have line 414?
-        //}
     }
 
     public:
@@ -396,7 +393,6 @@ public:
             string current, next;
             bool current_appears_once;
             bool next_appears_once;
-            //std::cout<<"remove "<<sequence<<"... ";
 
             // while we still have sequence left:
             while(int(sequence.size()) > mKmerLength){
@@ -406,13 +402,12 @@ public:
                 mVertices[current].remove_path_len(next);
                 current_appears_once = mVertices[current].get_kmer_occurrences() <= 0;
                 next_appears_once = mVertices[next].get_kmer_occurrences() <= 1;
-                std::cout<<"Current (bool = "<<current_appears_once<<") "<<current<<" = "<<mVertices[current].get_kmer_occurrences()<<" Next (bool = "<<next_appears_once<<") "<<next<<" = "<<mVertices[next].get_kmer_occurrences()<<"\n";
+                //std::cout<<"Current (bool = "<<current_appears_once<<") "<<current<<" = "<<mVertices[current].get_kmer_occurrences()<<" Next (bool = "<<next_appears_once<<") "<<next<<" = "<<mVertices[next].get_kmer_occurrences()<<"\n";
 
                 if (current_appears_once  || next_appears_once) {
                     mVertices[current].remove_from_adj_list(next); //we should be removing all copies of this kmer if it's the only occurance in the graph, but we may be removing only one string in the vector
                     mVertices[current].get_out_edge().remove_tail(next);
                     mVertices[next].get_in_edge().remove_head(current);
-                    //mVertices[current].remove_path_len(next);
                 }
                 if (current_appears_once ){ remove(current, next); } //if kmer only appears once in entire graph, when we delete this instance, we delete it from all objects
                 
@@ -431,7 +426,7 @@ public:
             }
 
             if(mVertices.size() > 0) { // update loop flags for sequences still in graph
-                update_loops(); //std::cout<<"got here\n";
+                update_loops();
             }
         }
         //else{ throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" ); }
@@ -931,7 +926,7 @@ public:
      * Get the value associated with a vertex
      * @return Debruijn vertex value object
      */
-    DeBruijnValue get_value(string vertex) { return mVertices[vertex]; }
+    DeBruijnValue & get_value(string vertex) { return mVertices[vertex]; }
 
 };
 

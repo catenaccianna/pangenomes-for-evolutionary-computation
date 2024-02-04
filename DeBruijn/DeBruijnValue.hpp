@@ -309,7 +309,6 @@ public:
         for (std::map<int, std::set<std::string>>::iterator it = mPathLenAdjList.begin(); it != mPathLenAdjList.end(); ++it) {
             set<string> adj_copies  = it->second;// new copy of it->second. delete from the original but look at /compare to the copy
             for (auto i : adj_copies) { // for every kmer in every set (for auto i in copy) (could make this an if statement, idk if we should use both i and adj)
-                std::cout<<"\n"<<it->first<<" "<<i;
                 if (i == adj) { // if the kmer if the one we're trying to remove
                     pair<string, int> element = make_pair(i, it->first);
                     if (mCounts.count(element)) {
@@ -322,15 +321,7 @@ public:
                                 to_delete_from_mPath.insert(it->first);
                             }
                             mCounts.erase(element);
-                        }   }
-                    else {
-                        std::cout<<" reached inside of else statement (should not happen) ";
-                        it->second.erase(adj);
-                            if (it->second.size() < 1) {
-                                to_delete_from_mPath.insert(it->first);
-                            }
-                            mCounts.erase(element);
-                    } } } }
+                        } } } } }
         for (auto i : to_delete_from_mPath) {
             mPathLenAdjList.erase(i);
         }
