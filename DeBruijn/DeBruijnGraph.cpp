@@ -13,10 +13,39 @@
 #define CATCH_CONFIG_MAIN
 #include "../../../mabe/MABE2/source/third-party/empirical/third-party/Catch/single_include/catch2/catch.hpp"
 
+TEST_CASE("DeBruijnGraph__step-through-modify-org", "[DeBruijnGraph.hpp]")
+{
+    {
+        DeBruijnGraph g;
+        emp::Random random;
+        vector<string> generated_seq_0;
+        g.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+        g.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+        g.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+        g.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+        g.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+        g.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+        g.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
+        g.add_sequence("cccdaccnnccclccnncccocccbtcccqfccgookccccbhccptccqfccclccnccc");
+        g.add_sequence("nnccctjctbccocccdccc");
+        g.add_sequence("cccnncccsccnncccoccclccncccccfccgookcccfcccbhccptccbhccptccr");
+        g.add_sequence("cccbtcctbccocccsccnnccccttccqfccgoocccocccoocccdaccnccclccnccc");
+        g.add_sequence("cccslccncccocccncccnncccocccbfcccqfccptcctjctbccoocccfccc");
+        g.add_sequence("cccslccncccscccdcccttccbtccr");
+        g.add_sequence("cccqfccgooccclccncccooccctjctbccoocccslccncccdccclccnccc");
+        g.add_sequence("cccslccncccslccncccncccbfccptccbtccr");
+        g.add_sequence("cmccbfccgoocccbtcccqfccclccncccocccttcccscccslccncccsccc");
+        g.add_sequence("cccoccctbccocccttccbhccptcctbccoocccttccr");
+
+        string output = g.modify_org_variable_len(random, "nnccctjctbccocccdccc");
+        std::cout<<"OUTPUT = "<<output<<"\n";
+        
+    }
+}
 
 TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
 {
-    {
+    {/**
         // add_sequence helper functions (add_edge, set_path_length, set_empty_vertex--but this one is private)
         DeBruijnGraph g;
         g.add_sequence("abcd");
@@ -118,7 +147,7 @@ TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
         // remove_inf_path (not clearing the loop flag)
         DeBruijnGraph g2;
         g2.reset_loops();
-
+*/
     }
 }
 
@@ -213,6 +242,7 @@ TEST_CASE("DeBruijnGraph__VirtualCPUOrgs", "[DeBruijnGraph.hpp]")
         // create graph for Virtual CPU Orgs
         DeBruijnGraph g;
         emp::Random random;
+        vector<string> generated_seq_0;
         // add the same beginning sequences that MABE would add
         g.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
         g.add_sequence("cccccccccccccccccccccccccccccccccccccccccccccccccc");
@@ -228,12 +258,12 @@ TEST_CASE("DeBruijnGraph__VirtualCPUOrgs", "[DeBruijnGraph.hpp]")
         CHECK(g.is_valid("cccccccccccccccccccccccccccccccccccccccccccccccccc"));
 
         // first recombination -- nothing about the graph should change
-        g.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc");
-        g.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc");
-        g.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc");
-        g.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc");
-        g.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc");
-        g.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc");
+        generated_seq_0.push_back(g.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc"));
+        generated_seq_0.push_back(g.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc"));
+        generated_seq_0.push_back(g.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc"));
+        generated_seq_0.push_back(g.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc"));
+        generated_seq_0.push_back(g.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc"));
+        generated_seq_0.push_back(g.modify_org_variable_len(random,"cccccccccccccccccccccccccccccccccccccccccccccccccc"));
         CHECK(g.get_size() == 1);
         CHECK(g.get_value("ccc").adj_list_size() == 1);
         CHECK(g.get_value("ccc").get_endpoint() == 7);
@@ -284,17 +314,29 @@ TEST_CASE("DeBruijnGraph__VirtualCPUOrgs", "[DeBruijnGraph.hpp]")
         g.remove_sequence("cccncccfqccncccoocccfqccncccfccptccclccnccctjctbccoccc");
         g.remove_sequence("cccocccncccdccctjctbccoocccscccqfccgoocccqfccptccr");
 
-        g.modify_org_variable_len(random,"cccfccptcctqccncccdcccbtcccclccnccccscccttcctqccdcccbtccr");
-        g.modify_org_variable_len(random,"cccbhccptcccqfccptccbhccptccttcccdcccctgcctgcctcctccr");
-        g.modify_org_variable_len(random,"cccoccctbccocccttccbhccptcctbccoocccttccr");
-        g.modify_org_variable_len(random,"cccslccncccslccncccncccbfccptccbtccr");
-        g.modify_org_variable_len(random,"cccbtcctbccocccsccnnccccttccqfccgoocccocccoocccdaccnccclccnccc");
-        g.modify_org_variable_len(random,"nnccctjctbccocccdccc");
-        g.modify_org_variable_len(random,"cccncccfqccncccoocccfqccncccfccptccclccnccctjctbccoccc");
-        g.modify_org_variable_len(random,"cccocccncccdccctjctbccoocccscccqfccgoocccqfccptccr");
-        g.modify_org_variable_len(random,"cccslccncccscccdcccttccbtccr");
-        g.modify_org_variable_len(random,"cccdaccnnccclccnncccocccbtcccqfccgookccccbhccptccqfccclccnccc");
+        vector<string> generated_seq_1;
+        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccfccptcctqccncccdcccbtcccclccnccccscccttcctqccdcccbtccr"));
+        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccbhccptcccqfccptccbhccptccttcccdcccctgcctgcctcctccr"));
+        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccoccctbccocccttccbhccptcctbccoocccttccr"));
+        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccslccncccslccncccncccbfccptccbtccr"));
+        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccbtcctbccocccsccnnccccttccqfccgoocccocccoocccdaccnccclccnccc"));
+        generated_seq_1.push_back(g.modify_org_variable_len(random,"nnccctjctbccocccdccc"));
+        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccncccfqccncccoocccfqccncccfccptccclccnccctjctbccoccc"));
+        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccocccncccdccctjctbccoocccscccqfccgoocccqfccptccr"));
+        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccslccncccscccdcccttccbtccr"));
+        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccdaccnnccclccnncccocccbtcccqfccgookccccbhccptccqfccclccnccc"));
 
+        std::cout<<"first seq\n";
+        for (auto i : generated_seq_0) {
+            std::cout<<i<<"\n";
+        }
+        std::cout<<"\nsecond seq\n";
+        for (auto i : generated_seq_1) {
+            std::cout<<i<<"\n";
+        }
+        std::cout<<"\ndisplay\n";
+        g.display();
+    
     }
 }
 

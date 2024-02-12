@@ -58,16 +58,6 @@ private:
         mVertices[v];
     }
 
-    /**
-     * Set minimum and maximum possible path lengths from this node
-     * @param v vertex object
-     * @param path_length from this node to an endpoint
-     * @param adj next node after v
-     * @param new_node true if there's nothing in the adj list, and min and max length should both be set to this length
-     */
-    void set_path_length(string v, int path_length, string adj) {
-        mVertices[v].append_path_len(path_length, adj);
-    }
 
     /**
      * Add an edge between two vertices
@@ -115,7 +105,7 @@ private:
             set_empty_vertex(input.substr(0, mKmerLength));
             // min/max path length from this node
             int path_len = input.size() - 3;
-            set_path_length(input.substr(0, kmer_length), path_len, input.substr(1, kmer_length));
+            mVertices[input.substr(0, kmer_length)].append_path_len(path_len, input.substr(1, kmer_length));
         }
         // add to size and add an edge for each vertex, and an empty vertex for the end
         while(int(input.length()) >= kmer_length + 1){
@@ -124,7 +114,7 @@ private:
             set_empty_vertex(input.substr(1, kmer_length));
             // min/max path length from this node
             int path_len = input.size() - 3;
-            set_path_length(input.substr(0, kmer_length), path_len, input.substr(1, kmer_length));
+            mVertices[input.substr(0, kmer_length)].append_path_len(path_len, input.substr(1, kmer_length));
             // take one character off the input, continue
             past = input.substr(0, mKmerLength);
             input = input.substr(1, input.length()-1);
@@ -324,9 +314,9 @@ public:
             if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0){
                 //std::cout<<mVertices.count(sequence.substr(1, mKmerLength))<<"    ";
             }
-            // min/max path length from this node
+            // add path length from this node
             int path_len = sequence.size() - 3;
-            set_path_length(sequence.substr(0, mKmerLength), path_len, sequence.substr(1, mKmerLength));
+            mVertices[sequence.substr(0, mKmerLength)].append_path_len(path_len, sequence.substr(1, mKmerLength));
             //std::cout<<"path len set to "<<path_len<<"    ";
             add_edge(past, sequence.substr(0, mKmerLength), sequence.substr(1, mKmerLength));
             //std::cout<<"edge btwn "<<sequence.substr(0, mKmerLength)<<" and "<<sequence.substr(1, mKmerLength)<<"\n";
@@ -519,23 +509,37 @@ public:
      *         0 if there is a possible endpoint
     */
     int make_adj_availible(DeBruijnValue & node, int current_len, int parent_len, int threshold = 0){
+        std::cout<<" in make avail: ";
         node.clear_adj_availible();
         if ( current_len < parent_len ) { // if we're underneath the target length, and the path is not too short, add it
             node.not_too_short(current_len, parent_len, 0); // only the not too short ones
-            //std::cout<<"OPTION 1 \n";
+            std::cout<<"not_too_short cuz current len = "<<current_len<<" and parent = "<<parent_len<<". ";
             if(node.adj_availible_size() == 0) {
-                //std::cout<<"OPTION 3 \n";
-                node.make_all_adj_availible();
+                node.append_adj_availible(get<1>(node.get_max_length()));
+                std::cout<<"oh no! no adj availible! make all availible. now there are "<<node.adj_availible_size();
+                std::cout<<". this node is "<<node.get_endpoint()<<" an endpoint. return 0. \n";
+                std::cout<<"full adj llist of this node = adjs: ";
+                for (auto i : node.get_adj_list()) {
+                    std::cout<<i<<", ";
+                } std::cout<<" paths: ";
+                for (auto i : node.get_all_paths()) {
+                    std::cout<<i<<", ";
+                } std::cout<<" avail adj: ";
+                for (auto i : node.get_all_adj_availible()) {
+                    std::cout<<i<<", ";
+                }
+                std::cout<<"\n";
                 return 0;
             }
+            std::cout<<"\n";
             return 1;
         }
         else { //if we are already at the target length, choose endpoint or lowest min path and break out of while loop
             node.append_adj_availible(get<1>(node.get_min_length())); // put minimum path length adjs into the list of availible adjs
-            /**std::cout<<"OPTION 2 "<<get<0>(node.get_min_length())<<" from ";
+            std::cout<<"get_min_length (yeilds len of "<<get<0>(node.get_min_length())<<" from ";
             for(auto i : node.get_all_adj_availible()){
                 std::cout<<i<<", ";
-            }std::cout<<"\n";*/
+            }std::cout<<")\n";
             return 0;
         }
     }
@@ -548,21 +552,24 @@ public:
      * @param random 
      * @param organism 
      * @param probability
-     * @return string 
+     * @return string
      */
     string modify_org_variable_len(emp::Random & random, std::string organism, double probability = 1){
+        std::cout<<"START WITH "<<organism;
         string path = organism.substr(0, mKmerLength);
         string current = organism.substr(0, mKmerLength);
         string next = "";
         mVertices[current].increment_visitor_flag(); // Mark 1st kmer as visited
+        std::cout<<" whose visit flag is now "<<mVertices[current].get_visitor_flag()<<"\n";
         int index;
+        std::cout<<current;
         if ( random.P ( probability ) ) { // If P() then we will modify this genome, else do nothing
             while ( true ) {
                 if ( mVertices[current].adj_list_size() < 1 ){ // if we have no possible adjacencies, we are at an endpoint with no options (besides turning around)
                     // if path length is 0, return original genome. maybe take this out later when there are no more errors?
-                    //std::cout<<"Path length is "<<path.length()<<" but adj list "<<mVertices[current].adj_list_size()<<"\n";
+                    std::cout<<" Path length is "<<path.length()<<" and adj list size is "<<mVertices[current].adj_list_size()<<"\n";
                     if (path.length() == 0) {  
-                        //std::cout<<"Path Length = 0, so returning original organism. No crossover today.\n";
+                        std::cout<<"Path Length = 0, so returning original organism. No crossover today.\n";
                         path = organism;
                     }
                     break;
@@ -570,7 +577,7 @@ public:
                 int flag = make_adj_availible(mVertices[current], path.length(), organism.length());
                 if ( flag == 0 && mVertices[current].get_endpoint() > 0 && path.length() > 0){ // we are traveling down the shortest path possible
                     if (path.length() == 0) {  
-                        //std::cout<<"Path Length = 0, so returning original organism. No crossover today.\n";
+                        std::cout<<"Path Length = 0, so returning original organism. No crossover today.\n";
                         path = organism;
                     }
                     break;
@@ -578,13 +585,14 @@ public:
                 //std::cout<<"CURRENT:";  info(current);
                 index = random.GetUInt ( mVertices[current].adj_availible_size() );  // Choose random path down graph
                 next = mVertices[current].get_adj_availible(index);
-                //std::cout<<"NEXT "<<next<<"\n";
+                //std::cout<<" NEXT "<<next<<"\n";
                 path += next.substr(2,1);
                 current = next;
             }
             remove_sequence(organism);                          // Remove old, unmodified sequence from graph
             add_sequence(path);                                 // Add new, modified sequence to graph
             reset_vertex_flags();
+            std::cout<<"RETURN "<<path<<"\n";
             return path;
         }
         else {                                                 // No modification
