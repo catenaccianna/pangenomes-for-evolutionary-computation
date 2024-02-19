@@ -107,10 +107,12 @@ TEST_CASE("DeBruijnValue__adj-lists", "[DeBruijnValue.hpp]")
         a.clear_adj_availible();
         a.append_adj_availible("000");
         CHECK(a.adj_availible_size() == 1);
+        CHECK(a.get_all_adj_availible() == set<string>{"000"});
 
         set<string> s({"000", "001"});
         a.append_adj_availible(s);
         CHECK(a.adj_availible_size() == 2);
+        CHECK(a.get_all_adj_availible() == set<string>{"000", "001"});
 
         a.clear_adj_availible();
         CHECK(a.adj_availible_size() == 0);

@@ -31,12 +31,12 @@ class DeBruijnValue {
 private:
 
     /// Adjacency list--vector of all verticies this vertex points to
-    set<string> mAdjList = {};
+    set<string> mAdjList = {}; // can we remove this?
 
     /// Adjacency list with path lengths attached
     /// all possible path langths to all the adjs
     //map<int, set<DeBruijnEdge*>> mPathLenAdjList = {}; //set of edges/pointer to edges, count in edge class
-    map<int, set<string>> mPathLenAdjList = {};
+    map<int, set<string>> mPathLenAdjList = {}; // it appears we may be removing too many of these compared to the adj list
 
     // adjacency and it's associated length : count of its occurences
     /* important to include because when we only have the path length list, 
@@ -267,7 +267,6 @@ public:
 
     void append_adj_availible(set<string> val) { 
         for(auto i : val) {
-            ///////// there are some blank i's at this point
             mAvailableAdj.insert(i);
         }
     }

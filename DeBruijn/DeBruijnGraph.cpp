@@ -314,15 +314,15 @@ TEST_CASE("DeBruijnGraph__VirtualCPUOrgs", "[DeBruijnGraph.hpp]")
         g.remove_sequence("cccncccfqccncccoocccfqccncccfccptccclccnccctjctbccoccc");
         g.remove_sequence("cccocccncccdccctjctbccoocccscccqfccgoocccqfccptccr");
 
-        vector<string> generated_seq_1;
-        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccfccptcctqccncccdcccbtcccclccnccccscccttcctqccdcccbtccr"));
-        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccbhccptcccqfccptccbhccptccttcccdcccctgcctgcctcctccr"));
+        vector<string> generated_seq_1; //don't modify removed orgs
+        //generated_seq_1.push_back(g.modify_org_variable_len(random,"cccfccptcctqccncccdcccbtcccclccnccccscccttcctqccdcccbtccr"));
+        //generated_seq_1.push_back(g.modify_org_variable_len(random,"cccbhccptcccqfccptccbhccptccttcccdcccctgcctgcctcctccr"));
         generated_seq_1.push_back(g.modify_org_variable_len(random,"cccoccctbccocccttccbhccptcctbccoocccttccr"));
         generated_seq_1.push_back(g.modify_org_variable_len(random,"cccslccncccslccncccncccbfccptccbtccr"));
         generated_seq_1.push_back(g.modify_org_variable_len(random,"cccbtcctbccocccsccnnccccttccqfccgoocccocccoocccdaccnccclccnccc"));
         generated_seq_1.push_back(g.modify_org_variable_len(random,"nnccctjctbccocccdccc"));
-        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccncccfqccncccoocccfqccncccfccptccclccnccctjctbccoccc"));
-        generated_seq_1.push_back(g.modify_org_variable_len(random,"cccocccncccdccctjctbccoocccscccqfccgoocccqfccptccr"));
+        //generated_seq_1.push_back(g.modify_org_variable_len(random,"cccncccfqccncccoocccfqccncccfccptccclccnccctjctbccoccc"));
+        //generated_seq_1.push_back(g.modify_org_variable_len(random,"cccocccncccdccctjctbccoocccscccqfccgoocccqfccptccr"));
         generated_seq_1.push_back(g.modify_org_variable_len(random,"cccslccncccscccdcccttccbtccr"));
         generated_seq_1.push_back(g.modify_org_variable_len(random,"cccdaccnnccclccnncccocccbtcccqfccgookccccbhccptccqfccclccnccc"));
 
