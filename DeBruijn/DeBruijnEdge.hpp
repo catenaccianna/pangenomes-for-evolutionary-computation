@@ -3,8 +3,9 @@
  * @author Anna Catenacci
  *
  * Class describing the attributes of a DeBruijnEdge object
- * Includes information about the weight of the edge between two modes
- * 
+ * Includes information about the weight of the edge between two nodes
+ * This is different from the DBValue class because we are recording the 
+ * current node connected to only one possible adjacent node.
  */
 
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNEDGE_H
