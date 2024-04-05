@@ -45,6 +45,8 @@ private:
     // so you'd to to the adj list being pointed to, and then check the index to be accessed, and is the size == 
     // the index +1, then you know this vertex is done
     int mVisits = 0;
+    // also a visitor flag, but specifically for infinity_length function
+    int mInfLenVisits = 0;
 
     /// Count of the number of sequences in the graph that use this kmer
     /// Used to make sure we don't remove a duplicant sequence
@@ -58,8 +60,10 @@ private:
     int mLoop = 0;
 
     /// Edges into and out of this node
-    DeBruijnEdge mInEdge;
-    DeBruijnEdge mOutEdge;
+    // In Edges will always point from something else to this node, so we can look up the edge by what kmer points into it
+    map<string, DeBruijnEdge> mInEdge;
+    // Out Edges will always point from this node to something else, so we can look up the edge by what it points to
+    map<string, DeBruijnEdge> mOutEdge;
 
 public:
     /// Constructors
@@ -88,6 +92,13 @@ public:
      * @param value true if visited, false if not
      */
     void increment_visitor_flag() { mVisits++; }
+
+    /**
+     * Same functions as above, but for mInfLenVisits flag
+     */
+    int get_inflenvisitor_flag(){ return mInfLenVisits; }
+    void change_inflenvisitor_flag(int value) { mInfLenVisits = value; }
+    void increment_inflenvisitor_flag() { mInfLenVisits++; }
 
     /**
      * Get the loop flag object
@@ -149,33 +160,85 @@ public:
     /**
      * Set edge into this node
      */
-    void set_in_head(string head) { mInEdge.set_head(head); }
-
-    /**
-     * Set edge into this node
-     */
-    void set_in_tail(string tail) { mInEdge.set_tail(tail); }
+    void set_in_edge(string head, string tail) {
+        if (mInEdge.count(head)) { // if there's already been an occurence of this edge
+            mInEdge[head].increment_count();
+        }
+        else {
+            DeBruijnEdge new_edge(head, tail);
+            mInEdge.insert(make_pair(head, new_edge));
+            mInEdge[head].increment_count();
+        }
+    } 
         
     /**
-     * Get edge into this node
+     * Get one specific edge into this node
      */
-    DeBruijnEdge & get_in_edge() { return mInEdge; }
+    DeBruijnEdge & get_in_edge(string head) { return mInEdge[head]; }
+
+    /**
+     * Get all edges into this node
+     */
+    map<string, DeBruijnEdge> & get_all_in_edges() { return mInEdge; }
+
+    /**
+     * Remove an In Edge based on the string index of which node we're coming from
+     */
+    void remove_in_edge (string index) {
+        mInEdge[index].decrement_count();
+        if (mInEdge[index].get_count() <= 0) {
+            mInEdge.erase(index);
+            // do i have to clean up memory with the edge?????
+        }
+    }
 
     /**
      * Set edge out of this node
      */
-    void set_out_head(string head) { mOutEdge.set_head(head); }
+    void set_out_edge(string head, string tail) {
+        if (mOutEdge.count(tail)) { // if there's already been an occurence of this edge
+            mOutEdge[tail].increment_count();
+        }
+        else {
+            DeBruijnEdge new_edge(head, tail);
+            mOutEdge.insert(make_pair(tail, new_edge));
+            mOutEdge[tail].increment_count();
+        }
+    }
 
     /**
-     * Set edge out of this node
+     * Get one specific edge out of this node
      */
-    void set_out_tail(string tail) { mOutEdge.set_tail(tail); }
+    DeBruijnEdge & get_out_edge(string tail) { return mOutEdge[tail]; }
 
-    /**
-     * Get edge out of this node
+     /**
+     * Get all edges out of this node
      */
-    DeBruijnEdge & get_out_edge() { return mOutEdge; }
+    map<string, DeBruijnEdge> & get_all_out_edges() { return mOutEdge; }
     
+    /**
+     * Remove an Out Edge based on the string index of which node this one leads to
+     */
+    void remove_out_edge (string index) {
+        mOutEdge[index].decrement_count();
+        if (mOutEdge[index].get_count() <= 0) {
+            mOutEdge.erase(index);
+            // do i have to clean up memory with the edge?????
+        }
+    }
+
+    /**
+     * Clear all Edge Visitor Flags
+     */
+    void clear_edge_flags() {
+        for (auto i : mInEdge) {
+            i.second.clear_edge_visitor_flag();
+        }
+        for (auto i : mOutEdge) {
+            i.second.clear_edge_visitor_flag();
+        }
+    }
+
 //* All possible adjacencies that this node has *//
 
     /**

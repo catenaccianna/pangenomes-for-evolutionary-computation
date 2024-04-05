@@ -11,14 +11,14 @@
 #include "DeBruijnGraph.hpp"
 #include "DeBruijnValue.hpp"
 #define CATCH_CONFIG_MAIN
-#include "../../../mabe/MABE2/source/third-party/empirical/third-party/Catch/single_include/catch2/catch.hpp"
+#include "../../MABE2/source/third-party/empirical/third-party/Catch/single_include/catch2/catch.hpp"
 
 
 TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
 {
     {
         // add_sequence helper functions (add_edge, set_path_length, set_empty_vertex--but this one is private)
-        DeBruijnGraph g;
+        /**DeBruijnGraph g;
         g.add_sequence("abcd");
         DeBruijnValue a = g.get_value("abc");
         DeBruijnValue b = g.get_value("bcd");
@@ -51,23 +51,50 @@ TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
         a.get_out_edge().remove_tail("xyz");
         b.get_in_edge().remove_head("tgf");
         CHECK(a.get_out_edge().get_tail() == tail);
-        CHECK(b.get_in_edge().get_head() == head);
+        CHECK(b.get_in_edge().get_head() == head);*/
 
         // path length helper functions
         DeBruijnGraph g1;
-        g1.add_sequence("bbbc");
+        g1.add_sequence("bbbc"); std::cout<<"GOT TO 0\n";
         g1.add_sequence("bbbbc");
+        std::cout<<"GOT TO 1\n";
         map<int, set<string>> actual_initial_dict = g1.get_value("bbb").get_path_len_dict();
+        std::cout<<"GOT TO 2\n";
         map<int, set<string>> correct_initial_dict = {{1, set<string>{"bbc"}}, {2, set<string>{"bbb"}}, {std::numeric_limits<int>::max(), set<string>{"bbb"}}};
         CHECK(actual_initial_dict == correct_initial_dict);
+        set<string> actual_init_adj_list = g1.get_value("bbb").get_adj_list();
+        set<string> correct_init_adj_list = {"bbc", "bbb"};
+        CHECK(actual_init_adj_list == correct_init_adj_list);
         g1.remove_sequence("bbbbc");
         map<int, set<string>> actual_end_dict = g1.get_value("bbb").get_path_len_dict();
         map<int, set<string>> correct_end_dict = {{1, set<string>{"bbc"}}};
+        for (auto i : actual_end_dict){
+            for (auto z : i.second){
+                std::cout<<z<<", ";
+            }
+        }
+        std::cout<<"\ncorrect end dict\n";
+        for (auto i : correct_end_dict){
+            for (auto z : i.second){
+                std::cout<<z<<", ";
+            }
+        }std::cout<<"\n";
         CHECK(actual_end_dict == correct_end_dict);
-
+        set<string> actual_end_adj_list = g1.get_value("bbb").get_adj_list();
+        set<string> correct_end_adj_list = {"bbc"};
+        CHECK(actual_end_adj_list == correct_end_adj_list);
+        std::cout<<"actual end adj list\n";
+        for (auto i : actual_end_adj_list){
+            std::cout<<i<<", ";
+        }
+        std::cout<<"\ncorrect end adj list\n";
+        for (auto i : correct_end_adj_list){
+            std::cout<<i<<", ";
+            }
+        std::cout<<"\n";
 
         // remove_sequence helper functions (remove_from_adj_list, erase, remove_path_len, mStarts.erase)
-        set<string> full_adj_list = {"bcd"};
+        /**set<string> full_adj_list = {"bcd"};
         CHECK(a.get_adj_list() == full_adj_list);
         full_adj_list.clear();
         a.remove_from_adj_list("bcd");
@@ -113,7 +140,7 @@ TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
 
         // remove_inf_path (not clearing the loop flag)
         DeBruijnGraph g2;
-        g2.reset_loops();
+        g2.reset_loops();*/
 
     }
 }

@@ -11,7 +11,7 @@
 #include "DeBruijnValue.hpp"
 #include "DeBruijnEdge.hpp"
 #define CATCH_CONFIG_MAIN
-#include "../../../mabe/MABE2/source/third-party/empirical/third-party/Catch/single_include/catch2/catch.hpp"
+#include "../../MABE2/source/third-party/empirical/third-party/Catch/single_include/catch2/catch.hpp"
 
 TEST_CASE("DeBruijnValue__empty", "[DeBruijnValue.hpp]")
 {
@@ -196,7 +196,7 @@ TEST_CASE("DeBruijnValue__edges", "[DeBruijnValue.hpp]")
         e0.clear_edge_visitor_flag();
         CHECK(e0.get_visits() == 0);
 
-        e0.set_head("abc");
+        a.set_in_edge("abc", "xyz");
         e0.set_tail("xyz");
         set<string> head = {"abc"};
         set<string> tail = {"xyz"};

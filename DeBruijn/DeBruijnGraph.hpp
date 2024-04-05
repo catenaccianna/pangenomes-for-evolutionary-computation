@@ -8,7 +8,7 @@
 #ifndef PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
 #define PANGENOMES_FOR_EVOLUTIONARY_COMPUTATION_DEBRUIJNGRAPH_H
 
-#include "../../../mabe/MABE2/source/third-party/empirical/include/emp/math/Random.hpp"
+#include "../../MABE2/source/third-party/empirical/include/emp/math/Random.hpp"
 
 #include "DeBruijnValue.hpp"
 #include <vector>
@@ -75,12 +75,10 @@ private:
      * @param end_v Vertex being pointed to
      */
     void add_edge(string past_v, string start_v, string end_v){
-        int initial_adj_size = mVertices[start_v].adj_list_size();
+        //int initial_adj_size = mVertices[start_v].adj_list_size();
         mVertices[start_v].add_to_adj_list(end_v);
-        if(past_v.length() > 0) { mVertices[start_v].set_in_head(past_v); }
-        mVertices[start_v].set_in_tail(start_v);
-        mVertices[start_v].set_out_head(start_v);
-        mVertices[start_v].set_out_tail(end_v);
+        mVertices[start_v].set_in_edge(past_v, start_v);
+        mVertices[start_v].set_out_edge(start_v, end_v);
     }
 
     /**
@@ -131,9 +129,7 @@ private:
         }
         mVertices[input].increment_endpoint();
         mVertices[input].increment_kmer_occurrences();
-        mVertices[input].set_out_head(input);
-        mVertices[input].set_in_head(past);
-        mVertices[input].set_in_tail(input);
+        mVertices[input].set_in_edge(past, input);
         update_loops(); 
     }
 
@@ -246,28 +242,29 @@ public:
      * @param node kmer that we KNOW is part of a loop
      */
     void infinity_length(string node) {
-        //std::cout<<"inf length staring node = "<<node<<"\n";
+        mVertices[node].increment_inflenvisitor_flag();
         queue<pair<string, string>> Q_parent;
-        DeBruijnEdge & start_edge = mVertices[node].get_in_edge();
-        //std::cout<<"initial heads ";
-        for (auto i : start_edge.get_head() ){
-            //std::cout<<i<<", ";
-            Q_parent.push(make_pair(i, node));
-        } //std::cout<<"\n";
+        map<string, DeBruijnEdge> & start_edges = mVertices[node].get_all_in_edges();
+        for (auto i : start_edges ){
+            Q_parent.push(make_pair(i.first, node));
+            //i.second.increment_edge_visitor_flag();
+            mVertices[i.first].increment_inflenvisitor_flag();
+        }
         string current, parent;
         while(!Q_parent.empty()) {
             parent = Q_parent.front().second;
             current = Q_parent.front().first;
-            //std::cout<<"parent "<<parent<<" child "<<current<<"\n";
             Q_parent.pop();
-            DeBruijnEdge & edge = mVertices[current].get_in_edge(); //next edge
+            map<string, DeBruijnEdge> & edges = mVertices[current].get_all_in_edges(); //next edge
             mVertices[current].append_path_len(std::numeric_limits<int>::max(), parent);
-            if(edge.get_visits() == 0) {
-                for (auto i : edge.get_head() ){
-                    Q_parent.push(make_pair(i, current));
+            for (auto i : edges){
+                //if(i.first.size() > 0 && i.second.get_visits() == 0) {
+                if(i.first.size() > 0 && mVertices[i.first].get_inflenvisitor_flag() == 0) {
+                    Q_parent.push(make_pair(i.first, current));
                 }
+                //i.second.increment_edge_visitor_flag(); //explored, discovered, unknown
+                mVertices[i.first].increment_inflenvisitor_flag();
             }
-            edge.increment_edge_visitor_flag();
         }
     }
 
@@ -285,7 +282,7 @@ public:
      */
     void add_sequence(vector<int> sequence) {
         string input = "";
-        for(int i = 0; i < sequence.size(); ++i){
+        for(int i = 0; i < int(sequence.size()); ++i){
             input += std::to_string(sequence[i]);
         }
         add_sequence(input);
@@ -297,7 +294,7 @@ public:
      */
     void add_sequence(vector<string> sequence) {
         string input = "";
-        for(int i = 0; i < sequence.size(); ++i){
+        for(int i = 0; i < int(sequence.size()); ++i){
             input += sequence[i];
         }
         add_sequence(input);
@@ -310,7 +307,6 @@ public:
      * @param sequence to add to the graph
      */
     void add_sequence(string sequence) {
-        //std::cout<<"hi\n";
         mSequenceLength = sequence.size();
         string past = "";
         // if the beginning string is not in the graph, add a new beginning vertex
@@ -320,19 +316,13 @@ public:
         }
         // go through the entire new sequence and add edges:
         while(int(sequence.length()) >= mKmerLength+1){
-            //std::cout<<"\n"<<sequence<<"    ";
-            if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0){
-                //std::cout<<mVertices.count(sequence.substr(1, mKmerLength))<<"    ";
-            }
             // min/max path length from this node
             int path_len = sequence.size() - 3;
             set_path_length(sequence.substr(0, mKmerLength), path_len, sequence.substr(1, mKmerLength));
-            //std::cout<<"path len set to "<<path_len<<"    ";
             add_edge(past, sequence.substr(0, mKmerLength), sequence.substr(1, mKmerLength));
-            //std::cout<<"edge btwn "<<sequence.substr(0, mKmerLength)<<" and "<<sequence.substr(1, mKmerLength)<<"\n";
             mVertices[sequence.substr(0, mKmerLength)].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
             //if future vertex is not already in map, set it as an empty vertex
-            if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0 && sequence.length() != (mKmerLength)){
+            if(mVertices.count(sequence.substr(1, mKmerLength)) <= 0 && int(sequence.length()) != (mKmerLength)){
                 set_empty_vertex(sequence.substr(1, mKmerLength));
             }
             past = sequence.substr(0, mKmerLength);
@@ -340,9 +330,7 @@ public:
         }
         mVertices[sequence].increment_endpoint(); //increment number of times this kmer is an endpoint of a seq in the pangenome
         mVertices[sequence].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
-        mVertices[sequence].set_out_head(sequence);
-        mVertices[sequence].set_in_head(past);
-        mVertices[sequence].set_in_tail(sequence);
+        mVertices[sequence].set_in_edge(past, sequence);
         update_loops();
     }
    
@@ -394,25 +382,25 @@ public:
     void remove_sequence(string sequence){
         if(is_valid(sequence)){
             string current, next;
-            bool current_appears_once;
-            bool next_appears_once;
-            //std::cout<<"remove "<<sequence<<"... ";
+            bool current_appears_once, next_appears_once, edge_appears_once;
+            std::cout<<"remove "<<sequence<<"... ";
 
             // while we still have sequence left:
             while(int(sequence.size()) > mKmerLength){
                 current = sequence.substr(0,mKmerLength);
                 next = sequence.substr(1,mKmerLength);
                 mVertices[current].decrement_kmer_occurrences();
+                mVertices[current].get_out_edge(next).decrement_count();
                 current_appears_once = mVertices[current].get_kmer_occurrences() <= 0;
                 next_appears_once = mVertices[next].get_kmer_occurrences() <= 1;
-                //std::cout<<current<<" = "<<mVertices[current].get_kmer_occurrences()<<", ";
-
-                if (current_appears_once  || next_appears_once) {
+                edge_appears_once = mVertices[current].get_out_edge(next).get_count() <= 0;
+                std::cout<<current<<" = "<<mVertices[current].get_kmer_occurrences()<<", ";
+                if (current_appears_once || next_appears_once || edge_appears_once) {
                     mVertices[current].remove_from_adj_list(next); //we should be removing all copies of this kmer if it's the only occurance in the graph, but we may be removing only one string in the vector
-                    mVertices[current].get_out_edge().remove_tail(next);
-                    mVertices[next].get_in_edge().remove_head(current);
+                    mVertices[current].remove_out_edge(next);
+                    mVertices[next].remove_in_edge(current);
                 }
-                if (current_appears_once ){ remove(current, next); } //if kmer only appears once in entire graph, when we delete this instance, we delete it from all objects
+                if (current_appears_once){ remove(current, next); } //if kmer only appears once in entire graph, when we delete this instance, we delete it from all objects
                 
                 sequence = sequence.substr(1, sequence.length()-1);
             }
@@ -429,7 +417,7 @@ public:
             }
 
             if(mVertices.size() > 0) { // update loop flags for sequences still in graph
-                update_loops(); //std::cout<<"got here\n";
+                update_loops(); std::cout<<"got here\n";
             }
         }
         //else{ throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" ); }
@@ -652,8 +640,8 @@ public:
      */
     void reset_edge_flags() {
         for (auto & element : mVertices) {
-            element.second.get_in_edge().clear_edge_visitor_flag();
-            element.second.get_out_edge().clear_edge_visitor_flag();
+            element.second.clear_edge_flags();
+            element.second.change_inflenvisitor_flag(0);
         }
     }
 
@@ -709,21 +697,13 @@ public:
      */
     void info (string current) {
         std::cout<<"\nstring = "<<current;
-        std::cout<<"\nin edge head ("<<mVertices[current].get_in_edge().get_head().size()<<") = ";
-        for (auto i : mVertices[current].get_in_edge().get_head()){
-            std::cout<<i<<", ";
+        std::cout<<"\nin edges (size = "<<mVertices[current].get_all_in_edges().size()<<") = ";
+        for (auto i : mVertices[current].get_all_in_edges()){
+            std::cout<<i.first<<", ";
         }
-        std::cout<<"\nin edge tail ("<<mVertices[current].get_in_edge().get_tail().size()<<") = ";
-        for (auto i : mVertices[current].get_in_edge().get_tail()){
-            std::cout<<i<<", ";
-        }
-        std::cout<<"\nout edge head ("<<mVertices[current].get_out_edge().get_head().size()<<") = ";
-        for (auto i : mVertices[current].get_out_edge().get_head()){
-            std::cout<<i<<", ";
-        }
-        std::cout<<"\nout edge tail ("<<mVertices[current].get_out_edge().get_tail().size()<<") = ";
-        for (auto i : mVertices[current].get_out_edge().get_tail()){
-            std::cout<<i<<", ";
+        std::cout<<"\nout edges (size = "<<mVertices[current].get_all_out_edges().size()<<") = ";
+        for (auto i : mVertices[current].get_all_out_edges()){
+            std::cout<<i.first<<", ";
         }
         std::cout<<"\nAVAIL ADJ SZ "<<mVertices[current].adj_availible_size()<<": ";
         set<string> all_results = mVertices[current].get_all_adj_availible();

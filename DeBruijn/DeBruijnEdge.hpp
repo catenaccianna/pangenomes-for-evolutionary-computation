@@ -28,17 +28,13 @@ class DeBruijnEdge {
 private:
 
     /// Head node (pointing to, which nodes go out from this one, looking forward)
-    set<string> mHead;
-
-    /// Map specifying how many of each possible adjacency are in the graph
-    /// Map version of the set mHeads (which contains the adjacencies from mTail)
-    //map<string, int> mCounts;
-
-    /// 
-    //map<int, set<string>> mPathLenAdjList = {};
+    string mHead;
 
     /// Tail node (pointing from, which nodes lead TO this one, looking backwards)
-    set<string> mTail;
+    string mTail;
+
+    /// How many times this edge appears in the graph
+    int mCount = 0;
 
     /// Visitor flag
     int mVisits = 0;
@@ -46,7 +42,7 @@ private:
 public:
     /// Constructors
     DeBruijnEdge()=default;
-    DeBruijnEdge(string origin, string destination) { mHead.insert(origin); mTail.insert(destination); };
+    DeBruijnEdge(string origin, string destination) { mHead=origin; mTail=destination; };
 
     /// Destructor                                                        
     ~DeBruijnEdge()=default;
@@ -54,33 +50,48 @@ public:
     /**
      * Set head node
      */
-    void set_head(string h) { mHead.insert(h); }
+    //void set_head(string h) { mHead.insert(h); }
         
     /**
      * Get head node
      */
-    std::set<string> get_head() { return mHead; }
+    string get_head() { return mHead; }
 
     /**
      * Remove a head node
      */
-    void remove_head(string h) { mHead.erase(h); }
+    //void remove_head(string h) { mHead.erase(h); }
 
     /**
      * Set tail node
      */
-    void set_tail(string t) { mTail.insert(t); }
+    //void set_tail(string t) { mTail.insert(t); }
         
     /**
      * Get tail node
      */
     //std::vector<std::shared_ptr<DBGraphValue>> get_tail() { return mTail; }
-    std::set<string> get_tail() { return mTail; }
+    string get_tail() { return mTail; }
 
     /**
      * Remove a tail node
      */
-    void remove_tail(string t) { mTail.erase(t); }
+    //void remove_tail(string t) { mTail.erase(t); }
+
+    /**
+     * Increment number of times this edge has been seen in the graph
+     */
+    void increment_count() { mCount ++; }
+
+    /**
+     * Decrement number of times this edge has been seen in the graph
+     */
+    void decrement_count() { mCount --; }
+
+    /**
+     * Get number of times this edge appears in the graph
+     */
+    int get_count() { return mCount; }
 
     /**
      * Get the visitor flag object
@@ -99,7 +110,7 @@ public:
      */
     void clear_edge_visitor_flag() { mVisits = 0; }
 
-    void show_edge() {
+    /**void show_edge() {
         std::cout<<"Edge Info - Head: ";
         for (auto i : mHead) {
             std::cout<<i<<", ";
@@ -108,7 +119,12 @@ public:
         for (auto i : mTail) {
             std::cout<<i<<", ";
         }
-        std::cout<<"\n";}
+        std::cout<<"\n";}*/
+
+    void show_edge() {
+        std::cout<<"Edge Info - Head: "<<mHead<<", ";
+        std::cout<<" Tail: "<<mTail<<"\n";
+    }
 
 };
 
