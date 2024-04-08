@@ -186,59 +186,34 @@ TEST_CASE("DeBruijnValue__adj-lists", "[DeBruijnValue.hpp]")
 TEST_CASE("DeBruijnValue__edges", "[DeBruijnValue.hpp]")
 {
     {
-        // initialize an empty node
-        DeBruijnValue a;
-        DeBruijnEdge e0;
+        // a (abc) > b(ghi) > c(xyz) and b self loop
+        DeBruijnValue a, b, c;
+        DeBruijnEdge e0("abc", "ghi");
+        DeBruijnEdge e1("ghi", "xyz");
+        DeBruijnEdge e2("ghi", "ghi");
 
         e0.increment_edge_visitor_flag();
         CHECK(e0.get_visits() == 1);
-
         e0.clear_edge_visitor_flag();
         CHECK(e0.get_visits() == 0);
 
-        a.set_in_edge("abc", "xyz");
-        e0.set_tail("xyz");
-        set<string> head = {"abc"};
-        set<string> tail = {"xyz"};
-        CHECK(e0.get_head() == head);
-        CHECK(e0.get_tail() == tail);
+        a.set_out_edge("abc", "ghi");
+        b.set_out_edge("ghi", "xyz");
+        b.set_out_edge("ghi", "ghi");
+        CHECK(a.get_out_edge("ghi").get_head() == "abc");
+        CHECK(a.get_out_edge("ghi").get_tail() == "ghi");
+        CHECK(b.get_out_edge("xyz").get_head() == "ghi");
+        CHECK(b.get_out_edge("xyz").get_tail() == "xyz");
 
-        e0.remove_head("ghi");
-        CHECK(e0.get_head() == head);
-        e0.remove_head("abc");
-        head.clear();
-        CHECK(e0.get_head() == head);
-        e0.remove_head("abc");
-        CHECK(e0.get_head() == head);
+        b.set_in_edge("abc", make_shared<DeBruijnEdge>(e0));
+        b.set_in_edge("ghi", make_shared<DeBruijnEdge>(e2));
+        c.set_in_edge("ghi", make_shared<DeBruijnEdge>(e1));
 
-        e0.remove_tail("ghi");
-        CHECK(e0.get_tail() == tail);
-        e0.remove_tail("xyz");
-        tail.clear();
-        CHECK(e0.get_tail() == tail);
-        e0.remove_tail("xyz");
-        CHECK(e0.get_tail() == tail);
-
-        head = {"abc", "bbb", "ccc", "aaa"};
-        tail = {"xyz", "xxx", "zzz", "yyy"};
-        e0.set_head("abc");
-        e0.set_head("aaa");
-        e0.set_head("bbb");
-        e0.set_head("ccc");
-        e0.set_tail("xyz");
-        e0.set_tail("zzz");
-        e0.set_tail("xxx");
-        e0.set_tail("yyy");
-        CHECK(e0.get_head() == head);
-        CHECK(e0.get_tail() == tail);
-
-        e0.remove_head("bbb");
-        head.erase("bbb");
-        CHECK(e0.get_head() == head);
-
-        e0.remove_tail("zzz");
-        tail.erase("zzz");
-        CHECK(e0.get_tail() == tail);
+        CHECK(b.get_in_edge("abc").get_head() == "abc");
+        CHECK(b.get_in_edge("abc").get_tail() == "ghi");
+        CHECK(b.get_in_edge("ghi").get_tail() == "ghi");
+        CHECK(c.get_in_edge("ghi").get_head() == "ghi");
+        CHECK(c.get_in_edge("ghi").get_tail() == "xyz");
 
     }
 }

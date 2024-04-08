@@ -23,9 +23,10 @@
 #include <cassert>
 #include <stdexcept>
 #include <iostream>
+#include <memory>
 
 using std::string; using std::vector; using std::map; using std::tuple;
-using std::pair; using std::set;
+using std::pair; using std::set; using std::shared_ptr; using std::make_shared;
 
 class DeBruijnValue {
 private:
@@ -61,7 +62,7 @@ private:
 
     /// Edges into and out of this node
     // In Edges will always point from something else to this node, so we can look up the edge by what kmer points into it
-    map<string, DeBruijnEdge> mInEdge;
+    map<string, shared_ptr<DeBruijnEdge>> mInEdge;
     // Out Edges will always point from this node to something else, so we can look up the edge by what it points to
     map<string, DeBruijnEdge> mOutEdge;
 
@@ -160,35 +161,33 @@ public:
     /**
      * Set edge into this node
      */
-    void set_in_edge(string head, string tail) {
+    void set_in_edge(string head, shared_ptr<DeBruijnEdge> tail) {
         if (mInEdge.count(head)) { // if there's already been an occurence of this edge
-            mInEdge[head].increment_count();
+            (*mInEdge[head]).increment_count();
         }
         else {
-            DeBruijnEdge new_edge(head, tail);
-            mInEdge.insert(make_pair(head, new_edge));
-            mInEdge[head].increment_count();
+            mInEdge.insert(make_pair(head, tail));
+            (*mInEdge[head]).increment_count();
         }
     } 
         
     /**
      * Get one specific edge into this node
      */
-    DeBruijnEdge & get_in_edge(string head) { return mInEdge[head]; }
+    DeBruijnEdge & get_in_edge(string head) { return (*mInEdge[head]); }
 
     /**
      * Get all edges into this node
      */
-    map<string, DeBruijnEdge> & get_all_in_edges() { return mInEdge; }
+    map<string, shared_ptr<DeBruijnEdge>> & get_all_in_edges() { return mInEdge; }
 
     /**
      * Remove an In Edge based on the string index of which node we're coming from
      */
     void remove_in_edge (string index) {
-        mInEdge[index].decrement_count();
-        if (mInEdge[index].get_count() <= 0) {
+        (*mInEdge[index]).decrement_count();
+        if ((*mInEdge[index]).get_count() <= 0) {
             mInEdge.erase(index);
-            // do i have to clean up memory with the edge?????
         }
     }
 
@@ -232,7 +231,7 @@ public:
      */
     void clear_edge_flags() {
         for (auto i : mInEdge) {
-            i.second.clear_edge_visitor_flag();
+            (*i.second).clear_edge_visitor_flag();
         }
         for (auto i : mOutEdge) {
             i.second.clear_edge_visitor_flag();

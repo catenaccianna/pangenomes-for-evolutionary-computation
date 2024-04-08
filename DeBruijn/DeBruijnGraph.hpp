@@ -77,8 +77,9 @@ private:
     void add_edge(string past_v, string start_v, string end_v){
         //int initial_adj_size = mVertices[start_v].adj_list_size();
         mVertices[start_v].add_to_adj_list(end_v);
-        mVertices[start_v].set_in_edge(past_v, start_v);
         mVertices[start_v].set_out_edge(start_v, end_v);
+        if(past_v.length() > 0) {
+            mVertices[start_v].set_in_edge(past_v, make_shared<DeBruijnEdge>(mVertices[past_v].get_out_edge(start_v))); } //get the out_edge pointing to this node AT the previous node
     }
 
     /**
@@ -110,7 +111,6 @@ private:
         }
         // if the vertex is already in the graph, then skip this and don't add to size //uh???????????
         if(mVertices.count(input.substr(0, mKmerLength)) <= 0){
-            set_empty_vertex(input.substr(0, mKmerLength));
             // min/max path length from this node
             int path_len = input.size() - 3;
             set_path_length(input.substr(0, kmer_length), path_len, input.substr(1, kmer_length));
@@ -129,7 +129,7 @@ private:
         }
         mVertices[input].increment_endpoint();
         mVertices[input].increment_kmer_occurrences();
-        mVertices[input].set_in_edge(past, input);
+        mVertices[input].set_in_edge(past, make_shared<DeBruijnEdge>(mVertices[past].get_out_edge(input)));
         update_loops(); 
     }
 
@@ -244,7 +244,7 @@ public:
     void infinity_length(string node) {
         mVertices[node].increment_inflenvisitor_flag();
         queue<pair<string, string>> Q_parent;
-        map<string, DeBruijnEdge> & start_edges = mVertices[node].get_all_in_edges();
+        map<string, shared_ptr<DeBruijnEdge>> & start_edges = mVertices[node].get_all_in_edges();
         for (auto i : start_edges ){
             Q_parent.push(make_pair(i.first, node));
             //i.second.increment_edge_visitor_flag();
@@ -255,7 +255,7 @@ public:
             parent = Q_parent.front().second;
             current = Q_parent.front().first;
             Q_parent.pop();
-            map<string, DeBruijnEdge> & edges = mVertices[current].get_all_in_edges(); //next edge
+            map<string, shared_ptr<DeBruijnEdge>> & edges = mVertices[current].get_all_in_edges(); //next edge
             mVertices[current].append_path_len(std::numeric_limits<int>::max(), parent);
             for (auto i : edges){
                 //if(i.first.size() > 0 && i.second.get_visits() == 0) {
@@ -330,7 +330,7 @@ public:
         }
         mVertices[sequence].increment_endpoint(); //increment number of times this kmer is an endpoint of a seq in the pangenome
         mVertices[sequence].increment_kmer_occurrences(); //increment number of times we've seen this kmer in the pangenome
-        mVertices[sequence].set_in_edge(past, sequence);
+        mVertices[sequence].set_in_edge(past, make_shared<DeBruijnEdge>(mVertices[past].get_out_edge(sequence)));
         update_loops();
     }
    

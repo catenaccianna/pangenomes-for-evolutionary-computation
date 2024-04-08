@@ -55,11 +55,9 @@ TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
 
         // path length helper functions
         DeBruijnGraph g1;
-        g1.add_sequence("bbbc"); std::cout<<"GOT TO 0\n";
+        g1.add_sequence("bbbc");
         g1.add_sequence("bbbbc");
-        std::cout<<"GOT TO 1\n";
         map<int, set<string>> actual_initial_dict = g1.get_value("bbb").get_path_len_dict();
-        std::cout<<"GOT TO 2\n";
         map<int, set<string>> correct_initial_dict = {{1, set<string>{"bbc"}}, {2, set<string>{"bbb"}}, {std::numeric_limits<int>::max(), set<string>{"bbb"}}};
         CHECK(actual_initial_dict == correct_initial_dict);
         set<string> actual_init_adj_list = g1.get_value("bbb").get_adj_list();
