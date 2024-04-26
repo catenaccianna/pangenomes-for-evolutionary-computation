@@ -509,9 +509,7 @@ public:
         node.clear_adj_availible();
         if ( current_len < parent_len ) { // if we're underneath the target length, and the path is not too short, add it
             node.not_too_short(current_len, parent_len, 0); // only the not too short ones
-            //std::cout<<"OPTION 1 \n";
             if(node.adj_availible_size() == 0) {
-                //std::cout<<"OPTION 3 \n";
                 node.make_all_adj_availible();
                 return 0;
             }
@@ -519,10 +517,6 @@ public:
         }
         else { //if we are already at the target length, choose endpoint or lowest min path and break out of while loop
             node.append_adj_availible(get<1>(node.get_min_length())); // put minimum path length adjs into the list of availible adjs
-            /**std::cout<<"OPTION 2 "<<get<0>(node.get_min_length())<<" from ";
-            for(auto i : node.get_all_adj_availible()){
-                std::cout<<i<<", ";
-            }std::cout<<"\n";*/
             return 0;
         }
     }
@@ -656,7 +650,6 @@ public:
      * @todo Would like to eventually use Julia to display the graph as a whole
      */
     void display(){
-        //std::cout<<"a     ";
         traversal( [&] (string vertex) { 
             cout<<vertex<<" ";
             // if there is one, non-empty vertex in the list, print it
@@ -670,21 +663,16 @@ public:
                     cout<<i<<", ";
                 }
             }
-            //std::cout<<"c     ";
             // if the adj_list contains an endpoint/empty vertex, show that
             if (mVertices[vertex].get_endpoint()>0){
                 cout << " (an endpoint)";
             }
-            //std::cout<<"d     ";
             // if the vertex is a loop, show that
             if (mVertices[vertex].get_loop_flag()>0){
                 cout << " (a loop at " << vertex << " = " << mVertices[vertex].get_loop_flag() << ")";
             }
-            //std::cout<<"e     ";
             std::cout<<"\n";
-            //std::cout<<"f     ";
             });
-            //std::cout<<"g     ";
     }
 
     /**
