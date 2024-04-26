@@ -58,25 +58,9 @@ public:
     string get_head() { return mHead; }
 
     /**
-     * Remove a head node
-     */
-    //void remove_head(string h) { mHead.erase(h); }
-
-    /**
-     * Set tail node
-     */
-    //void set_tail(string t) { mTail.insert(t); }
-        
-    /**
      * Get tail node
      */
-    //std::vector<std::shared_ptr<DBGraphValue>> get_tail() { return mTail; }
     string get_tail() { return mTail; }
-
-    /**
-     * Remove a tail node
-     */
-    //void remove_tail(string t) { mTail.erase(t); }
 
     /**
      * Increment number of times this edge has been seen in the graph
@@ -109,17 +93,6 @@ public:
      * Set visitor flag to 0
      */
     void clear_edge_visitor_flag() { mVisits = 0; }
-
-    /**void show_edge() {
-        std::cout<<"Edge Info - Head: ";
-        for (auto i : mHead) {
-            std::cout<<i<<", ";
-        }
-        std::cout<<" Tail: ";
-        for (auto i : mTail) {
-            std::cout<<i<<", ";
-        }
-        std::cout<<"\n";}*/
 
     void show_edge() {
         std::cout<<"Edge Info - Head: "<<mHead<<", ";

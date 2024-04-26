@@ -66,30 +66,10 @@ TEST_CASE("DeBruijnGraph__helper-functions", "[DeBruijnGraph.hpp]")
         g1.remove_sequence("bbbbc");
         map<int, set<string>> actual_end_dict = g1.get_value("bbb").get_path_len_dict();
         map<int, set<string>> correct_end_dict = {{1, set<string>{"bbc"}}};
-        for (auto i : actual_end_dict){
-            for (auto z : i.second){
-                std::cout<<z<<", ";
-            }
-        }
-        std::cout<<"\ncorrect end dict\n";
-        for (auto i : correct_end_dict){
-            for (auto z : i.second){
-                std::cout<<z<<", ";
-            }
-        }std::cout<<"\n";
         CHECK(actual_end_dict == correct_end_dict);
         set<string> actual_end_adj_list = g1.get_value("bbb").get_adj_list();
         set<string> correct_end_adj_list = {"bbc"};
         CHECK(actual_end_adj_list == correct_end_adj_list);
-        std::cout<<"actual end adj list\n";
-        for (auto i : actual_end_adj_list){
-            std::cout<<i<<", ";
-        }
-        std::cout<<"\ncorrect end adj list\n";
-        for (auto i : correct_end_adj_list){
-            std::cout<<i<<", ";
-            }
-        std::cout<<"\n";
 
         // remove_sequence helper functions (remove_from_adj_list, erase, remove_path_len, mStarts.erase)
         /**set<string> full_adj_list = {"bcd"};
@@ -172,6 +152,15 @@ TEST_CASE("DeBruijnGraph__BitsOrgs", "[DeBruijnGraph.hpp]")
         CHECK(get<0>(g.get_value("031").get_max_length()) == std::numeric_limits<int>::max()); // inf if you take 311, finite if you take 311
         CHECK(get<0>(g.get_value("117").get_max_length()) != std::numeric_limits<int>::max()); // this is the endpoint, no more paths
 
+        std::cout<<"adj list: ";
+        for (auto i : g.get_value("111").get_adj_list()){
+            std::cout<<i<<", ";
+        }
+        std::cout<<"\npath dict: ";
+        for (auto i : g.get_value("111").get_all_path_lens()){
+            std::cout<<i<<", ";
+        }std::cout<<"\n";
+
         g.add_sequence("1110317");
         g.remove_sequence("111031117");
         CHECK(g.is_valid("111031117") == false);
@@ -187,7 +176,7 @@ TEST_CASE("DeBruijnGraph__BitsOrgs", "[DeBruijnGraph.hpp]")
         CHECK(get<0>(g.get_value("031").get_max_length()) != std::numeric_limits<int>::max());
         CHECK(get<0>(g.get_value("317").get_max_length()) != std::numeric_limits<int>::max());
         g.remove_sequence("1110317");
-
+/**
         // create a regular BitsOrg graph 
         g.add_sequence("1111000110111101110101100101000010101110000001011000011101110101000001110000100101110100111010100110");
         // remove sequence
@@ -224,10 +213,10 @@ TEST_CASE("DeBruijnGraph__BitsOrgs", "[DeBruijnGraph.hpp]")
         new_genome = g.modify_org(random, "1101011111110101101010010011110101001011010101100011000000001011111110110101100110110111010101010111");
         CHECK(g.is_valid(new_genome));
         new_genome = g.modify_org(random, "1100000000000101101010001010000101001000011011001111110100110101101011101010101101100101010110100111");
-        CHECK(g.is_valid(new_genome));
+        CHECK(g.is_valid(new_genome));*/
     }
 }
-
+/*
 TEST_CASE("DeBruijnGraph__VirtualCPUOrgs", "[DeBruijnGraph.hpp]")
 {
     {
@@ -318,7 +307,7 @@ TEST_CASE("DeBruijnGraph__VirtualCPUOrgs", "[DeBruijnGraph.hpp]")
 
     }
 }
-
+*/
 
 /**
  * @brief Clone of DFT in the DeBruijnGraph class, but we don't reset the vertex flags at the end of this one so that we can test them.

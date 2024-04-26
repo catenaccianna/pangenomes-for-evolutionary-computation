@@ -191,10 +191,6 @@ public:
         reset_vertex_flags();   // resets DeBruijnValue visitor flags
         reset_edge_flags();     // reset edge visitor flags in case we hit the infinity_length function and use them
         reset_loops();          // completely reset loop flags in case anything has changed
-        /*for (auto & element : mVertices) {
-            std::cout<<"loop flag = "<<element.second.get_loop_flag()<<" max path = "<<get<0>(element.second.get_max_length())<<"\n";
-            
-        }*/
         loop_detection();
         reset_edge_flags();
         reset_vertex_flags();
@@ -206,7 +202,6 @@ public:
     void loop_detection() {
         if(mVertices.size() >= 1) {
             set<string> path = mStarts;
-            //std::cout<<"\nstart loop detectyion ";
             string current = "";
             while(path.size() > 0) {
                 // pop off next kmer
@@ -217,8 +212,6 @@ public:
 
                 // if we have seen this kmer before, we found a loop!
                 if (mVertices[current].get_visitor_flag() == 1) {
-                    if (current == "111"){ //display();
-                    }
                     mVertices[current].set_loop_flag(1);
                     infinity_length(current);
                     reset_edge_flags();
@@ -242,7 +235,7 @@ public:
      * @param node kmer that we KNOW is part of a loop
      */
     void infinity_length(string node) {
-        mVertices[node].increment_inflenvisitor_flag();
+        //mVertices[node].increment_inflenvisitor_flag();
         queue<pair<string, string>> Q_parent;
         map<string, shared_ptr<DeBruijnEdge>> & start_edges = mVertices[node].get_all_in_edges();
         for (auto i : start_edges ){
@@ -257,6 +250,10 @@ public:
             Q_parent.pop();
             map<string, shared_ptr<DeBruijnEdge>> & edges = mVertices[current].get_all_in_edges(); //next edge
             mVertices[current].append_path_len(std::numeric_limits<int>::max(), parent);
+            /**std::cout<<current<<"'s path len ";
+            for (auto i : mVertices[current].get_path_len_dict()){
+                std::cout<<i.first<<", ";
+            }std::cout<<"\n";*/
             for (auto i : edges){
                 //if(i.first.size() > 0 && i.second.get_visits() == 0) {
                 if(i.first.size() > 0 && mVertices[i.first].get_inflenvisitor_flag() == 0) {
@@ -368,9 +365,9 @@ public:
         mVertices.erase(current);
         auto iter = mStarts.find(current);
         if(iter != mStarts.end()) { mStarts.erase(iter); }
-        for(auto i : mVertices) {
-            i.second.remove_path_len(current);
-        }
+        //for(auto i : mVertices) {
+        //    i.second.remove_path_len(current);
+        //}
     }
 
     public:
@@ -383,7 +380,6 @@ public:
         if(is_valid(sequence)){
             string current, next;
             bool current_appears_once, next_appears_once, edge_appears_once;
-            std::cout<<"remove "<<sequence<<"... ";
 
             // while we still have sequence left:
             while(int(sequence.size()) > mKmerLength){
@@ -394,11 +390,11 @@ public:
                 current_appears_once = mVertices[current].get_kmer_occurrences() <= 0;
                 next_appears_once = mVertices[next].get_kmer_occurrences() <= 1;
                 edge_appears_once = mVertices[current].get_out_edge(next).get_count() <= 0;
-                std::cout<<current<<" = "<<mVertices[current].get_kmer_occurrences()<<", ";
                 if (current_appears_once || next_appears_once || edge_appears_once) {
                     mVertices[current].remove_from_adj_list(next); //we should be removing all copies of this kmer if it's the only occurance in the graph, but we may be removing only one string in the vector
                     mVertices[current].remove_out_edge(next);
                     mVertices[next].remove_in_edge(current);
+                    mVertices[current].remove_path_len(next);
                 }
                 if (current_appears_once){ remove(current, next); } //if kmer only appears once in entire graph, when we delete this instance, we delete it from all objects
                 
@@ -417,7 +413,7 @@ public:
             }
 
             if(mVertices.size() > 0) { // update loop flags for sequences still in graph
-                update_loops(); std::cout<<"got here\n";
+                update_loops();
             }
         }
         //else{ throw std::invalid_argument( "input sequence to DeBruijn remove_sequence() is invalid" ); }

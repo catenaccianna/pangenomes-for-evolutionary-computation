@@ -219,10 +219,9 @@ public:
      * Remove an Out Edge based on the string index of which node this one leads to
      */
     void remove_out_edge (string index) {
-        mOutEdge[index].decrement_count();
+        //mOutEdge[index].decrement_count(); this happens in remove function I think
         if (mOutEdge[index].get_count() <= 0) {
             mOutEdge.erase(index);
-            // do i have to clean up memory with the edge?????
         }
     }
 
